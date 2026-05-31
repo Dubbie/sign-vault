@@ -32,13 +32,13 @@ async function handleLogout() {
               class="text-zinc-400 no-underline transition-colors hover:text-white"
               active-class="text-white"
             >
-              Folders
+              My folders
             </RouterLink>
           </li>
         </ul>
 
         <RouterLink to="/" class="text-xl font-black tracking-tight text-white no-underline">
-          SignVault
+          Sign<span class="text-orange-400">Vault</span>
         </RouterLink>
 
         <div v-if="auth.user" class="flex items-center gap-3">
@@ -55,7 +55,7 @@ async function handleLogout() {
           </span>
           <button
             type="button"
-            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-text-muted transition-colors hover:border-orange-400 hover:text-white"
+            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-orange-400 hover:text-white"
             @click="handleLogout"
           >
             Logout
@@ -71,7 +71,7 @@ async function handleLogout() {
     </main>
 
     <footer
-      class="relative z-10 border-t border-border px-6 py-4 text-center text-xs text-text-muted sm:px-8"
+      class="relative z-10 border-t border-border px-6 py-4 text-center text-xs text-zinc-400 sm:px-8"
     >
       SignVault &mdash; Trackmania sign library
     </footer>

@@ -4,9 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 
-import UiCard from '@/components/ui/UiCard.vue'
-import UiEyebrow from '@/components/ui/UiEyebrow.vue'
-
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
@@ -40,11 +37,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <UiCard max-width="30rem">
-    <UiEyebrow>Discord callback</UiEyebrow>
-    <h1 class="text-[clamp(2rem,5vw,2.75rem)] leading-tight text-heading">Signing you in</h1>
-    <p class="mt-4 text-text-muted">
+  <div class="max-w-sm">
+    <p class="mb-3 text-xs text-orange-400 font-semibold">Discord callback</p>
+    <h1 class="text-[clamp(1.5rem,5vw,2rem)] leading-tight text-white">Signing you in</h1>
+    <p class="mt-4 text-zinc-400">
       {{ statusMessage }}
     </p>
-  </UiCard>
+  </div>
 </template>

@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { PublicSign } from '@/types/public-folder'
+interface GridSign {
+  id: number
+  name: string
+  public_url: string
+  width: number | null
+  height: number | null
+}
 
 const props = defineProps<{
-  signs: PublicSign[]
+  signs: GridSign[]
   copiedSignId: number | null
 }>()
 
@@ -38,7 +44,7 @@ function closestColumnRatio(width: number | null, height: number | null): number
 }
 
 const columns = computed(() => {
-  const byRatio: Record<number, PublicSign[]> = {}
+  const byRatio: Record<number, GridSign[]> = {}
 
   for (const col of COLUMNS) {
     byRatio[col.value] = []
@@ -59,32 +65,30 @@ const columns = computed(() => {
 
 <template>
   <div class="grid gap-6 sign-grid">
-    <div v-for="col in columns" :key="col.label" class="gap-3 flex flex-col">
+    <div v-for="col in columns" :key="col.label" class="flex flex-col gap-3">
       <div class="px-4 py-2 text-center text-sm font-semibold text-white">
-        <p>
-          {{ col.label }}
-        </p>
-        <p class="text-xs font-mono font-normal text-zinc-500">{{ col.signs.length }} signs</p>
+        <p>{{ col.label }}</p>
+        <p class="font-mono text-xs font-normal text-zinc-500">{{ col.signs.length }} signs</p>
       </div>
 
       <article
         v-for="sign in col.signs"
         :key="sign.id"
-        class="group cursor-pointer relative transition duration-150 ease-in-out ring ring-white hover:ring-4"
+        class="group relative cursor-pointer ring ring-white transition duration-150 ease-in-out hover:ring-4"
         @click="emit('copy', sign.id)"
       >
         <img
           :src="sign.public_url"
           :alt="sign.name"
           loading="lazy"
-          class="w-full block transition duration-300 ease-in-out"
+          class="block w-full transition duration-300 ease-in-out"
         />
 
         <div
-          class="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-200"
-          :class="copiedSignId === sign.id ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-200"
+          :class="copiedSignId === sign.id ? 'opacity-100' : 'opacity-0'"
         >
-          <span class="px-4 py-2 font-mono text-sm text-white"> Copied! </span>
+          <span class="font-mono text-sm text-white"> Copied! </span>
         </div>
       </article>
     </div>

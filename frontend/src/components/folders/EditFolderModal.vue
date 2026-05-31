@@ -1,21 +1,27 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, reactive, watch } from 'vue'
 
 import { useFoldersStore } from '@/stores/folders'
 import type { FolderVisibility, UpdateFolderPayload } from '@/types/folder'
 
-import UiCard from '@/components/ui/UiCard.vue'
-import UiEyebrow from '@/components/ui/UiEyebrow.vue'
+import UiModal from '@/components/ui/UiModal.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 
+const props = defineProps<{
+  modelValue: boolean
+  folderId: number
+}>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  saved: []
+}>()
+
 const foldersStore = useFoldersStore()
-const route = useRoute()
-const router = useRouter()
 
 const form = reactive({
   name: '',
@@ -23,7 +29,6 @@ const form = reactive({
   password: '',
 })
 
-const folderId = computed(() => Number(route.params.id))
 const requiresPassword = computed(() => form.visibility === 'password')
 
 const visibilityOptions = [
@@ -42,37 +47,38 @@ function fillFormFromFolder() {
 }
 
 async function loadFolder() {
-  const id = folderId.value
-  if (!Number.isFinite(id)) {
+  if (!Number.isFinite(props.folderId)) {
     foldersStore.error = 'Invalid folder id.'
     return
   }
 
-  const folder = await foldersStore.fetchFolder(id)
+  const folder = await foldersStore.fetchFolder(props.folderId)
   if (folder) fillFormFromFolder()
 }
 
-onMounted(async () => {
-  foldersStore.clearError()
+watch(
+  () => props.modelValue,
+  async (open) => {
+    if (!open) return
 
-  if (foldersStore.currentFolder?.id !== folderId.value) {
+    foldersStore.clearError()
+
+    if (foldersStore.currentFolder?.id === props.folderId) {
+      fillFormFromFolder()
+      return
+    }
+
     await loadFolder()
-    return
-  }
+  },
+)
 
-  fillFormFromFolder()
+watch(requiresPassword, (next) => {
+  if (!next) form.password = ''
 })
 
-watch(folderId, async () => {
-  foldersStore.clearCurrentFolder()
-  await loadFolder()
-})
-
-watch(requiresPassword, (nextRequiresPassword) => {
-  if (!nextRequiresPassword) {
-    form.password = ''
-  }
-})
+function close() {
+  emit('update:modelValue', false)
+}
 
 async function handleSubmit() {
   foldersStore.clearError()
@@ -91,28 +97,24 @@ async function handleSubmit() {
     payload.password = form.password
   }
 
-  const folder = await foldersStore.updateFolder(folderId.value, payload)
+  const folder = await foldersStore.updateFolder(props.folderId, payload)
 
   if (folder) {
-    await router.push({ name: 'folders-show', params: { id: folder.id } })
+    emit('saved')
+    close()
   }
 }
 </script>
 
 <template>
-  <UiCard max-width="40rem">
-    <UiEyebrow>Folders</UiEyebrow>
-    <h1 class="text-[clamp(2rem,4vw,2.5rem)] text-white">Edit folder</h1>
-
+  <UiModal :model-value="modelValue" title="Edit folder" @update:model-value="close">
     <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}
     </UiErrorBanner>
 
-    <p v-if="foldersStore.isLoading && !foldersStore.currentFolder" class="mt-4 text-zinc-400">
-      Loading folder...
-    </p>
+    <p v-if="!foldersStore.currentFolder" class="text-zinc-400">Loading folder...</p>
 
-    <form v-else class="mt-5 grid gap-4" @submit.prevent="handleSubmit">
+    <form v-else class="grid gap-4" @submit.prevent="handleSubmit">
       <UiFormField label="Name" name="name">
         <UiInput v-model="form.name" type="text" name="name" required />
       </UiFormField>
@@ -136,5 +138,5 @@ async function handleSubmit() {
         </UiButton>
       </div>
     </form>
-  </UiCard>
+  </UiModal>
 </template>

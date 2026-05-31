@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, reactive, watch } from 'vue'
 
 import { useFoldersStore } from '@/stores/folders'
 import type { CreateFolderPayload, FolderVisibility } from '@/types/folder'
 
-import UiCard from '@/components/ui/UiCard.vue'
-import UiEyebrow from '@/components/ui/UiEyebrow.vue'
+import UiModal from '@/components/ui/UiModal.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 
+defineProps<{
+  modelValue: boolean
+}>()
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  saved: []
+}>()
+
 const foldersStore = useFoldersStore()
-const router = useRouter()
 
 const form = reactive({
   name: '',
@@ -30,15 +36,21 @@ const visibilityOptions = [
   { value: 'password', label: 'Password' },
 ]
 
-onMounted(() => {
-  foldersStore.clearError()
+watch(requiresPassword, (next) => {
+  if (!next) form.password = ''
 })
 
-watch(requiresPassword, (nextRequiresPassword) => {
-  if (!nextRequiresPassword) {
-    form.password = ''
-  }
-})
+function resetForm() {
+  form.name = ''
+  form.visibility = 'private'
+  form.password = ''
+}
+
+function close() {
+  emit('update:modelValue', false)
+  resetForm()
+  foldersStore.clearError()
+}
 
 async function handleSubmit() {
   foldersStore.clearError()
@@ -65,21 +77,19 @@ async function handleSubmit() {
   const folder = await foldersStore.createFolder(payload)
 
   if (folder) {
-    await router.push({ name: 'folders-show', params: { id: folder.id } })
+    emit('saved')
+    close()
   }
 }
 </script>
 
 <template>
-  <UiCard max-width="40rem">
-    <UiEyebrow>Folders</UiEyebrow>
-    <h1 class="text-[clamp(2rem,4vw,2.5rem)] text-white">Create folder</h1>
-
+  <UiModal :model-value="modelValue" title="Create folder" @update:model-value="close">
     <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}
     </UiErrorBanner>
 
-    <form class="mt-5 grid gap-4" @submit.prevent="handleSubmit">
+    <form class="grid gap-4" @submit.prevent="handleSubmit">
       <UiFormField label="Name" name="name">
         <UiInput v-model="form.name" type="text" name="name" required />
       </UiFormField>
@@ -98,5 +108,5 @@ async function handleSubmit() {
         </UiButton>
       </div>
     </form>
-  </UiCard>
+  </UiModal>
 </template>

@@ -28,7 +28,7 @@ function onInput(event: Event) {
     :required="required"
     :placeholder="placeholder"
     :autocomplete="autocomplete"
-    class="w-full rounded-xl border border-border bg-surface-input px-4 py-[0.85rem] text-heading placeholder:text-text-muted/50 focus:border-primary/50 focus:outline-hidden"
+    class="w-full rounded-xl bg-zinc-900 px-3 py-1 text-white placeholder:text-zinc-400/50 focus:border-white focus:outline-hidden"
     @input="onInput"
   />
 </template>

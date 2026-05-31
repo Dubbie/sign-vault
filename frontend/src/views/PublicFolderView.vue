@@ -15,7 +15,7 @@ import UiPanel from '@/components/ui/UiPanel.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
-import PublicSignGrid from '@/components/signs/PublicSignGrid.vue'
+import SignGrid from '@/components/signs/SignGrid.vue'
 
 const route = useRoute()
 
@@ -143,7 +143,7 @@ watch(folderSlug, () => {
 
 <template>
   <div>
-    <p v-if="isLoading && !folder && !requiresPassword" class="mt-4 text-text-muted">
+    <p v-if="isLoading && !folder && !requiresPassword" class="mt-4 text-zinc-400">
       Loading folder...
     </p>
 
@@ -157,7 +157,7 @@ watch(folderSlug, () => {
           <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
             Password required
           </p>
-          <h2 class="text-[1.35rem] text-heading">This folder is protected</h2>
+          <h2 class="text-[1.35rem] text-white">This folder is protected</h2>
         </div>
       </div>
 
@@ -195,7 +195,7 @@ watch(folderSlug, () => {
       <div>
         <p v-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
 
-        <PublicSignGrid v-else :signs="signs" :copied-sign-id="copiedSignId" @copy="handleCopy" />
+        <SignGrid v-else :signs="signs" :copied-sign-id="copiedSignId" @copy="handleCopy" />
       </div>
     </div>
   </div>

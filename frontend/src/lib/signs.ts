@@ -41,20 +41,14 @@ export async function getSign(id: number): Promise<Sign> {
   return data
 }
 
-export async function createSign(folderId: number, payload: CreateSignPayload): Promise<Sign> {
+export async function createSigns(folderId: number, payload: CreateSignPayload): Promise<Sign[]> {
   const formData = new FormData()
-  formData.append('file', payload.file)
+  payload.files.forEach((file) => {
+    formData.append('files[]', file)
+  })
 
-  if (payload.name) {
-    formData.append('name', payload.name)
-  }
-
-  if (payload.description) {
-    formData.append('description', payload.description)
-  }
-
-  const { data } = await api.post<Sign>(`/api/folders/${folderId}/signs`, formData)
-  return data
+  const { data } = await api.post<{ signs: Sign[] }>(`/api/folders/${folderId}/signs`, formData)
+  return data.signs
 }
 
 export async function deleteSign(id: number): Promise<void> {

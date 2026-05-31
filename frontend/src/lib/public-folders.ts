@@ -1,0 +1,53 @@
+import type { AxiosError } from 'axios'
+
+import api from '@/lib/api'
+import type {
+  PublicFolderContentsResponse,
+  PublicFolderResponse,
+  UnlockPublicFolderPayload,
+} from '@/types/public-folder'
+
+type PublicFolderApiError = {
+  message?: string
+  errors?: Record<string, string[]>
+}
+
+function getErrorMessage(error: unknown) {
+  const axiosError = error as AxiosError<PublicFolderApiError> | undefined
+  const responseData = axiosError?.response?.data
+
+  if (responseData?.message) {
+    return responseData.message
+  }
+
+  if (responseData?.errors) {
+    const firstError = Object.values(responseData.errors).flat()[0]
+
+    if (firstError) {
+      return firstError
+    }
+  }
+
+  return 'Something went wrong.'
+}
+
+export function getPublicFolderErrorMessage(error: unknown) {
+  return getErrorMessage(error)
+}
+
+export async function getPublicFolder(slug: string): Promise<PublicFolderResponse> {
+  const { data } = await api.get<PublicFolderResponse>(`/api/public/folders/${slug}`)
+  return data
+}
+
+export async function unlockPublicFolder(
+  slug: string,
+  payload: UnlockPublicFolderPayload,
+): Promise<PublicFolderContentsResponse> {
+  const { data } = await api.post<PublicFolderContentsResponse>(
+    `/api/public/folders/${slug}/unlock`,
+    payload,
+  )
+
+  return data
+}

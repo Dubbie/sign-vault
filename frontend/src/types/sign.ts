@@ -2,7 +2,6 @@ export type Sign = {
   id: number
   folder_id: number
   name: string
-  description: string | null
   public_url: string
   mime_type: string
   size_bytes: number
@@ -13,7 +12,5 @@ export type Sign = {
 }
 
 export type CreateSignPayload = {
-  file: File
-  name?: string
-  description?: string
+  files: File[]
 }

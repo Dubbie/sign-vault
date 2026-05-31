@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
-  createSign as createSignRequest,
+  createSigns as createSignsRequest,
   deleteSign as deleteSignRequest,
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
@@ -87,9 +87,9 @@ export const useSignsStore = defineStore('signs', () => {
     clearError()
 
     try {
-      const sign = await createSignRequest(folderId, payload)
-      upsertSign(sign)
-      return sign
+      const createdSigns = await createSignsRequest(folderId, payload)
+      createdSigns.forEach(upsertSign)
+      return createdSigns
     } catch (exception) {
       setErrorFromUnknown(exception)
       return null

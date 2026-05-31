@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import { useFoldersStore } from '@/stores/folders'
@@ -13,13 +13,11 @@ const route = useRoute()
 const folderId = computed(() => Number(route.params.id))
 const folder = computed(() => foldersStore.currentFolder)
 
-const uploadForm = reactive({
-  name: '',
-  description: '',
-})
-const selectedFile = ref<File | null>(null)
+const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
 const copiedSignId = ref<number | null>(null)
+const copiedPublicUrl = ref(false)
+const publicUrlError = ref<string | null>(null)
 
 const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp'])
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -52,23 +50,29 @@ function visibilityLabel(visibility: string) {
   return visibility.charAt(0).toUpperCase() + visibility.slice(1)
 }
 
+const publicFolderPath = computed(() => `/public/folders/${folder.value?.slug ?? ''}`)
+
+function canShareFolder() {
+  return folder.value?.visibility !== 'private'
+}
+
 function resetUploadForm() {
-  uploadForm.name = ''
-  uploadForm.description = ''
-  selectedFile.value = null
+  selectedFiles.value = []
 
   if (fileInput.value) {
     fileInput.value.value = ''
   }
 }
 
-function validateSelectedFile(file: File | null) {
-  if (!file) {
-    return 'File is required.'
+function validateSelectedFiles(files: File[]) {
+  if (files.length === 0) {
+    return 'At least one image file is required.'
   }
 
-  if (!allowedMimeTypes.has(file.type)) {
-    return 'File must be a PNG, JPEG, or WebP image.'
+  const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
+
+  if (invalidFile) {
+    return 'Files must be PNG, JPEG, or WebP images.'
   }
 
   return null
@@ -95,13 +99,16 @@ watch(folderId, () => {
   foldersStore.clearCurrentFolder()
   signsStore.clearCurrentSign()
   signsStore.signs = []
+  copiedSignId.value = null
+  copiedPublicUrl.value = false
+  publicUrlError.value = null
   void loadFolder()
 })
 
 async function handleSubmit() {
   signsStore.clearError()
 
-  const fileError = validateSelectedFile(selectedFile.value)
+  const fileError = validateSelectedFiles(selectedFiles.value)
 
   if (fileError) {
     signsStore.error = fileError
@@ -109,48 +116,32 @@ async function handleSubmit() {
   }
 
   const payload: CreateSignPayload = {
-    file: selectedFile.value as File,
+    files: selectedFiles.value,
   }
 
-  const trimmedName = uploadForm.name.trim()
-  const trimmedDescription = uploadForm.description.trim()
+  const uploadedSigns = await signsStore.uploadSign(folderId.value, payload)
 
-  if (trimmedName) {
-    payload.name = trimmedName
-  }
-
-  if (trimmedDescription) {
-    payload.description = trimmedDescription
-  }
-
-  const uploadedSign = await signsStore.uploadSign(folderId.value, payload)
-
-  if (uploadedSign) {
+  if (uploadedSigns) {
     resetUploadForm()
   }
 }
 
 function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement
-  const file = input.files?.[0] ?? null
+  const files = Array.from(input.files ?? [])
 
   signsStore.clearError()
 
-  if (!file) {
-    selectedFile.value = null
-    return
-  }
-
-  const fileError = validateSelectedFile(file)
+  const fileError = validateSelectedFiles(files)
 
   if (fileError) {
-    selectedFile.value = null
+    selectedFiles.value = []
     input.value = ''
     signsStore.error = fileError
     return
   }
 
-  selectedFile.value = file
+  selectedFiles.value = files
 }
 
 async function handleDelete(sign: Sign) {
@@ -176,6 +167,21 @@ async function handleCopy(sign: Sign) {
       copiedSignId.value = null
     }
   }, 1500)
+}
+
+async function handleCopyPublicUrl() {
+  publicUrlError.value = null
+
+  try {
+    await navigator.clipboard.writeText(publicFolderPath.value)
+    copiedPublicUrl.value = true
+
+    window.setTimeout(() => {
+      copiedPublicUrl.value = false
+    }, 1500)
+  } catch {
+    publicUrlError.value = 'Could not copy the public URL. Please copy it manually.'
+  }
 }
 </script>
 
@@ -217,11 +223,35 @@ async function handleCopy(sign: Sign) {
         </div>
       </dl>
 
+      <section v-if="canShareFolder()" class="panel">
+        <div class="panel-header">
+          <div>
+            <p class="section-eyebrow">Public sharing</p>
+            <h2>Share this folder</h2>
+          </div>
+        </div>
+
+        <p v-if="publicUrlError" class="error-banner">
+          {{ publicUrlError }}
+        </p>
+
+        <div class="share-row">
+          <RouterLink class="url-link" :to="{ name: 'public-folder', params: { slug: folder.slug } }">
+            Open public page
+          </RouterLink>
+          <button class="copy-button" type="button" @click="handleCopyPublicUrl">
+            {{ copiedPublicUrl ? 'Copied!' : 'Copy public URL' }}
+          </button>
+        </div>
+
+        <p class="share-url">{{ publicFolderPath }}</p>
+      </section>
+
       <section class="panel">
         <div class="panel-header">
           <div>
             <p class="section-eyebrow">Upload Sign</p>
-            <h2>Upload a new sign</h2>
+            <h2>Upload new signs</h2>
           </div>
 
           <p class="section-note">PNG, JPEG, or WebP</p>
@@ -238,29 +268,10 @@ async function handleCopy(sign: Sign) {
               ref="fileInput"
               type="file"
               name="file"
+              multiple
               accept="image/png,image/jpeg,image/webp"
               required
               @change="handleFileChange"
-            />
-          </label>
-
-          <label>
-            <span>Name</span>
-            <input
-              v-model="uploadForm.name"
-              type="text"
-              name="name"
-              placeholder="Ice Warning"
-            />
-          </label>
-
-          <label>
-            <span>Description</span>
-            <textarea
-              v-model="uploadForm.description"
-              name="description"
-              rows="3"
-              placeholder="Optional notes about this sign"
             />
           </label>
 
@@ -268,8 +279,8 @@ async function handleCopy(sign: Sign) {
             <button class="primary-button" type="submit" :disabled="signsStore.isUploading">
               {{ signsStore.isUploading ? 'Uploading...' : 'Upload sign' }}
             </button>
-            <p v-if="selectedFile" class="selected-file">
-              Selected: {{ selectedFile.name }}
+            <p v-if="selectedFiles.length" class="selected-file">
+              Selected: {{ selectedFiles.map((file) => file.name).join(', ') }}
             </p>
           </div>
         </form>
@@ -300,9 +311,6 @@ async function handleCopy(sign: Sign) {
               <div class="sign-top">
                 <div>
                   <h3>{{ sign.name }}</h3>
-                  <p v-if="sign.description" class="sign-description">
-                    {{ sign.description }}
-                  </p>
                 </div>
 
                 <button class="copy-button" type="button" @click="handleCopy(sign)">
@@ -431,6 +439,19 @@ async function handleCopy(sign: Sign) {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: 1rem;
+}
+
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.share-url {
+  margin-top: 0.75rem;
+  color: var(--color-text-muted);
+  word-break: break-all;
 }
 
 .meta dt,
@@ -577,11 +598,6 @@ textarea {
 .sign-card h3 {
   color: var(--color-heading);
   font-size: 1.1rem;
-}
-
-.sign-description {
-  margin-top: 0.2rem;
-  color: var(--color-text-muted);
 }
 
 .sign-meta {

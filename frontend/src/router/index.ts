@@ -10,6 +10,7 @@ import FoldersIndexView from '../views/FoldersIndexView.vue'
 import FolderCreateView from '../views/FolderCreateView.vue'
 import FolderShowView from '../views/FolderShowView.vue'
 import FolderEditView from '../views/FolderEditView.vue'
+import PublicFolderView from '../views/PublicFolderView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -68,6 +69,11 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
       },
+    },
+    {
+      path: '/public/folders/:slug',
+      name: 'public-folder',
+      component: PublicFolderView,
     },
   ],
 })

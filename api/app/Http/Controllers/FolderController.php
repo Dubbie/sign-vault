@@ -32,6 +32,7 @@ class FolderController extends Controller
         $folder = $request->user()->folders()->create([
             'name' => $validated['name'],
             'slug' => Folder::generateSlugFor($request->user(), $validated['name']),
+            'public_slug' => Folder::generatePublicSlugFor($validated['name']),
             'visibility' => $validated['visibility'],
             'password_hash' => $this->passwordHashFor($validated),
         ]);
@@ -55,6 +56,7 @@ class FolderController extends Controller
         $folder->fill([
             'name' => $validated['name'],
             'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
+            'public_slug' => $folder->public_slug ?? Folder::generatePublicSlugFor($validated['name'], $folder->id),
             'visibility' => $validated['visibility'],
         ]);
 

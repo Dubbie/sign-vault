@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'name',
     'slug',
+    'public_slug',
     'visibility',
     'password_hash',
 ])]
@@ -24,6 +25,7 @@ class Folder extends Model
 
     protected $hidden = [
         'password_hash',
+        'public_slug',
     ];
 
     protected function casts(): array
@@ -41,6 +43,34 @@ class Folder extends Model
     public function signs(): HasMany
     {
         return $this->hasMany(Sign::class);
+    }
+
+    public static function generatePublicSlugFor(string $name, ?int $ignoreFolderId = null): string
+    {
+        $baseSlug = Str::slug($name) ?: 'folder';
+        $query = static::query()
+            ->where(function ($query) use ($baseSlug): void {
+                $query->where('public_slug', $baseSlug)
+                    ->orWhere('public_slug', 'like', $baseSlug.'-%');
+            });
+
+        if ($ignoreFolderId !== null) {
+            $query->whereKeyNot($ignoreFolderId);
+        }
+
+        $existingSlugs = $query->pluck('public_slug')->all();
+
+        if (! in_array($baseSlug, $existingSlugs, true)) {
+            return $baseSlug;
+        }
+
+        $suffix = 2;
+
+        while (in_array($baseSlug.'-'.$suffix, $existingSlugs, true)) {
+            $suffix++;
+        }
+
+        return $baseSlug.'-'.$suffix;
     }
 
     public static function generateSlugFor(User $user, string $name, ?int $ignoreFolderId = null): string

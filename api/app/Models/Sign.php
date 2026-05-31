@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'folder_id',
     'name',
-    'description',
     'storage_disk',
     'storage_key',
     'public_url',

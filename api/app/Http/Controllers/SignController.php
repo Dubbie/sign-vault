@@ -33,37 +33,50 @@ class SignController extends Controller
         $this->authorize('update', $folder);
 
         $validated = $request->validated();
-        $file = $request->file('file');
+        $files = $validated['files'];
         $disk = config('filesystems.default');
-        $name = $this->signNameFor($validated, $file);
-        Log::info('Sign upload started.', [
+        Log::info('Sign bulk upload started.', [
             'user_id' => $request->user()->id,
             'folder_id' => $folder->id,
             'folder_slug' => $folder->slug,
             'disk' => $disk,
-            'file_name' => $file->getClientOriginalName(),
-            'derived_name' => $name,
-            'mime_type' => $file->getClientMimeType(),
-            'size_bytes' => $file->getSize(),
+            'file_count' => count($files),
         ]);
 
-        $storageKey = $this->storeFile($disk, $request->user()->id, $folder->slug, $name, $file);
-        [$width, $height] = $this->imageDimensions($file);
+        $signs = [];
 
-        $sign = $request->user()->signs()->create([
-            'folder_id' => $folder->id,
-            'name' => $name,
-            'description' => $validated['description'] ?? null,
-            'storage_disk' => $disk,
-            'storage_key' => $storageKey,
-            'public_url' => Storage::disk($disk)->url($storageKey),
-            'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
-            'size_bytes' => $file->getSize() ?? 0,
-            'width' => $width,
-            'height' => $height,
-        ]);
+        foreach ($files as $file) {
+            $name = $this->signNameFor($file);
+            Log::info('Sign upload started.', [
+                'user_id' => $request->user()->id,
+                'folder_id' => $folder->id,
+                'folder_slug' => $folder->slug,
+                'disk' => $disk,
+                'file_name' => $file->getClientOriginalName(),
+                'derived_name' => $name,
+                'mime_type' => $file->getClientMimeType(),
+                'size_bytes' => $file->getSize(),
+            ]);
 
-        return (new SignResource($sign))->response()->setStatusCode(201);
+            $storageKey = $this->storeFile($disk, $request->user()->id, $folder->slug, $name, $file);
+            [$width, $height] = $this->imageDimensions($file);
+
+            $signs[] = $request->user()->signs()->create([
+                'folder_id' => $folder->id,
+                'name' => $name,
+                'storage_disk' => $disk,
+                'storage_key' => $storageKey,
+                'public_url' => Storage::disk($disk)->url($storageKey),
+                'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
+                'size_bytes' => $file->getSize() ?? 0,
+                'width' => $width,
+                'height' => $height,
+            ]);
+        }
+
+        return response()->json([
+            'signs' => SignResource::collection(collect($signs)),
+        ], 201);
     }
 
     public function show(Sign $sign): JsonResponse
@@ -85,17 +98,8 @@ class SignController extends Controller
         ]);
     }
 
-    /**
-     * @param  array{name?:string|null}  $validated
-     */
-    private function signNameFor(array $validated, UploadedFile $file): string
+    private function signNameFor(UploadedFile $file): string
     {
-        $name = trim((string) ($validated['name'] ?? ''));
-
-        if ($name !== '') {
-            return $name;
-        }
-
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $derivedName = trim((string) $originalName);
 

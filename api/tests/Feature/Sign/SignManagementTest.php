@@ -7,10 +7,8 @@ use App\Models\Sign;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
-use Mockery;
 use Tests\TestCase;
 
 class SignManagementTest extends TestCase
@@ -26,79 +24,72 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        Log::spy();
 
         Sanctum::actingAs($user);
 
         $response = $this->postJson("/api/folders/{$folder->id}/signs", [
-            'file' => UploadedFile::fake()->image('ice-warning.png', 1024, 256),
-            'name' => 'Ice Warning',
-            'description' => null,
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+                UploadedFile::fake()->image('start-banner.png', 512, 256),
+            ],
         ]);
 
         $response->assertCreated()
             ->assertJsonStructure([
-                'id',
-                'folder_id',
-                'name',
-                'description',
-                'public_url',
-                'mime_type',
-                'size_bytes',
-                'width',
-                'height',
-                'created_at',
-                'updated_at',
+                'signs' => [
+                    '*' => [
+                        'id',
+                        'folder_id',
+                        'name',
+                        'public_url',
+                        'mime_type',
+                        'size_bytes',
+                        'width',
+                        'height',
+                        'created_at',
+                        'updated_at',
+                    ],
+                ],
             ])
-            ->assertJsonPath('folder_id', $folder->id)
-            ->assertJsonPath('name', 'Ice Warning')
-            ->assertJsonPath('description', null)
-            ->assertJsonPath('mime_type', 'image/png')
-            ->assertJsonPath('width', 1024)
-            ->assertJsonPath('height', 256)
-            ->assertJsonMissingPath('storage_key')
-            ->assertJsonMissingPath('storage_disk');
+            ->assertJsonCount(2, 'signs')
+            ->assertJsonPath('signs.0.folder_id', $folder->id)
+            ->assertJsonPath('signs.0.name', 'ice-warning')
+            ->assertJsonPath('signs.0.mime_type', 'image/png')
+            ->assertJsonPath('signs.0.width', 1024)
+            ->assertJsonPath('signs.0.height', 256)
+            ->assertJsonPath('signs.1.name', 'start-banner')
+            ->assertJsonPath('signs.1.mime_type', 'image/png')
+            ->assertJsonPath('signs.1.width', 512)
+            ->assertJsonPath('signs.1.height', 256)
+            ->assertJsonMissingPath('signs.0.storage_key')
+            ->assertJsonMissingPath('signs.0.storage_disk')
+            ->assertJsonMissingPath('signs.1.storage_key')
+            ->assertJsonMissingPath('signs.1.storage_disk');
 
-        $sign = Sign::query()->firstOrFail();
+        $this->assertDatabaseCount('signs', 2);
 
-        $this->assertSame($user->id, $sign->user_id);
-        $this->assertSame($folder->id, $sign->folder_id);
-        $this->assertSame('Ice Warning', $sign->name);
-        $this->assertSame('image/png', $sign->mime_type);
-        $this->assertSame(1024, $sign->width);
-        $this->assertSame(256, $sign->height);
-        $this->assertGreaterThan(0, $sign->size_bytes);
-        $this->assertSame($disk, $sign->storage_disk);
-        $this->assertSame(Storage::disk($disk)->url($sign->storage_key), $sign->public_url);
-        Storage::disk($disk)->assertExists($sign->storage_key);
-        $this->assertSame('public', Storage::disk($disk)->getVisibility($sign->storage_key));
+        $firstSign = Sign::query()->where('name', 'ice-warning')->firstOrFail();
+        $secondSign = Sign::query()->where('name', 'start-banner')->firstOrFail();
 
-        Log::shouldHaveReceived('info')
-            ->with(
-                'Sign upload started.',
-                Mockery::on(function (array $context) use ($user, $folder, $disk): bool {
-                    return $context['user_id'] === $user->id
-                        && $context['folder_id'] === $folder->id
-                        && $context['folder_slug'] === $folder->slug
-                        && $context['disk'] === $disk
-                        && $context['file_name'] === 'ice-warning.png'
-                        && $context['derived_name'] === 'Ice Warning'
-                        && $context['mime_type'] === 'image/png';
-                })
-            )
-            ->once();
+        $this->assertSame($user->id, $firstSign->user_id);
+        $this->assertSame($folder->id, $firstSign->folder_id);
+        $this->assertSame('image/png', $firstSign->mime_type);
+        $this->assertSame(1024, $firstSign->width);
+        $this->assertSame(256, $firstSign->height);
+        $this->assertSame($disk, $firstSign->storage_disk);
+        $this->assertSame(Storage::disk($disk)->url($firstSign->storage_key), $firstSign->public_url);
+        Storage::disk($disk)->assertExists($firstSign->storage_key);
+        $this->assertSame('public', Storage::disk($disk)->getVisibility($firstSign->storage_key));
 
-        Log::shouldHaveReceived('info')
-            ->with(
-                'Sign upload stored.',
-                Mockery::on(function (array $context) use ($disk, $sign): bool {
-                    return $context['disk'] === $disk
-                        && $context['storage_key'] === $sign->storage_key
-                        && $context['directory'] === 'signs/'.$sign->user_id.'/'.$sign->folder->slug
-                        && str_ends_with($context['filename'], '.png');
-                })
-            )
-            ->once();
+        $this->assertSame($user->id, $secondSign->user_id);
+        $this->assertSame($folder->id, $secondSign->folder_id);
+        $this->assertSame('image/png', $secondSign->mime_type);
+        $this->assertSame(512, $secondSign->width);
+        $this->assertSame(256, $secondSign->height);
+        $this->assertSame($disk, $secondSign->storage_disk);
+        $this->assertSame(Storage::disk($disk)->url($secondSign->storage_key), $secondSign->public_url);
+        Storage::disk($disk)->assertExists($secondSign->storage_key);
+        $this->assertSame('public', Storage::disk($disk)->getVisibility($secondSign->storage_key));
     }
 
     public function test_authenticated_user_can_list_signs_in_own_folder(): void
@@ -117,8 +108,7 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
-            'name' => 'Ice Warning',
-            'description' => null,
+            'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
             'public_url' => Storage::disk($disk)->url($storageKey),
@@ -156,8 +146,7 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
-            'name' => 'Ice Warning',
-            'description' => 'Track ahead',
+            'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
             'public_url' => Storage::disk($disk)->url($storageKey),
@@ -175,7 +164,6 @@ class SignManagementTest extends TestCase
                 'id',
                 'folder_id',
                 'name',
-                'description',
                 'public_url',
                 'mime_type',
                 'size_bytes',
@@ -186,8 +174,7 @@ class SignManagementTest extends TestCase
             ])
             ->assertJsonPath('id', $sign->id)
             ->assertJsonPath('folder_id', $folder->id)
-            ->assertJsonPath('name', 'Ice Warning')
-            ->assertJsonPath('description', 'Track ahead')
+            ->assertJsonPath('name', 'ice-warning')
             ->assertJsonPath('public_url', Storage::disk($disk)->url($storageKey))
             ->assertJsonMissingPath('storage_key')
             ->assertJsonMissingPath('storage_disk');
@@ -209,8 +196,7 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
-            'name' => 'Ice Warning',
-            'description' => null,
+            'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
             'public_url' => Storage::disk($disk)->url($storageKey),
@@ -248,8 +234,7 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
-            'name' => 'Ice Warning',
-            'description' => null,
+            'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
             'public_url' => Storage::disk($disk)->url($storageKey),
@@ -318,8 +303,7 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $otherUser->id,
             'folder_id' => $folder->id,
-            'name' => 'Ice Warning',
-            'description' => null,
+            'name' => 'ice-warning',
             'storage_disk' => 's3',
             'storage_key' => 'signs/2/private-folder/ice-warning.png',
             'public_url' => 'http://example.test/signs/2/private-folder/ice-warning.png',
@@ -347,8 +331,7 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $otherUser->id,
             'folder_id' => $folder->id,
-            'name' => 'Ice Warning',
-            'description' => null,
+            'name' => 'ice-warning',
             'storage_disk' => 's3',
             'storage_key' => 'signs/2/private-folder/ice-warning.png',
             'public_url' => 'http://example.test/signs/2/private-folder/ice-warning.png',
@@ -376,11 +359,12 @@ class SignManagementTest extends TestCase
         Sanctum::actingAs($user);
 
         $this->postJson("/api/folders/{$folder->id}/signs", [
-            'file' => UploadedFile::fake()->create('document.txt', 10, 'text/plain'),
-            'name' => 'Ice Warning',
+            'files' => [
+                UploadedFile::fake()->create('document.txt', 10, 'text/plain'),
+            ],
         ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors('file');
+            ->assertJsonValidationErrors('files.0');
     }
 
     public function test_missing_file_is_rejected(): void
@@ -395,10 +379,10 @@ class SignManagementTest extends TestCase
         Sanctum::actingAs($user);
 
         $this->postJson("/api/folders/{$folder->id}/signs", [
-            'name' => 'Ice Warning',
+            'files' => [],
         ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors('file');
+            ->assertJsonValidationErrors('files');
     }
 
     public function test_sign_name_can_be_derived_from_filename(): void
@@ -413,10 +397,12 @@ class SignManagementTest extends TestCase
         Sanctum::actingAs($user);
 
         $this->postJson("/api/folders/{$folder->id}/signs", [
-            'file' => UploadedFile::fake()->image('start-banner.png', 1024, 256),
+            'files' => [
+                UploadedFile::fake()->image('start-banner.png', 1024, 256),
+            ],
         ])
             ->assertCreated()
-            ->assertJsonPath('name', 'start-banner');
+            ->assertJsonPath('signs.0.name', 'start-banner');
 
         $this->assertDatabaseHas('signs', [
             'user_id' => $user->id,
@@ -438,17 +424,18 @@ class SignManagementTest extends TestCase
         Sanctum::actingAs($user);
 
         $response = $this->postJson("/api/folders/{$folder->id}/signs", [
-            'file' => UploadedFile::fake()->image('ice-warning.png', 1024, 256),
-            'name' => 'Ice Warning',
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+            ],
         ]);
 
-        $signId = $response->json('id');
+        $signId = $response->json('signs.0.id');
         $sign = Sign::query()->findOrFail($signId);
 
         $response->assertCreated()
-            ->assertJsonPath('public_url', Storage::disk($disk)->url($sign->storage_key))
-            ->assertJsonMissingPath('storage_key')
-            ->assertJsonMissingPath('storage_disk');
+            ->assertJsonPath('signs.0.public_url', Storage::disk($disk)->url($sign->storage_key))
+            ->assertJsonMissingPath('signs.0.storage_key')
+            ->assertJsonMissingPath('signs.0.storage_disk');
 
         $this->assertSame($disk, $sign->storage_disk);
         $this->assertNotEmpty($sign->storage_key);

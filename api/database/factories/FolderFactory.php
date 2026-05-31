@@ -26,6 +26,7 @@ class FolderFactory extends Factory
             'user_id' => User::factory(),
             'name' => $name,
             'slug' => Str::slug($name) ?: 'folder',
+            'public_slug' => Folder::generatePublicSlugFor($name),
             'visibility' => FolderVisibility::Private,
             'password_hash' => null,
         ];

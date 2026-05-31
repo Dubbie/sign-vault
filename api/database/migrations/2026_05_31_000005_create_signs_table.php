@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('folder_id')->constrained()->restrictOnDelete();
             $table->string('name', 120);
-            $table->string('description', 500)->nullable();
             $table->string('storage_disk', 50);
             $table->string('storage_key');
             $table->text('public_url');

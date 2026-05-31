@@ -37,7 +37,6 @@ class SignFactory extends Factory
             'user_id' => $user,
             'folder_id' => $folder,
             'name' => $name,
-            'description' => fake()->optional()->sentence(),
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
             'public_url' => Storage::disk($disk)->url($storageKey),

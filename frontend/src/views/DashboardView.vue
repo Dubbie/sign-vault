@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 
@@ -27,6 +27,10 @@ async function handleLogout() {
   <section class="dashboard-card">
     <p class="eyebrow">Dashboard</p>
     <h1>Welcome back</h1>
+
+    <div class="actions">
+      <RouterLink class="primary-link" to="/folders">Manage folders</RouterLink>
+    </div>
 
     <div v-if="auth.user" class="profile-card">
       <p class="label">Discord username</p>
@@ -78,6 +82,22 @@ h1 {
   border: 1px solid var(--color-border);
   border-radius: 1rem;
   background: var(--color-surface-strong);
+}
+
+.actions {
+  margin-top: 1.25rem;
+}
+
+.primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
+  color: #04111e;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 .label {

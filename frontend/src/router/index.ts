@@ -6,6 +6,10 @@ import RootRedirectView from '../views/RootRedirectView.vue'
 import LoginView from '../views/LoginView.vue'
 import DiscordCallbackView from '../views/DiscordCallbackView.vue'
 import DashboardView from '../views/DashboardView.vue'
+import FoldersIndexView from '../views/FoldersIndexView.vue'
+import FolderCreateView from '../views/FolderCreateView.vue'
+import FolderShowView from '../views/FolderShowView.vue'
+import FolderEditView from '../views/FolderEditView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,6 +33,38 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/folders',
+      name: 'folders',
+      component: FoldersIndexView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/folders/new',
+      name: 'folders-new',
+      component: FolderCreateView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/folders/:id',
+      name: 'folders-show',
+      component: FolderShowView,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/folders/:id/edit',
+      name: 'folders-edit',
+      component: FolderEditView,
       meta: {
         requiresAuth: true,
       },

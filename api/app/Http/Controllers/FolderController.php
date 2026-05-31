@@ -69,7 +69,12 @@ class FolderController extends Controller
     {
         $this->authorize('delete', $folder);
 
-        // TODO: When signs exist, make deletion respect folder contents intentionally.
+        if ($folder->signs()->exists()) {
+            return response()->json([
+                'message' => 'Folder must be empty before deletion.',
+            ], 409);
+        }
+
         $folder->delete();
 
         return response()->json([

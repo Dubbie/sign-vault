@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\DiscordAuthController;
 use App\Http\Controllers\FolderController;
+use App\Http\Controllers\SignController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/discord/redirect', [DiscordAuthController::class, 'redirect']);
@@ -17,4 +18,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         'update',
         'destroy',
     ]);
+    Route::get('/folders/{folder}/signs', [SignController::class, 'index']);
+    Route::post('/folders/{folder}/signs', [SignController::class, 'store']);
+    Route::get('/signs/{sign}', [SignController::class, 'show']);
+    Route::delete('/signs/{sign}', [SignController::class, 'destroy']);
 });

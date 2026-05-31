@@ -17,7 +17,7 @@ The frontend is a separate Vue application.
 
 ## Tech Stack
 
-- Laravel 12
+- Laravel 13
 - PHP 8.4+
 - Laravel Sanctum
 - Laravel Socialite
@@ -65,7 +65,16 @@ http://localhost:9001
 Default bucket:
 
 ```text
-trackmania-signs
+sign-vault-local
+```
+
+If direct `public_url` links return `AccessDenied`, make the bucket publicly readable:
+
+```bash
+docker run --rm --network host --entrypoint sh minio/mc:latest -lc '
+mc alias set local http://localhost:9000 minio minio_password &&
+mc anonymous set download local/sign-vault-local
+'
 ```
 
 Production uses Cloudflare R2 through Laravel's S3 filesystem driver.

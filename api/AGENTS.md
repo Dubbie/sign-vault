@@ -72,7 +72,7 @@ composer <command>
 
 # Tech Stack
 
-- Laravel 12
+- Laravel 13
 - PHP 8.4+
 - MySQL or PostgreSQL
 - Laravel Sanctum
@@ -239,9 +239,9 @@ FILESYSTEM_DISK=s3
 AWS_ACCESS_KEY_ID=minio
 AWS_SECRET_ACCESS_KEY=minio_password
 AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=trackmania-signs
-AWS_ENDPOINT=http://localhost:9000
-AWS_URL=http://localhost:9000/trackmania-signs
+AWS_BUCKET=sign-vault-local
+AWS_ENDPOINT=http://host.docker.internal:9000
+AWS_URL=http://host.docker.internal:9000/sign-vault-local
 AWS_USE_PATH_STYLE_ENDPOINT=true
 ```
 
@@ -254,7 +254,16 @@ http://localhost:9001
 Expected bucket:
 
 ```text
-trackmania-signs
+sign-vault-local
+```
+
+If direct `public_url` links return `AccessDenied`, make the bucket publicly readable:
+
+```bash
+docker run --rm --network host --entrypoint sh minio/mc:latest -lc '
+mc alias set local http://localhost:9000 minio minio_password &&
+mc anonymous set download local/sign-vault-local
+'
 ```
 
 ---

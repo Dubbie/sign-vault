@@ -26,4 +26,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Folder::class);
     }
+
+    public function signs(): HasMany
+    {
+        return $this->hasMany(Sign::class);
+    }
 }

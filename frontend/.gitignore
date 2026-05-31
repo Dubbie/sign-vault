@@ -37,3 +37,12 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# Local HTTPS certs
+certs/*.crt
+certs/*.key
+
+# Local env files
+.env
+.env.*
+!.env.example

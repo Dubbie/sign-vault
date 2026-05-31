@@ -1,54 +1,79 @@
-# frontend
+# SignVault Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 frontend for SignVault, a Trackmania sign hosting and sharing app.
 
-## Recommended IDE Setup
+## Requirements
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Node.js `20.19.0` or newer
+- npm
+- A running SignVault API
 
-## Recommended Browser Setup
+## Setup
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+Install dependencies:
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+Create your local environment file:
 
-```sh
+```bash
+cp .env.example .env
+```
+
+Edit `.env` if needed:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+## Start The App
+
+The frontend runs over HTTPS in development so it can talk to an HTTPS API without mixed-content issues.
+
+Start the dev server:
+
+```bash
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Then open:
 
-```sh
-npm run build
+```text
+https://localhost:5173
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+If your browser warns about the local certificate, accept it for local development.
 
-```sh
-npm run test:unit
-```
+## Auth Flow
 
-### Lint with [ESLint](https://eslint.org/)
+This frontend uses bearer-token auth for the MVP.
 
-```sh
-npm run lint
-```
+- `/login` starts Discord login by calling `GET /api/auth/discord/redirect`
+- `/auth/discord/callback` exchanges the Discord code with `POST /api/auth/discord/callback`
+- The returned token is stored in `localStorage`
+- `/dashboard` is protected and refreshes the current user with `GET /api/me`
+- Logout calls `POST /api/auth/logout` and clears local auth state
+
+## Scripts
+
+- `npm run dev` - start the HTTPS Vite dev server
+- `npm run build` - type-check and build for production
+- `npm run preview` - preview the production build
+- `npm run test:unit` - run Vitest
+- `npm run lint` - run Oxlint and ESLint
+
+## Project Structure
+
+- `src/lib/api.ts` - reusable Axios client with bearer token support
+- `src/stores/auth.ts` - Pinia auth store
+- `src/router/index.ts` - route definitions and auth guards
+- `src/views/LoginView.vue` - Discord login page
+- `src/views/DiscordCallbackView.vue` - OAuth callback handler
+- `src/views/DashboardView.vue` - protected dashboard
+
+## Notes
+
+- The frontend expects `VITE_API_URL` to point at the API origin.
+- Local HTTPS certs for development are stored in `certs/` and are not committed.

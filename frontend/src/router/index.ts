@@ -19,16 +19,19 @@ const router = createRouter({
       path: '/',
       name: 'root',
       component: RootRedirectView,
+      meta: { layout: 'auth' },
     },
     {
       path: '/login',
       name: 'login',
       component: LoginView,
+      meta: { layout: 'auth' },
     },
     {
       path: '/auth/discord/callback',
       name: 'discord-callback',
       component: DiscordCallbackView,
+      meta: { layout: 'auth' },
     },
     {
       path: '/dashboard',

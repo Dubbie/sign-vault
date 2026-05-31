@@ -4,6 +4,12 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { useFoldersStore } from '@/stores/folders'
 
+import UiCard from '@/components/ui/UiCard.vue'
+import UiEyebrow from '@/components/ui/UiEyebrow.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
+
 const foldersStore = useFoldersStore()
 const router = useRouter()
 
@@ -26,11 +32,7 @@ function visibilityLabel(visibility: string) {
 
 async function handleDelete(id: number) {
   const confirmed = window.confirm('Delete this folder?')
-
-  if (!confirmed) {
-    return
-  }
-
+  if (!confirmed) return
   await foldersStore.deleteFolder(id)
 }
 
@@ -40,194 +42,69 @@ function handleCreate() {
 </script>
 
 <template>
-  <section class="page-card">
-    <div class="header">
+  <UiCard max-width="60rem">
+    <div class="flex items-start justify-between gap-4">
       <div>
-        <p class="eyebrow">Folders</p>
-        <h1>Folders</h1>
+        <UiEyebrow>Folders</UiEyebrow>
+        <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-heading">Folders</h1>
       </div>
 
-      <button class="primary-button" type="button" @click="handleCreate">
+      <UiButton variant="primary" type="button" @click="handleCreate">
         Create folder
-      </button>
+      </UiButton>
     </div>
 
-    <p v-if="foldersStore.error" class="error-banner">
+    <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}
-    </p>
+    </UiErrorBanner>
 
-    <p v-if="foldersStore.isLoading" class="muted">Loading folders...</p>
+    <p v-if="foldersStore.isLoading" class="mt-4 text-text-muted">Loading folders...</p>
 
-    <p v-else-if="foldersStore.folders.length === 0" class="empty-state">
+    <p v-else-if="foldersStore.folders.length === 0" class="mt-4 text-text-muted">
       No folders yet.
     </p>
 
-    <div v-else class="folder-grid">
-      <article v-for="folder in foldersStore.folders" :key="folder.id" class="folder-card">
-        <div class="folder-top">
+    <div v-else class="mt-5 grid gap-4">
+      <article
+        v-for="folder in foldersStore.folders"
+        :key="folder.id"
+        class="rounded-xl border border-border bg-surface-strong p-4"
+      >
+        <div class="flex items-start justify-between gap-4">
           <div>
-            <h2>{{ folder.name }}</h2>
-            <p class="slug">{{ folder.slug }}</p>
+            <h2 class="text-[1.15rem] text-heading">{{ folder.name }}</h2>
+            <p class="text-text-muted">{{ folder.slug }}</p>
           </div>
-
-          <span class="badge">{{ visibilityLabel(folder.visibility) }}</span>
+          <UiBadge :label="visibilityLabel(folder.visibility)" />
         </div>
 
-        <dl class="meta">
-          <div>
-            <dt>Created</dt>
-            <dd>{{ formatDate(folder.created_at) }}</dd>
-          </div>
+        <dl class="mt-4">
+          <dt class="text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">Created</dt>
+          <dd class="mt-1 text-heading">{{ formatDate(folder.created_at) }}</dd>
         </dl>
 
-        <div class="actions">
-          <RouterLink class="text-link" :to="{ name: 'folders-show', params: { id: folder.id } }">
+        <div class="mt-4 flex flex-wrap gap-3">
+          <RouterLink
+            class="cursor-pointer rounded-xl border border-border bg-transparent px-[0.9rem] py-[0.6rem] text-heading no-underline transition duration-150 ease-in-out hover:bg-white/5"
+            :to="{ name: 'folders-show', params: { id: folder.id } }"
+          >
             View
           </RouterLink>
-          <RouterLink class="text-link" :to="{ name: 'folders-edit', params: { id: folder.id } }">
+          <RouterLink
+            class="cursor-pointer rounded-xl border border-border bg-transparent px-[0.9rem] py-[0.6rem] text-heading no-underline transition duration-150 ease-in-out hover:bg-white/5"
+            :to="{ name: 'folders-edit', params: { id: folder.id } }"
+          >
             Edit
           </RouterLink>
-          <button class="danger-button" type="button" @click="handleDelete(folder.id)">
+          <button
+            type="button"
+            class="cursor-pointer rounded-xl border border-border-danger bg-transparent px-[0.9rem] py-[0.6rem] text-danger-text transition duration-150 ease-in-out hover:bg-white/5"
+            @click="handleDelete(folder.id)"
+          >
             Delete
           </button>
         </div>
       </article>
     </div>
-  </section>
+  </UiCard>
 </template>
-
-<style scoped>
-.page-card {
-  width: min(100%, 60rem);
-  padding: 2rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1.5rem;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-elevated);
-  backdrop-filter: blur(18px);
-}
-
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.eyebrow {
-  margin-bottom: 0.5rem;
-  color: var(--color-primary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-h1 {
-  color: var(--color-heading);
-  font-size: clamp(2rem, 4vw, 2.5rem);
-  line-height: 1.05;
-}
-
-.primary-button {
-  padding: 0.85rem 1rem;
-  border: 0;
-  border-radius: 0.9rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
-  color: #04111e;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.error-banner {
-  margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(251, 113, 133, 0.35);
-  border-radius: 0.9rem;
-  color: #fecdd3;
-  background: rgba(127, 29, 29, 0.24);
-}
-
-.muted,
-.empty-state {
-  margin-top: 1rem;
-  color: var(--color-text-muted);
-}
-
-.folder-grid {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.25rem;
-}
-
-.folder-card {
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  background: var(--color-surface-strong);
-}
-
-.folder-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-h2 {
-  color: var(--color-heading);
-  font-size: 1.15rem;
-}
-
-.slug {
-  color: var(--color-text-muted);
-}
-
-.badge {
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  color: var(--color-heading);
-  font-size: 0.85rem;
-  text-transform: capitalize;
-}
-
-.meta {
-  margin-top: 1rem;
-}
-
-.meta dt {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.meta dd {
-  margin-top: 0.25rem;
-  color: var(--color-heading);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.text-link,
-.danger-button {
-  padding: 0.6rem 0.9rem;
-  border-radius: 0.8rem;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-heading);
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.danger-button {
-  border-color: rgba(251, 113, 133, 0.35);
-  color: #fecdd3;
-}
-</style>

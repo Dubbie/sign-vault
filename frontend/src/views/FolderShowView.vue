@@ -4,7 +4,16 @@ import { RouterLink, useRoute } from 'vue-router'
 
 import { useFoldersStore } from '@/stores/folders'
 import { useSignsStore } from '@/stores/signs'
-import type { CreateSignPayload, Sign } from '@/types/sign'
+import type { CreateSignPayload } from '@/types/sign'
+
+import UiCard from '@/components/ui/UiCard.vue'
+import UiEyebrow from '@/components/ui/UiEyebrow.vue'
+import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
+import UiPanel from '@/components/ui/UiPanel.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiFormField from '@/components/ui/UiFormField.vue'
+import UiSignCard from '@/components/ui/UiSignCard.vue'
 
 const foldersStore = useFoldersStore()
 const signsStore = useSignsStore()
@@ -29,23 +38,6 @@ function formatDate(value: string) {
   return dateFormatter.format(new Date(value))
 }
 
-function formatFileSize(bytes: number) {
-  if (bytes < 1024) {
-    return `${bytes} B`
-  }
-
-  const units = ['KB', 'MB', 'GB', 'TB']
-  let value = bytes / 1024
-  let unitIndex = 0
-
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024
-    unitIndex += 1
-  }
-
-  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[unitIndex]}`
-}
-
 function visibilityLabel(visibility: string) {
   return visibility.charAt(0).toUpperCase() + visibility.slice(1)
 }
@@ -58,39 +50,24 @@ function canShareFolder() {
 
 function resetUploadForm() {
   selectedFiles.value = []
-
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
+  if (fileInput.value) fileInput.value.value = ''
 }
 
 function validateSelectedFiles(files: File[]) {
-  if (files.length === 0) {
-    return 'At least one image file is required.'
-  }
-
+  if (files.length === 0) return 'At least one image file is required.'
   const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
-
-  if (invalidFile) {
-    return 'Files must be PNG, JPEG, or WebP images.'
-  }
-
+  if (invalidFile) return 'Files must be PNG, JPEG, or WebP images.'
   return null
 }
 
 async function loadFolder() {
   const id = folderId.value
-
   if (!Number.isFinite(id)) {
     foldersStore.error = 'Invalid folder id.'
     return
   }
-
   const loadedFolder = await foldersStore.fetchFolder(id)
-
-  if (loadedFolder) {
-    await signsStore.fetchFolderSigns(id)
-  }
+  if (loadedFolder) await signsStore.fetchFolderSigns(id)
 }
 
 onMounted(loadFolder)
@@ -105,35 +82,26 @@ watch(folderId, () => {
   void loadFolder()
 })
 
-async function handleSubmit() {
+async function handleUploadSubmit() {
   signsStore.clearError()
 
   const fileError = validateSelectedFiles(selectedFiles.value)
-
   if (fileError) {
     signsStore.error = fileError
     return
   }
 
-  const payload: CreateSignPayload = {
-    files: selectedFiles.value,
-  }
-
+  const payload: CreateSignPayload = { files: selectedFiles.value }
   const uploadedSigns = await signsStore.uploadSign(folderId.value, payload)
-
-  if (uploadedSigns) {
-    resetUploadForm()
-  }
+  if (uploadedSigns) resetUploadForm()
 }
 
 function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   const files = Array.from(input.files ?? [])
-
   signsStore.clearError()
 
   const fileError = validateSelectedFiles(files)
-
   if (fileError) {
     selectedFiles.value = []
     input.value = ''
@@ -144,38 +112,33 @@ function handleFileChange(event: Event) {
   selectedFiles.value = files
 }
 
-async function handleDelete(sign: Sign) {
+async function handleDelete(signId: number) {
+  const sign = signsStore.signs.find((s) => s.id === signId)
+  if (!sign) return
+
   const confirmed = window.confirm(`Delete "${sign.name}"?`)
-
-  if (!confirmed) {
-    return
-  }
-
-  await signsStore.deleteSign(sign.id)
+  if (!confirmed) return
+  await signsStore.deleteSign(signId)
 }
 
-async function handleCopy(sign: Sign) {
+async function handleCopy(signId: number) {
+  const sign = signsStore.signs.find((s) => s.id === signId)
+  if (!sign) return
+
   const copied = await signsStore.copySignUrl(sign)
+  if (!copied) return
 
-  if (!copied) {
-    return
-  }
-
-  copiedSignId.value = sign.id
+  copiedSignId.value = signId
   window.setTimeout(() => {
-    if (copiedSignId.value === sign.id) {
-      copiedSignId.value = null
-    }
+    if (copiedSignId.value === signId) copiedSignId.value = null
   }, 1500)
 }
 
 async function handleCopyPublicUrl() {
   publicUrlError.value = null
-
   try {
     await navigator.clipboard.writeText(publicFolderPath.value)
     copiedPublicUrl.value = true
-
     window.setTimeout(() => {
       copiedPublicUrl.value = false
     }, 1500)
@@ -186,84 +149,109 @@ async function handleCopyPublicUrl() {
 </script>
 
 <template>
-  <section class="page-card">
-    <RouterLink class="back-link" to="/folders">Back to folders</RouterLink>
+  <UiCard max-width="72rem">
+    <RouterLink
+      to="/folders"
+      class="text-primary underline-offset-2 hover:underline"
+    >
+      Back to folders
+    </RouterLink>
 
-    <p class="eyebrow">Folder details</p>
+    <UiEyebrow>Folder details</UiEyebrow>
 
-    <p v-if="foldersStore.error" class="error-banner">
+    <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}
+    </UiErrorBanner>
+
+    <p v-if="foldersStore.isLoading && !folder" class="mt-4 text-text-muted">
+      Loading folder...
     </p>
 
-    <p v-if="foldersStore.isLoading && !folder" class="muted">Loading folder...</p>
-
-    <div v-else-if="folder" class="content">
-      <header class="folder-header">
-        <div class="folder-copy">
-          <h1>{{ folder.name }}</h1>
-          <p class="slug">{{ folder.slug }}</p>
+    <div v-else-if="folder" class="mt-2 grid gap-5">
+      <header class="flex items-start justify-between gap-4 max-sm:flex-col">
+        <div>
+          <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-heading">
+            {{ folder.name }}
+          </h1>
+          <p class="text-text-muted">{{ folder.slug }}</p>
         </div>
 
-        <div class="folder-actions">
-          <span class="badge">{{ visibilityLabel(folder.visibility) }}</span>
-          <RouterLink class="secondary-link" :to="{ name: 'folders-edit', params: { id: folder.id } }">
-            Edit folder
-          </RouterLink>
+        <div class="flex flex-wrap items-center justify-end gap-3 max-sm:justify-start">
+          <UiBadge :label="visibilityLabel(folder.visibility)" />
+          <UiButton variant="secondary" type="button">
+            <RouterLink
+              class="text-heading no-underline"
+              :to="{ name: 'folders-edit', params: { id: folder.id } }"
+            >
+              Edit folder
+            </RouterLink>
+          </UiButton>
         </div>
       </header>
 
-      <dl class="meta">
+      <dl class="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-4">
         <div>
-          <dt>Created</dt>
-          <dd>{{ formatDate(folder.created_at) }}</dd>
+          <dt class="text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">Created</dt>
+          <dd class="mt-1 text-heading">{{ formatDate(folder.created_at) }}</dd>
         </div>
         <div>
-          <dt>Updated</dt>
-          <dd>{{ formatDate(folder.updated_at) }}</dd>
+          <dt class="text-[0.8rem] uppercase tracking-[0.08em] text-text-muted">Updated</dt>
+          <dd class="mt-1 text-heading">{{ formatDate(folder.updated_at) }}</dd>
         </div>
       </dl>
 
-      <section v-if="canShareFolder()" class="panel">
-        <div class="panel-header">
+      <UiPanel v-if="canShareFolder()">
+        <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="section-eyebrow">Public sharing</p>
-            <h2>Share this folder</h2>
+            <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
+              Public sharing
+            </p>
+            <h2 class="text-[1.35rem] text-heading">Share this folder</h2>
           </div>
         </div>
 
-        <p v-if="publicUrlError" class="error-banner">
+        <UiErrorBanner v-if="publicUrlError">
           {{ publicUrlError }}
-        </p>
+        </UiErrorBanner>
 
-        <div class="share-row">
-          <RouterLink class="url-link" :to="{ name: 'public-folder', params: { slug: folder.slug } }">
-            Open public page
-          </RouterLink>
-          <button class="copy-button" type="button" @click="handleCopyPublicUrl">
+        <div class="mt-4 flex flex-wrap gap-3">
+          <UiButton variant="secondary" type="button">
+            <RouterLink
+              class="text-heading no-underline"
+              :to="{ name: 'public-folder', params: { slug: folder.slug } }"
+            >
+              Open public page
+            </RouterLink>
+          </UiButton>
+          <button
+            type="button"
+            class="min-w-[6.5rem] cursor-pointer rounded-xl border border-border bg-transparent px-[0.9rem] py-[0.6rem] text-heading transition duration-150 ease-in-out hover:bg-white/5"
+            @click="handleCopyPublicUrl"
+          >
             {{ copiedPublicUrl ? 'Copied!' : 'Copy public URL' }}
           </button>
         </div>
 
-        <p class="share-url">{{ publicFolderPath }}</p>
-      </section>
+        <p class="mt-3 break-all text-text-muted">{{ publicFolderPath }}</p>
+      </UiPanel>
 
-      <section class="panel">
-        <div class="panel-header">
+      <UiPanel>
+        <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="section-eyebrow">Upload Sign</p>
-            <h2>Upload new signs</h2>
+            <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
+              Upload Sign
+            </p>
+            <h2 class="text-[1.35rem] text-heading">Upload new signs</h2>
           </div>
-
-          <p class="section-note">PNG, JPEG, or WebP</p>
+          <p class="text-text-muted">PNG, JPEG, or WebP</p>
         </div>
 
-        <p v-if="signsStore.error" class="error-banner">
+        <UiErrorBanner v-if="signsStore.error">
           {{ signsStore.error }}
-        </p>
+        </UiErrorBanner>
 
-        <form class="form" @submit.prevent="handleSubmit">
-          <label>
-            <span>File</span>
+        <form class="mt-4 grid gap-4" @submit.prevent="handleUploadSubmit">
+          <UiFormField label="File" name="file">
             <input
               ref="fileInput"
               type="file"
@@ -271,385 +259,57 @@ async function handleCopyPublicUrl() {
               multiple
               accept="image/png,image/jpeg,image/webp"
               required
+              class="w-full rounded-xl border border-border bg-surface-input px-4 py-[0.85rem] text-heading file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1 file:text-xs file:font-semibold file:text-sky-950"
               @change="handleFileChange"
             />
-          </label>
+          </UiFormField>
 
-          <div class="actions">
-            <button class="primary-button" type="submit" :disabled="signsStore.isUploading">
+          <div class="flex flex-wrap items-center gap-3">
+            <UiButton variant="primary" type="submit" :disabled="signsStore.isUploading">
               {{ signsStore.isUploading ? 'Uploading...' : 'Upload sign' }}
-            </button>
-            <p v-if="selectedFiles.length" class="selected-file">
+            </UiButton>
+            <p v-if="selectedFiles.length" class="text-text-muted">
               Selected: {{ selectedFiles.map((file) => file.name).join(', ') }}
             </p>
           </div>
         </form>
-      </section>
+      </UiPanel>
 
-      <section class="panel">
-        <div class="panel-header">
+      <UiPanel>
+        <div class="flex items-start justify-between gap-4">
           <div>
-            <p class="section-eyebrow">Signs</p>
-            <h2>Folder signs</h2>
+            <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
+              Signs
+            </p>
+            <h2 class="text-[1.35rem] text-heading">Folder signs</h2>
           </div>
-
-          <p class="section-note">{{ signsStore.signs.length }} total</p>
+          <p class="text-text-muted">{{ signsStore.signs.length }} total</p>
         </div>
 
-        <p v-if="signsStore.isLoading" class="muted">Loading signs...</p>
-        <p v-else-if="signsStore.signs.length === 0" class="empty-state">
+        <p v-if="signsStore.isLoading" class="mt-4 text-text-muted">Loading signs...</p>
+        <p v-else-if="signsStore.signs.length === 0" class="mt-4 text-text-muted">
           No signs uploaded yet.
         </p>
 
-        <div v-else class="sign-grid">
-          <article v-for="sign in signsStore.signs" :key="sign.id" class="sign-card">
-            <div class="thumb-wrap">
-              <img class="thumb" :src="sign.public_url" :alt="sign.name" loading="lazy" />
-            </div>
-
-            <div class="sign-body">
-              <div class="sign-top">
-                <div>
-                  <h3>{{ sign.name }}</h3>
-                </div>
-
-                <button class="copy-button" type="button" @click="handleCopy(sign)">
-                  {{ copiedSignId === sign.id ? 'Copied!' : 'Copy URL' }}
-                </button>
-              </div>
-
-              <dl class="sign-meta">
-                <div>
-                  <dt>Dimensions</dt>
-                  <dd>
-                    {{
-                      sign.width && sign.height
-                        ? `${sign.width} × ${sign.height}`
-                        : 'Unavailable'
-                    }}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Size</dt>
-                  <dd>{{ formatFileSize(sign.size_bytes) }}</dd>
-                </div>
-                <div>
-                  <dt>Type</dt>
-                  <dd>{{ sign.mime_type }}</dd>
-                </div>
-              </dl>
-
-              <div class="sign-actions">
-                <a class="url-link" :href="sign.public_url" target="_blank" rel="noreferrer">
-                  Open
-                </a>
-                <button class="danger-button" type="button" @click="handleDelete(sign)">
-                  Delete
-                </button>
-              </div>
-            </div>
-          </article>
+        <div v-else class="mt-4 grid gap-4">
+          <UiSignCard
+            v-for="sign in signsStore.signs"
+            :key="sign.id"
+            :id="sign.id"
+            :name="sign.name"
+            :public-url="sign.public_url"
+            :mime-type="sign.mime_type"
+            :width="sign.width"
+            :height="sign.height"
+            :size-bytes="sign.size_bytes"
+            :copied="copiedSignId === sign.id"
+            :show-delete="true"
+            :show-size="true"
+            @copy="handleCopy"
+            @delete="handleDelete"
+          />
         </div>
-      </section>
+      </UiPanel>
     </div>
-  </section>
+  </UiCard>
 </template>
-
-<style scoped>
-.page-card {
-  width: min(100%, 72rem);
-  padding: 2rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1.5rem;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-elevated);
-  backdrop-filter: blur(18px);
-}
-
-.back-link {
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-.eyebrow,
-.section-eyebrow {
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-  color: var(--color-primary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.content {
-  display: grid;
-  gap: 1.25rem;
-  margin-top: 0.5rem;
-}
-
-.folder-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.folder-copy h1 {
-  color: var(--color-heading);
-  font-size: clamp(2rem, 4vw, 2.5rem);
-  line-height: 1.05;
-}
-
-.slug {
-  color: var(--color-text-muted);
-}
-
-.folder-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.badge {
-  padding: 0.3rem 0.65rem;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  color: var(--color-heading);
-  font-size: 0.85rem;
-  text-transform: capitalize;
-}
-
-.secondary-link,
-.url-link,
-.copy-button,
-.danger-button {
-  padding: 0.6rem 0.9rem;
-  border-radius: 0.8rem;
-  border: 1px solid var(--color-border);
-  background: transparent;
-  color: var(--color-heading);
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 1rem;
-}
-
-.share-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.share-url {
-  margin-top: 0.75rem;
-  color: var(--color-text-muted);
-  word-break: break-all;
-}
-
-.meta dt,
-.sign-meta dt {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.meta dd,
-.sign-meta dd {
-  margin-top: 0.25rem;
-  color: var(--color-heading);
-}
-
-.panel {
-  padding: 1.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1.25rem;
-  background: var(--color-surface-strong);
-}
-
-.panel-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.panel h2 {
-  color: var(--color-heading);
-  font-size: 1.35rem;
-}
-
-.section-note,
-.muted,
-.empty-state,
-.selected-file {
-  color: var(--color-text-muted);
-}
-
-.form {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-label {
-  display: grid;
-  gap: 0.4rem;
-}
-
-span {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-}
-
-input,
-textarea {
-  width: 100%;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.9rem;
-  background: rgba(2, 6, 23, 0.35);
-  color: var(--color-heading);
-}
-
-textarea {
-  resize: vertical;
-  min-height: 6rem;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
-}
-
-.primary-button {
-  padding: 0.85rem 1rem;
-  border: 0;
-  border-radius: 0.9rem;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
-  color: #04111e;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.error-banner {
-  margin-top: 1rem;
-  padding: 0.9rem 1rem;
-  border: 1px solid rgba(251, 113, 133, 0.35);
-  border-radius: 0.9rem;
-  color: #fecdd3;
-  background: rgba(127, 29, 29, 0.24);
-}
-
-.sign-grid {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.sign-card {
-  display: grid;
-  grid-template-columns: minmax(11rem, 15rem) 1fr;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 1rem;
-  background: rgba(2, 6, 23, 0.18);
-}
-
-.thumb-wrap {
-  overflow: hidden;
-  border-radius: 0.9rem;
-  border: 1px solid var(--color-border);
-  background: rgba(15, 23, 42, 0.7);
-  aspect-ratio: 4 / 1;
-}
-
-.thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.sign-body {
-  display: grid;
-  gap: 1rem;
-}
-
-.sign-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.sign-card h3 {
-  color: var(--color-heading);
-  font-size: 1.1rem;
-}
-
-.sign-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-  gap: 1rem;
-}
-
-.sign-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.secondary-link {
-  background: rgba(2, 6, 23, 0.12);
-}
-
-.copy-button {
-  min-width: 6.5rem;
-}
-
-.url-link {
-  background: rgba(2, 6, 23, 0.12);
-}
-
-.danger-button {
-  border-color: rgba(251, 113, 133, 0.35);
-  color: #fecdd3;
-}
-
-@media (max-width: 720px) {
-  .page-card {
-    padding: 1.25rem;
-  }
-
-  .folder-header,
-  .panel-header,
-  .sign-top {
-    flex-direction: column;
-  }
-
-  .folder-actions {
-    justify-content: flex-start;
-  }
-
-  .sign-card {
-    grid-template-columns: 1fr;
-  }
-
-  .thumb-wrap {
-    aspect-ratio: 3 / 1;
-  }
-}
-</style>

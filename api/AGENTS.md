@@ -26,6 +26,8 @@ Do not assume PHP, Composer, Node, or Artisan are installed on the host machine.
 
 Prefer DDEV commands.
 
+When Codex runs DDEV commands in this repository, request elevated execution so Docker access is available when needed.
+
 Examples:
 
 ```bash

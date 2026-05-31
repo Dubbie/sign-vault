@@ -7,21 +7,15 @@ import {
   getPublicFolderErrorMessage,
   unlockPublicFolder,
 } from '@/lib/public-folders'
-import type {
-  PublicFolder,
-  PublicFolderContentsResponse,
-  PublicSign,
-} from '@/types/public-folder'
+import type { PublicFolder, PublicFolderContentsResponse, PublicSign } from '@/types/public-folder'
 
-import UiCard from '@/components/ui/UiCard.vue'
-import UiEyebrow from '@/components/ui/UiEyebrow.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiPanel from '@/components/ui/UiPanel.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
-import UiSignCard from '@/components/ui/UiSignCard.vue'
+import PublicSignGrid from '@/components/signs/PublicSignGrid.vue'
 
 const route = useRoute()
 
@@ -129,7 +123,7 @@ async function handleCopy(signId: number) {
     copiedSignId.value = signId
     window.setTimeout(() => {
       if (copiedSignId.value === signId) copiedSignId.value = null
-    }, 1500)
+    }, 1000)
   } catch {
     error.value = 'Could not copy the sign URL. Please copy it manually.'
   }
@@ -148,10 +142,7 @@ watch(folderSlug, () => {
 </script>
 
 <template>
-  <UiCard max-width="72rem">
-    <UiEyebrow>Public folder</UiEyebrow>
-    <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-heading">Shared folder</h1>
-
+  <div>
     <p v-if="isLoading && !folder && !requiresPassword" class="mt-4 text-text-muted">
       Loading folder...
     </p>
@@ -189,43 +180,23 @@ watch(folderSlug, () => {
       </form>
     </UiPanel>
 
-    <div v-else-if="folder" class="mt-2 grid gap-5">
+    <div v-else-if="folder" class="grid gap-5">
       <header class="flex items-start justify-between gap-4 max-sm:flex-col">
         <div>
-          <h2 class="text-[1.35rem] text-heading">{{ folder.name }}</h2>
-          <p class="text-text-muted">{{ folder.slug }}</p>
+          <h2 class="text-[1.35rem] text-white font-semibold">{{ folder.name }}</h2>
+          <p class="text-xs text-zinc-400 font-mono">{{ folder.slug }}</p>
         </div>
-        <UiBadge :label="visibilityLabel(folder.visibility)" />
+        <div class="text-right">
+          <UiBadge :label="visibilityLabel(folder.visibility)" />
+          <p class="text-xs font-mono pr-2 mt-2 text-zinc-400">{{ signs.length }} total</p>
+        </div>
       </header>
 
-      <UiPanel>
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
-              Signs
-            </p>
-            <h3 class="text-[1.35rem] text-heading">Available signs</h3>
-          </div>
-          <p class="text-text-muted">{{ signs.length }} total</p>
-        </div>
+      <div>
+        <p v-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
 
-        <p v-if="signs.length === 0" class="mt-4 text-text-muted">No signs available.</p>
-
-        <div v-else class="mt-4 grid gap-4">
-          <UiSignCard
-            v-for="sign in signs"
-            :key="sign.id"
-            :id="sign.id"
-            :name="sign.name"
-            :public-url="sign.public_url"
-            :mime-type="sign.mime_type"
-            :width="sign.width"
-            :height="sign.height"
-            :copied="copiedSignId === sign.id"
-            @copy="handleCopy"
-          />
-        </div>
-      </UiPanel>
+        <PublicSignGrid v-else :signs="signs" :copied-sign-id="copiedSignId" @copy="handleCopy" />
+      </div>
     </div>
-  </UiCard>
+  </div>
 </template>

@@ -24,6 +24,11 @@ const emit = defineEmits<{
   copy: [id: number]
 }>()
 
+const nameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: 'base',
+})
+
 const COLUMNS: { value: number; label: string }[] = [
   { value: 6, label: '6\u00D71' },
   { value: 4, label: '4\u00D71' },
@@ -64,7 +69,9 @@ const columns = computed(() => {
   return COLUMNS.map((col) => ({
     label: col.label,
     value: col.value,
-    signs: byRatio[col.value] ?? [],
+    signs: [...(byRatio[col.value] ?? [])].sort((a, b) =>
+      nameCollator.compare(a.name, b.name),
+    ),
   }))
 })
 

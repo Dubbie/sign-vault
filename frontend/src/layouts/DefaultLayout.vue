@@ -40,8 +40,8 @@ async function handleLogout() {
         </ul>
 
         <RouterLink to="/" class="flex items-center gap-x-2">
-          <img src="../assets/logo.svg" alt="SignVault logo" class="size-9 mt-1" />
-          <p class="text-[32px] font-medium tracking-tight text-zinc-100 no-underline">
+          <img src="../assets/logo.svg" alt="SignVault logo" class="size-9 mt-1.5" />
+          <p class="text-[32px] font-medium text-zinc-100 no-underline">
             Sign<span class="text-emerald-400 font-bold">Vault</span>
           </p>
         </RouterLink>

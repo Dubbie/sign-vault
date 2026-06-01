@@ -7,22 +7,23 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-const httpsOptions = {
-  key: readFileSync(fileURLToPath(new URL('./certs/localhost.key', import.meta.url))),
-  cert: readFileSync(fileURLToPath(new URL('./certs/localhost.crt', import.meta.url))),
-}
+export default defineConfig(({ command, isPreview }) => {
+  const httpsOptions =
+    command === 'serve' || isPreview
+      ? {
+          key: readFileSync(fileURLToPath(new URL('./certs/localhost.key', import.meta.url))),
+          cert: readFileSync(fileURLToPath(new URL('./certs/localhost.crt', import.meta.url))),
+        }
+      : undefined
 
-export default defineConfig({
-  plugins: [vue(), vueDevTools(), tailwindcss()],
-  server: {
-    https: httpsOptions,
-  },
-  preview: {
-    https: httpsOptions,
-  },
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+  return {
+    plugins: [vue(), vueDevTools(), tailwindcss()],
+    server: httpsOptions ? { https: httpsOptions } : undefined,
+    preview: httpsOptions ? { https: httpsOptions } : undefined,
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
     },
-  },
+  }
 })

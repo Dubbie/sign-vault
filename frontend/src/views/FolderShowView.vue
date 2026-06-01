@@ -49,7 +49,10 @@ async function loadFolder() {
     return
   }
   const loadedFolder = await foldersStore.fetchFolder(id)
-  if (loadedFolder) await signsStore.fetchFolderSigns(id)
+  if (loadedFolder) {
+    document.title = `${loadedFolder.name} — SignVault`
+    await signsStore.fetchFolderSigns(id)
+  }
 }
 
 onMounted(loadFolder)

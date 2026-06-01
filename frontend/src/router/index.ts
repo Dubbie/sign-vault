@@ -19,19 +19,19 @@ const router = createRouter({
       path: '/',
       name: 'root',
       component: RootRedirectView,
-      meta: { layout: 'auth' },
+      meta: { layout: 'auth', title: 'SignVault' },
     },
     {
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: { layout: 'auth' },
+      meta: { layout: 'auth', title: 'Sign In — SignVault' },
     },
     {
       path: '/auth/discord/callback',
       name: 'discord-callback',
       component: DiscordCallbackView,
-      meta: { layout: 'auth' },
+      meta: { layout: 'auth', title: 'Signing In — SignVault' },
     },
     {
       path: '/dashboard',
@@ -39,6 +39,7 @@ const router = createRouter({
       component: DashboardView,
       meta: {
         requiresAuth: true,
+        title: 'Dashboard — SignVault',
       },
     },
     {
@@ -47,6 +48,7 @@ const router = createRouter({
       component: FoldersIndexView,
       meta: {
         requiresAuth: true,
+        title: 'My Folders — SignVault',
       },
     },
     {
@@ -55,6 +57,7 @@ const router = createRouter({
       component: FolderCreateView,
       meta: {
         requiresAuth: true,
+        title: 'New Folder — SignVault',
       },
     },
     {
@@ -63,6 +66,7 @@ const router = createRouter({
       component: FolderShowView,
       meta: {
         requiresAuth: true,
+        title: 'Folder — SignVault',
       },
     },
     {
@@ -71,12 +75,14 @@ const router = createRouter({
       component: FolderEditView,
       meta: {
         requiresAuth: true,
+        title: 'Edit Folder — SignVault',
       },
     },
     {
       path: '/public/folders/:slug',
       name: 'public-folder',
       component: PublicFolderView,
+      meta: { title: 'Public Folder — SignVault' },
     },
   ],
 })
@@ -101,6 +107,13 @@ router.beforeEach(async (to) => {
   }
 
   return true
+})
+
+router.afterEach((to) => {
+  const title = to.meta.title as string | undefined
+  if (title) {
+    document.title = title
+  }
 })
 
 export default router

@@ -47,6 +47,9 @@ async function handleLogout() {
         </RouterLink>
 
         <div v-if="auth.user" class="flex items-center gap-3">
+          <span class="hidden text-sm text-zinc-100 sm:inline">
+            {{ auth.user.discord_global_name || auth.user.discord_username }}
+          </span>
           <div class="h-8 w-8 overflow-hidden rounded-full bg-zinc-600">
             <img
               v-if="auth.user.discord_avatar"
@@ -55,9 +58,6 @@ async function handleLogout() {
               class="h-full w-full object-cover"
             />
           </div>
-          <span class="hidden text-sm text-zinc-100 sm:inline">
-            {{ auth.user.discord_global_name || auth.user.discord_username }}
-          </span>
           <button
             type="button"
             class="cursor-pointer rounded border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-zinc-100"
@@ -66,6 +66,14 @@ async function handleLogout() {
             Logout
           </button>
         </div>
+
+        <RouterLink
+          v-else
+          to="/login"
+          class="rounded-md bg-emerald-400 px-4 py-1.5 text-sm font-semibold text-background no-underline transition hover:bg-emerald-200"
+        >
+          Login with Discord
+        </RouterLink>
       </nav>
     </header>
 

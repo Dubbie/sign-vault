@@ -11,7 +11,6 @@ import type { PublicFolder, PublicFolderContentsResponse, PublicSign } from '@/t
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
-import UiPanel from '@/components/ui/UiPanel.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
@@ -42,6 +41,7 @@ function normalizeFolderResponse(response: PublicFolderContentsResponse) {
   signs.value = response.signs
   requiresPassword.value = false
   error.value = null
+  document.title = `${response.folder.name} — SignVault`
 }
 
 function resetStateForPasswordPrompt() {
@@ -151,17 +151,31 @@ watch(folderSlug, () => {
       {{ error }}
     </UiErrorBanner>
 
-    <UiPanel v-if="requiresPassword">
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
-            Password required
-          </p>
-          <h2 class="text-[1.35rem] text-zinc-100">This folder is protected</h2>
-        </div>
-      </div>
+    <div v-if="requiresPassword" class="mx-auto max-w-md mt-12 text-center">
+      <svg
+        class="mx-auto size-10 text-muted mb-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+        />
+      </svg>
 
-      <form class="mt-4 grid gap-4" @submit.prevent="handleUnlock">
+      <p
+        class="mb-1 inline-block rounded-full border border-border px-3 py-0.5 text-xs font-semibold text-muted"
+      >
+        Password required
+      </p>
+
+      <h2 class="mt-3 text-xl text-heading">This folder is protected</h2>
+      <p class="mt-1 text-sm text-muted">Enter the password to view the contents.</p>
+
+      <form class="mt-6 text-left" @submit.prevent="handleUnlock">
         <UiFormField label="Password" name="password">
           <UiInput
             v-model="unlockForm.password"
@@ -172,13 +186,18 @@ watch(folderSlug, () => {
           />
         </UiFormField>
 
-        <div class="flex gap-3">
-          <UiButton variant="primary" type="submit" :disabled="isUnlocking">
+        <div class="mt-4">
+          <UiButton
+            variant="primary"
+            type="submit"
+            full-width
+            :disabled="isUnlocking"
+          >
             {{ isUnlocking ? 'Unlocking...' : 'Unlock folder' }}
           </UiButton>
         </div>
       </form>
-    </UiPanel>
+    </div>
 
     <div v-else-if="folder" class="grid gap-5">
       <header class="flex items-start justify-between gap-4 max-sm:flex-col">

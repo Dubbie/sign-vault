@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
+import logoUrl from '@/assets/logo.svg'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
@@ -40,7 +41,7 @@ async function handleLogout() {
         </ul>
 
         <RouterLink to="/" class="flex items-center gap-x-2">
-          <img src="../assets/logo.svg" alt="SignVault logo" class="size-9 mt-1.5" />
+          <img :src="logoUrl" alt="SignVault logo" class="size-9 mt-1.5" />
           <p class="text-[32px] font-medium text-zinc-100 no-underline">
             Sign<span class="text-emerald-400 font-bold">Vault</span>
           </p>

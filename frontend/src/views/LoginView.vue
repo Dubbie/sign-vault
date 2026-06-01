@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import logoUrl from '@/assets/logo.svg'
 import { useAuthStore } from '@/stores/auth'
 
 import UiButton from '@/components/ui/UiButton.vue'
@@ -22,7 +23,7 @@ async function handleLogin() {
 <template>
   <div class="max-w-sm">
     <div class="flex items-center gap-x-2 mb-6">
-      <img src="../assets/logo.svg" alt="SignVault" class="size-8 mt-1" />
+      <img :src="logoUrl" alt="SignVault" class="size-8 mt-1" />
       <p class="text-2xl text-zinc-100 font-medium">
         Sign<span class="font-bold text-emerald-400">Vault</span>
       </p>

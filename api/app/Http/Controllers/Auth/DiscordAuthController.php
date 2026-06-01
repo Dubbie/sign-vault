@@ -5,29 +5,57 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\DiscordCallbackRequest;
 use App\Models\User;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
 use Laravel\Socialite\Two\User as DiscordUser;
 
 class DiscordAuthController extends Controller
 {
-    public function redirect(SocialiteFactory $socialite): JsonResponse
+    private const DISCORD_STATE_TTL_MINUTES = 10;
+
+    public function redirect(SocialiteFactory $socialite, CacheRepository $cache): JsonResponse
     {
+        $state = Str::random(64);
+
+        // The frontend starts the flow, so we manage OAuth state explicitly.
+        $cache->put(
+            $this->discordStateCacheKey($state),
+            true,
+            now()->addMinutes(self::DISCORD_STATE_TTL_MINUTES)
+        );
+
         $url = $socialite->driver('discord')
             ->stateless()
+            ->with([
+                'state' => $state,
+            ])
             ->redirect()
             ->getTargetUrl();
 
         return response()->json([
             'url' => $url,
+            'state' => $state,
         ]);
     }
 
     public function callback(
         DiscordCallbackRequest $request,
-        SocialiteFactory $socialite
+        SocialiteFactory $socialite,
+        CacheRepository $cache
     ): JsonResponse {
+        $validated = $request->validated();
+
+        // Consume the state before exchanging the code to block replay.
+        if (! $cache->pull($this->discordStateCacheKey($validated['state']))) {
+            throw ValidationException::withMessages([
+                'state' => ['The OAuth state is invalid or expired.'],
+            ]);
+        }
+
         $discordUser = $socialite->driver('discord')
             ->stateless()
             ->user();
@@ -87,5 +115,10 @@ class DiscordAuthController extends Controller
             'discord_avatar',
             'email',
         ]);
+    }
+
+    private function discordStateCacheKey(string $state): string
+    {
+        return 'oauth.discord.state.'.hash('sha256', $state);
     }
 }

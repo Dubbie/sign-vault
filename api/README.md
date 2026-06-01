@@ -85,6 +85,11 @@ Authentication is handled through Discord OAuth.
 
 Traditional email/password registration is not part of the MVP.
 
+The Discord flow uses a one-time `state` value for CSRF protection. The
+`/api/auth/discord/redirect` endpoint returns the authorization URL and the
+generated `state`; the frontend must forward both the `code` and `state` values
+to `/api/auth/discord/callback`.
+
 ## Project Status
 
 Current MVP goals:

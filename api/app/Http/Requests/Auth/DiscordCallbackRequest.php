@@ -23,6 +23,7 @@ class DiscordCallbackRequest extends FormRequest
     {
         return [
             'code' => ['required', 'string'],
+            'state' => ['required', 'string', 'max:255'],
         ];
     }
 }

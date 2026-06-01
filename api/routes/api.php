@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/auth/discord/redirect', [DiscordAuthController::class, 'redirect']);
 Route::post('/auth/discord/callback', [DiscordAuthController::class, 'callback']);
 Route::get('/public/folders/{slug}', [PublicFolderController::class, 'show']);
-Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'unlock']);
+Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'unlock'])
+    ->middleware('throttle:folder-unlock');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/auth/logout', [DiscordAuthController::class, 'logout']);

@@ -18,10 +18,22 @@ class DiscordAuthTest extends TestCase
 
     public function test_redirect_endpoint_returns_a_discord_auth_url(): void
     {
-        $redirectUrl = 'https://discord.com/oauth2/authorize?client_id=test-client';
+        $state = null;
         $provider = Mockery::mock();
         $provider->shouldReceive('stateless')->andReturnSelf();
-        $provider->shouldReceive('redirect')->andReturn(new RedirectResponse($redirectUrl));
+        $provider->shouldReceive('with')
+            ->once()
+            ->with(Mockery::on(function (array $parameters) use (&$state): bool {
+                $state = $parameters['state'] ?? null;
+
+                return is_string($state) && $state !== '';
+            }))
+            ->andReturnSelf();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturnUsing(function () use (&$state): RedirectResponse {
+                return new RedirectResponse('https://discord.com/oauth2/authorize?client_id=test-client&scope=identify&state='.$state);
+            });
 
         $this->mock(SocialiteFactory::class, function (MockInterface $mock) use ($provider): void {
             $mock->shouldReceive('driver')
@@ -32,20 +44,20 @@ class DiscordAuthTest extends TestCase
 
         $this->getJson('/api/auth/discord/redirect')
             ->assertOk()
-            ->assertJson([
-                'url' => $redirectUrl,
-            ]);
+            ->assertJsonPath('url', 'https://discord.com/oauth2/authorize?client_id=test-client&scope=identify&state='.$state)
+            ->assertJsonPath('state', $state);
     }
 
     public function test_callback_requires_a_code(): void
     {
         $this->postJson('/api/auth/discord/callback')
             ->assertStatus(422)
-            ->assertJsonValidationErrors('code');
+            ->assertJsonValidationErrors(['code', 'state']);
     }
 
     public function test_callback_creates_a_discord_user_and_returns_a_sanctum_token(): void
     {
+        $state = $this->redirectForState();
         $discordUser = $this->makeDiscordUser([
             'id' => '123456789',
             'username' => 'exampleuser',
@@ -58,6 +70,7 @@ class DiscordAuthTest extends TestCase
 
         $response = $this->postJson('/api/auth/discord/callback', [
             'code' => 'discord-code',
+            'state' => $state,
         ]);
 
         $response->assertOk()
@@ -84,6 +97,20 @@ class DiscordAuthTest extends TestCase
             'discord_avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
             'email' => null,
         ]);
+    }
+
+    public function test_callback_rejects_an_unknown_oauth_state(): void
+    {
+        $discordUser = $this->makeDiscordUser();
+
+        $this->mockDiscordProvider($discordUser);
+
+        $this->postJson('/api/auth/discord/callback', [
+            'code' => 'discord-code',
+            'state' => 'unknown-state',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('state');
     }
 
     public function test_me_endpoint_returns_the_authenticated_discord_user(): void
@@ -139,6 +166,8 @@ class DiscordAuthTest extends TestCase
 
     public function test_repeated_discord_logins_update_the_existing_user(): void
     {
+        $firstState = $this->redirectForState();
+        $secondState = $this->redirectForState();
         $firstDiscordUser = $this->makeDiscordUser([
             'id' => '123456789',
             'username' => 'exampleuser',
@@ -159,10 +188,12 @@ class DiscordAuthTest extends TestCase
 
         $this->postJson('/api/auth/discord/callback', [
             'code' => 'discord-code-1',
+            'state' => $firstState,
         ])->assertOk();
 
         $this->postJson('/api/auth/discord/callback', [
             'code' => 'discord-code-2',
+            'state' => $secondState,
         ])
             ->assertOk()
             ->assertJsonPath('user.discord_username', 'updateduser')
@@ -183,6 +214,7 @@ class DiscordAuthTest extends TestCase
     {
         $provider = Mockery::mock();
         $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('with')->andReturnSelf();
         $provider->shouldReceive('redirect')
             ->andReturn(new RedirectResponse('https://discord.com/oauth2/authorize?client_id=test-client'))
             ->byDefault();
@@ -195,6 +227,42 @@ class DiscordAuthTest extends TestCase
                 ->with('discord')
                 ->andReturn($provider);
         });
+    }
+
+    private function redirectForState(): string
+    {
+        $redirectUrl = 'https://discord.com/oauth2/authorize?client_id=test-client&scope=identify';
+        $state = null;
+        $provider = Mockery::mock();
+        $provider->shouldReceive('stateless')->andReturnSelf();
+        $provider->shouldReceive('with')
+            ->once()
+            ->with(Mockery::on(function (array $parameters) use (&$state): bool {
+                $state = $parameters['state'] ?? null;
+
+                return is_string($state) && $state !== '';
+            }))
+            ->andReturnSelf();
+        $provider->shouldReceive('redirect')
+            ->once()
+            ->andReturnUsing(function () use ($redirectUrl, &$state): RedirectResponse {
+                return new RedirectResponse($redirectUrl.'&state='.$state);
+            });
+
+        $this->mock(SocialiteFactory::class, function (MockInterface $mock) use ($provider): void {
+            $mock->shouldReceive('driver')
+                ->once()
+                ->with('discord')
+                ->andReturn($provider);
+        });
+
+        $response = $this->getJson('/api/auth/discord/redirect');
+
+        $response->assertOk()
+            ->assertJsonPath('state', $state)
+            ->assertJsonPath('url', $redirectUrl.'&state='.$state);
+
+        return (string) $state;
     }
 
     private function makeDiscordUser(array $attributes = []): DiscordUser

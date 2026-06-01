@@ -340,7 +340,9 @@ class SignManagementTest extends TestCase
 
         $this->deleteJson('/api/signs', [
             'ids' => [$sign->id],
-        ])->assertNotFound();
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('ids.0');
     }
 
     public function test_invalid_file_types_are_rejected(): void

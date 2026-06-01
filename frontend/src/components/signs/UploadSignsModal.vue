@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { CreateSignPayload } from '@/types/sign'
+import { useAuthStore } from '@/stores/auth'
 import { useSignsStore } from '@/stores/signs'
 
 import UiModal from '@/components/ui/UiModal.vue'
@@ -19,7 +20,9 @@ const emit = defineEmits<{
   saved: []
 }>()
 
+const authStore = useAuthStore()
 const signsStore = useSignsStore()
+const maxFiles = computed(() => authStore.signUploadMaxFiles)
 
 const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -33,6 +36,9 @@ function resetForm() {
 
 function validateSelectedFiles(files: File[]) {
   if (files.length === 0) return 'At least one image file is required.'
+  if (files.length > maxFiles.value) {
+    return `You may upload at most ${maxFiles.value} files at a time.`
+  }
   const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
   if (invalidFile) return 'Files must be PNG, JPEG, or WebP images.'
   return null
@@ -105,6 +111,7 @@ async function handleSubmit() {
       </div>
 
       <p class="mt-1 text-xs text-zinc-400">PNG, JPEG, or WebP</p>
+      <p class="mt-1 text-xs text-zinc-400">Up to {{ maxFiles }} files per upload.</p>
 
       <div class="mt-6 flex flex-wrap gap-3">
         <UiButton variant="primary" type="submit" :disabled="signsStore.isUploading">

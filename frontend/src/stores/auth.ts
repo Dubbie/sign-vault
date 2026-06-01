@@ -35,6 +35,7 @@ function persistToken(token: string | null) {
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(readStoredToken())
   const user = ref<AuthUser | null>(null)
+  const signUploadMaxFiles = ref(20)
   const isLoading = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
@@ -79,6 +80,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const { data } = await api.get<MeResponse>('/api/me')
       const nextUser = 'user' in data ? data.user : data
+      const nextLimit = 'limits' in data ? data.limits?.sign_upload_max_files : undefined
+
+      if (typeof nextLimit === 'number' && Number.isFinite(nextLimit)) {
+        signUploadMaxFiles.value = nextLimit
+      }
+
       user.value = nextUser
       return nextUser
     } catch {
@@ -108,6 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     user,
+    signUploadMaxFiles,
     isLoading,
     isAuthenticated,
     loginWithDiscord,

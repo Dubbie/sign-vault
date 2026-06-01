@@ -17,4 +17,8 @@ export interface DiscordCallbackResponse {
   user: AuthUser
 }
 
-export type MeResponse = AuthUser | { user: AuthUser }
+export interface AppLimits {
+  sign_upload_max_files: number
+}
+
+export type MeResponse = AuthUser | { user: AuthUser; limits?: AppLimits }

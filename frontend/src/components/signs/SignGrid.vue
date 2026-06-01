@@ -104,7 +104,7 @@ function toggleColumn(signs: GridSign[]) {
   <div class="grid gap-6 sign-grid">
     <div v-for="col in columns" :key="col.label" class="flex flex-col gap-3">
       <div
-        class="px-4 py-2 text-center text-sm font-semibold text-white"
+        class="px-4 py-2 text-center text-sm font-semibold text-zinc-100"
         :class="selectable ? 'cursor-pointer select-none' : ''"
         @click="selectable && toggleColumn(col.signs)"
       >
@@ -118,7 +118,7 @@ function toggleColumn(signs: GridSign[]) {
           >
             <svg
               v-if="allSelectedInCol(col.signs)"
-              class="size-3 text-black"
+              class="size-3 text-background"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -152,12 +152,12 @@ function toggleColumn(signs: GridSign[]) {
           :class="
             isSelected(sign.id)
               ? 'border-emerald-400 bg-emerald-400'
-              : 'border-white/70 bg-black/30 group-hover:border-white'
+              : 'border-white/70 bg-background/30 group-hover:border-white'
           "
         >
           <svg
             v-if="isSelected(sign.id)"
-            class="size-4 text-black"
+            class="size-4 text-background"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -170,7 +170,7 @@ function toggleColumn(signs: GridSign[]) {
         <button
           v-if="selectable"
           type="button"
-          class="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-black/50 text-white/70 opacity-0 transition hover:bg-black/70 hover:text-white group-hover:opacity-100"
+          class="absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full bg-background/50 text-zinc-100/70 opacity-0 transition hover:bg-background/70 hover:text-zinc-100 group-hover:opacity-100"
           title="Copy public URL"
           @click.stop="emit('copy', sign.id)"
         >
@@ -190,10 +190,10 @@ function toggleColumn(signs: GridSign[]) {
         </button>
 
         <div
-          class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-opacity duration-200"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-sm transition-opacity duration-200"
           :class="copiedSignId === sign.id ? 'opacity-100' : 'opacity-0'"
         >
-          <span class="font-mono text-sm text-white"> Copied! </span>
+          <span class="font-mono text-sm text-zinc-100"> Copied! </span>
         </div>
       </article>
     </div>

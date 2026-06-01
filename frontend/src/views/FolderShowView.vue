@@ -148,7 +148,7 @@ function clearSelection() {
       <header class="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div class="flex items-center gap-4">
-            <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-none text-white">
+            <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-none text-zinc-100">
               {{ folder.name }}
             </h1>
             <UiBadge class="mt-1.5" :label="visibilityLabel(folder.visibility)" />
@@ -208,10 +208,10 @@ function clearSelection() {
     <Transition name="toolbar">
       <div v-if="selectedSignIds.length > 0" class="fixed flex flex-col bottom-0 top-0 left-2 z-40">
         <div
-          class="bg-black/60 backdrop-blur border border-white/20 shadow-2xl px-4 py-3 rounded-2xl my-auto flex flex-col max-w-3xl items-center justify-between"
+          class="bg-background/60 backdrop-blur border border-white/20 shadow-2xl px-4 py-3 rounded-2xl my-auto flex flex-col max-w-3xl items-center justify-between"
         >
           <p class="text-sm text-zinc-300 mb-6">
-            <span class="font-semibold text-white">{{ selectedSignIds.length }}</span>
+            <span class="font-semibold text-zinc-100">{{ selectedSignIds.length }}</span>
             selected
           </p>
 
@@ -245,7 +245,7 @@ function clearSelection() {
     <UiModal v-model="showDeleteConfirm" title="Delete signs">
       <p class="text-zinc-300 text-sm">
         Are you sure you want to delete
-        <span class="font-semibold text-white">{{ selectedSignIds.length }}</span>
+        <span class="font-semibold text-zinc-100">{{ selectedSignIds.length }}</span>
         sign{{ selectedSignIds.length === 1 ? '' : 's' }}? This action cannot be undone.
       </p>
 

@@ -51,14 +51,14 @@ function handleCreateSaved() {
   <div class="mx-auto max-w-7xl">
     <div class="mb-8">
       <h1 class="text-[clamp(1.5rem,3vw,2rem)] text-zinc-500 font-normal">Welcome back</h1>
-      <p class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-white font-bold">
+      <p class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100 font-bold">
         {{ auth.user?.discord_global_name ?? auth.user?.discord_username ?? 'Dude' }}
       </p>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-3">
       <div class="rounded-2xl ring ring-white/20 bg-zinc-900/50 p-6">
-        <p class="text-3xl font-bold text-white">{{ foldersStore.folderCount }}</p>
+        <p class="text-3xl font-bold text-zinc-100">{{ foldersStore.folderCount }}</p>
         <p class="mt-1 text-sm text-zinc-400">Folders</p>
       </div>
 
@@ -66,7 +66,7 @@ function handleCreateSaved() {
         to="/folders"
         class="rounded-2xl ring ring-white/20 bg-zinc-900/50 p-6 no-underline transition hover:border-emerald-400/50 hover:bg-zinc-900"
       >
-        <p class="text-xl font-semibold text-white">View your folders</p>
+        <p class="text-xl font-semibold text-zinc-100">View your folders</p>
         <p class="mt-1 text-sm text-zinc-400">Browse and manage your sign folders</p>
       </RouterLink>
 
@@ -75,14 +75,14 @@ function handleCreateSaved() {
         class="rounded-2xl bg-emerald-400 p-6 text-left no-underline transition hover:bg-emerald-200 cursor-pointer"
         @click="showCreateModal = true"
       >
-        <p class="text-xl font-semibold text-black">Create a folder</p>
-        <p class="mt-1 text-sm text-black">Start a new sign collection</p>
+        <p class="text-xl font-semibold text-background">Create a folder</p>
+        <p class="mt-1 text-sm text-background">Start a new sign collection</p>
       </button>
     </div>
 
     <div v-if="recentFolders.length" class="mt-10">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-white">Recent folders</h2>
+        <h2 class="text-lg font-semibold text-zinc-100">Recent folders</h2>
         <RouterLink
           to="/folders"
           class="text-sm text-emerald-400 underline-offset-2 hover:underline"
@@ -99,7 +99,7 @@ function handleCreateSaved() {
           class="flex items-center justify-between rounded-xl border border-white/20 bg-zinc-900/50 px-5 py-4 no-underline transition hover:border-white/20 hover:bg-zinc-900"
         >
           <div class="min-w-0">
-            <p class="truncate font-semibold text-white">{{ folder.name }}</p>
+            <p class="truncate font-semibold text-zinc-100">{{ folder.name }}</p>
             <p class="truncate font-mono text-xs text-zinc-500">{{ folder.slug }}</p>
           </div>
 

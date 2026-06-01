@@ -21,7 +21,7 @@ function onChange(event: Event) {
   <select
     :name="name"
     :value="modelValue"
-    class="w-full rounded-xl bg-zinc-900 px-3 py-1 text-white placeholder:text-zinc-400/50 focus:border-white focus:outline-hidden"
+    class="w-full rounded-xl bg-zinc-900 px-3 py-1 text-zinc-100 placeholder:text-zinc-400/50 focus:border-white focus:outline-hidden"
     @change="onChange"
   >
     <option v-for="opt in options" :key="opt.value" :value="opt.value">

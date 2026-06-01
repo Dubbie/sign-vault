@@ -5,7 +5,7 @@ defineProps<{
 </script>
 
 <template>
-  <span class="rounded-full bg-white px-2.5 py-1 text-xs capitalize text-black font-semibold">
+  <span class="rounded-full bg-white px-2.5 py-1 text-xs capitalize text-background font-semibold">
     {{ label }}
   </span>
 </template>

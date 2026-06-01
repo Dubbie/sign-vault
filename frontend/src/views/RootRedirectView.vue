@@ -22,7 +22,7 @@ onMounted(async () => {
 <template>
   <UiCard max-width="30rem">
     <UiEyebrow>SignVault</UiEyebrow>
-    <h1 class="text-[clamp(2rem,5vw,2.75rem)] leading-tight text-white">Redirecting...</h1>
+    <h1 class="text-[clamp(2rem,5vw,2.75rem)] leading-tight text-zinc-100">Redirecting...</h1>
     <p class="mt-4 text-zinc-400">Preparing your session.</p>
   </UiCard>
 </template>

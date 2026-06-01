@@ -62,7 +62,7 @@ function handleCreateSaved() {
   <div class="mx-auto max-w-7xl">
     <div class="flex items-start justify-between gap-4">
       <div>
-        <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-white">My folders</h1>
+        <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100">My folders</h1>
       </div>
 
       <UiButton variant="primary" type="button" @click="handleCreate"> Create folder </UiButton>
@@ -91,12 +91,12 @@ function handleCreateSaved() {
           <tr
             v-for="folder in foldersStore.folders"
             :key="folder.id"
-            class="rounded-xl bg-black transition border-b border-white/20 last-of-type:border-0 hover:bg-zinc-900"
+            class="rounded-xl bg-background transition border-b border-white/20 last-of-type:border-0 hover:bg-zinc-900"
           >
             <td class="rounded-l-xl px-4 py-3">
               <RouterLink
                 :to="{ name: 'folders-show', params: { id: folder.id } }"
-                class="font-semibold text-white no-underline hover:underline"
+                class="font-semibold text-zinc-100 no-underline hover:underline"
               >
                 {{ folder.name }}
               </RouterLink>
@@ -114,7 +114,7 @@ function handleCreateSaved() {
               <div class="flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  class="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/5"
+                  class="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-zinc-100 transition hover:bg-white/5"
                   @click="handleEdit(folder.id)"
                 >
                   Edit

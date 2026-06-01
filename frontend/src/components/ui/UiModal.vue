@@ -18,17 +18,17 @@ function close() {
     <Transition name="modal">
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur px-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur px-4"
         @click.self="close"
       >
         <div
-          class="modal-box w-full max-w-lg rounded-3xl bg-black ring-2 ring-white p-6 shadow-2xl"
+          class="modal-box w-full max-w-lg rounded-3xl bg-background ring-2 ring-white p-6 shadow-2xl"
         >
           <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-white">{{ title }}</h2>
+            <h2 class="text-lg font-semibold text-zinc-100">{{ title }}</h2>
             <button
               type="button"
-              class="cursor-pointer text-zinc-400 transition hover:text-white"
+              class="cursor-pointer text-zinc-400 transition hover:text-zinc-100"
               @click="close"
             >
               <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

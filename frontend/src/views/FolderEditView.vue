@@ -102,7 +102,7 @@ async function handleSubmit() {
 <template>
   <UiCard max-width="40rem">
     <UiEyebrow>Folders</UiEyebrow>
-    <h1 class="text-[clamp(2rem,4vw,2.5rem)] text-white">Edit folder</h1>
+    <h1 class="text-[clamp(2rem,4vw,2.5rem)] text-zinc-100">Edit folder</h1>
 
     <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 
 @theme {
+  --color-background: #0c1111;
+
   --color-surface: rgba(30, 41, 59, 0.5);
   --color-surface-strong: rgba(30, 41, 59, 0.75);
   --color-surface-card: rgba(2, 6, 23, 0.18);

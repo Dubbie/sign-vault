@@ -51,7 +51,7 @@ If your browser warns about the local certificate, accept it for local developme
 This frontend uses bearer-token auth for the MVP.
 
 - `/login` starts Discord login by calling `GET /api/auth/discord/redirect`
-- `/auth/discord/callback` exchanges the Discord code with `POST /api/auth/discord/callback`
+- `/auth/discord/callback` exchanges the Discord `code` and `state` with `POST /api/auth/discord/callback`
 - The returned token is stored in `localStorage`
 - `/dashboard` is protected and refreshes the current user with `GET /api/me`
 - Logout calls `POST /api/auth/logout` and clears local auth state

@@ -3,7 +3,7 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <div class="relative min-h-screen overflow-hidden bg-black">
+  <div class="relative min-h-screen overflow-hidden bg-background">
     <main class="relative z-10 grid min-h-screen place-items-center p-8">
       <RouterView />
     </main>

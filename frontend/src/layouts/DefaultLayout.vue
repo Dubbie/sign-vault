@@ -13,15 +13,17 @@ async function handleLogout() {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen flex-col overflow-hidden bg-black">
-    <header class="flex justify-center fixed w-full z-20 bg-black/60 h-16 backdrop-blur-md sm:px-8">
+  <div class="relative flex min-h-screen flex-col overflow-hidden bg-background">
+    <header
+      class="flex justify-center fixed w-full z-20 bg-background/60 h-16 backdrop-blur-md sm:px-8"
+    >
       <nav class="mx-auto flex w-full max-w-7xl items-center justify-between gap-6">
         <ul class="hidden items-center gap-6 sm:flex">
           <li>
             <RouterLink
               to="/dashboard"
-              class="text-zinc-400 no-underline transition-colors hover:text-white"
-              active-class="text-white"
+              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
+              active-class="text-zinc-100"
             >
               Dashboard
             </RouterLink>
@@ -29,15 +31,15 @@ async function handleLogout() {
           <li>
             <RouterLink
               to="/folders"
-              class="text-zinc-400 no-underline transition-colors hover:text-white"
-              active-class="text-white"
+              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
+              active-class="text-zinc-100"
             >
               My folders
             </RouterLink>
           </li>
         </ul>
 
-        <RouterLink to="/" class="text-xl font-black tracking-tight text-white no-underline">
+        <RouterLink to="/" class="text-xl font-black tracking-tight text-zinc-100 no-underline">
           Sign<span class="text-emerald-400">Vault</span>
         </RouterLink>
 
@@ -50,12 +52,12 @@ async function handleLogout() {
               class="h-full w-full object-cover"
             />
           </div>
-          <span class="hidden text-sm text-white sm:inline">
+          <span class="hidden text-sm text-zinc-100 sm:inline">
             {{ auth.user.discord_global_name || auth.user.discord_username }}
           </span>
           <button
             type="button"
-            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-white"
+            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-zinc-100"
             @click="handleLogout"
           >
             Logout

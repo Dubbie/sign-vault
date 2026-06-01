@@ -94,7 +94,7 @@ async function handleSubmit() {
           multiple
           accept="image/png,image/jpeg,image/webp"
           required
-          class="w-full rounded-xl bg-zinc-900 text-sm p-2 text-white file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs file:font-semibold file:text-black"
+          class="w-full rounded-xl bg-zinc-900 text-sm p-2 text-zinc-100 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs file:font-semibold file:text-background"
           @change="handleFileChange"
         />
       </UiFormField>

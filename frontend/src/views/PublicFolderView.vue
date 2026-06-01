@@ -157,7 +157,7 @@ watch(folderSlug, () => {
           <p class="mb-1 text-[0.85rem] font-semibold uppercase tracking-[0.14em] text-primary">
             Password required
           </p>
-          <h2 class="text-[1.35rem] text-white">This folder is protected</h2>
+          <h2 class="text-[1.35rem] text-zinc-100">This folder is protected</h2>
         </div>
       </div>
 
@@ -183,7 +183,7 @@ watch(folderSlug, () => {
     <div v-else-if="folder" class="grid gap-5">
       <header class="flex items-start justify-between gap-4 max-sm:flex-col">
         <div>
-          <h2 class="text-[1.35rem] text-white font-semibold">{{ folder.name }}</h2>
+          <h2 class="text-[1.35rem] text-zinc-100 font-semibold">{{ folder.name }}</h2>
           <p class="text-xs text-zinc-400 font-mono">{{ folder.slug }}</p>
         </div>
         <div class="text-right">
@@ -195,7 +195,13 @@ watch(folderSlug, () => {
       <div>
         <p v-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
 
-        <SignGrid v-else :signs="signs" :copied-sign-id="copiedSignId" :selectable="false" @copy="handleCopy" />
+        <SignGrid
+          v-else
+          :signs="signs"
+          :copied-sign-id="copiedSignId"
+          :selectable="false"
+          @copy="handleCopy"
+        />
       </div>
     </div>
   </div>

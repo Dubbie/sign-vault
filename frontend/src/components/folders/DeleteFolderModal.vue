@@ -18,9 +18,7 @@ const emit = defineEmits<{
 
 const foldersStore = useFoldersStore()
 
-const folder = computed(() =>
-  foldersStore.folders.find((f) => f.id === props.folderId),
-)
+const folder = computed(() => foldersStore.folders.find((f) => f.id === props.folderId))
 
 function close() {
   emit('update:modelValue', false)
@@ -37,8 +35,8 @@ async function handleConfirm() {
   <UiModal :model-value="modelValue" title="Delete folder" @update:model-value="close">
     <p class="text-zinc-300">
       Are you sure you want to delete
-      <span class="font-semibold text-white">{{ folder?.name ?? 'this folder' }}</span>?
-      This action cannot be undone.
+      <span class="font-semibold text-zinc-100">{{ folder?.name ?? 'this folder' }}</span
+      >? This action cannot be undone.
     </p>
 
     <div class="mt-6 flex flex-wrap gap-3">

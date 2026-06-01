@@ -60,20 +60,37 @@ class SignController extends Controller
                 'size_bytes' => $file->getSize(),
             ]);
 
-            $storageKey = $this->storeFile($disk, $request->user()->id, $folder->slug, $name, $file);
+            $existingSign = $this->existingSignFor($request->user()->id, $folder->id, $name);
+            $storageKey = $this->storageKeyFor($request->user()->id, $folder->slug, $name, $file);
             [$width, $height] = $this->imageDimensions($file);
+            $publicUrl = Storage::disk($disk)->url($storageKey);
 
-            $signs[] = $request->user()->signs()->create([
+            $storedStorageKey = $this->storeFile($disk, $storageKey, $file);
+
+            $sign = $existingSign ?? $request->user()->signs()->make([
                 'folder_id' => $folder->id,
                 'name' => $name,
+            ]);
+
+            $oldStorageKey = $sign->exists ? $sign->storage_key : null;
+
+            $sign->fill([
                 'storage_disk' => $disk,
-                'storage_key' => $storageKey,
-                'public_url' => Storage::disk($disk)->url($storageKey),
+                'storage_key' => $storedStorageKey,
+                'public_url' => $publicUrl,
                 'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
                 'size_bytes' => $file->getSize() ?? 0,
                 'width' => $width,
                 'height' => $height,
             ]);
+
+            $sign->save();
+
+            if ($oldStorageKey !== null && $oldStorageKey !== $storedStorageKey) {
+                Storage::disk($disk)->delete($oldStorageKey);
+            }
+
+            $signs[] = $sign->refresh();
         }
 
         return response()->json([
@@ -116,8 +133,16 @@ class SignController extends Controller
         return $derivedName !== '' ? $derivedName : 'sign';
     }
 
-    private function storeFile(
-        string $disk,
+    private function existingSignFor(int $userId, int $folderId, string $name): ?Sign
+    {
+        return Sign::query()
+            ->where('user_id', $userId)
+            ->where('folder_id', $folderId)
+            ->where('name', $name)
+            ->first();
+    }
+
+    private function storageKeyFor(
         int $userId,
         string $folderSlug,
         string $name,
@@ -125,24 +150,30 @@ class SignController extends Controller
     ): string {
         $directory = sprintf('signs/%d/%s', $userId, $folderSlug);
         $filename = sprintf(
-            '%s-%s.%s',
+            '%s.%s',
             Str::slug($name) ?: 'sign',
-            Str::lower(Str::random(6)),
             $file->extension() ?: 'bin'
         );
 
+        return $directory.'/'.$filename;
+    }
+
+    private function storeFile(
+        string $disk,
+        string $storageKey,
+        UploadedFile $file
+    ): string {
         try {
-            $storageKey = Storage::disk($disk)->putFileAs(
-                $directory,
+            $result = Storage::disk($disk)->putFileAs(
+                dirname($storageKey),
                 $file,
-                $filename,
+                basename($storageKey),
                 ['visibility' => 'public']
             );
         } catch (Throwable $throwable) {
             Log::error('Sign upload failed.', [
                 'disk' => $disk,
-                'directory' => $directory,
-                'filename' => $filename,
+                'storage_key' => $storageKey,
                 'exception' => $throwable::class,
                 'message' => $throwable->getMessage(),
             ]);
@@ -150,11 +181,10 @@ class SignController extends Controller
             throw $throwable;
         }
 
-        if ($storageKey === false) {
+        if ($result === false) {
             Log::error('Sign upload failed.', [
                 'disk' => $disk,
-                'directory' => $directory,
-                'filename' => $filename,
+                'storage_key' => $storageKey,
                 'reason' => 'filesystem returned false',
             ]);
 
@@ -163,12 +193,10 @@ class SignController extends Controller
 
         Log::info('Sign upload stored.', [
             'disk' => $disk,
-            'storage_key' => $storageKey,
-            'directory' => $directory,
-            'filename' => $filename,
+            'storage_key' => $result,
         ]);
 
-        return $storageKey;
+        return $result;
     }
 
     /**

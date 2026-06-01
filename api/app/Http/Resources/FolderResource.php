@@ -19,6 +19,7 @@ class FolderResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'public_slug' => $this->public_slug,
             'visibility' => $visibility instanceof FolderVisibility ? $visibility->value : $visibility,
             'created_at' => $this->created_at?->toIso8601ZuluString(),
             'updated_at' => $this->updated_at?->toIso8601ZuluString(),

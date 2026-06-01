@@ -30,12 +30,14 @@ class FolderManagementTest extends TestCase
                 'id',
                 'name',
                 'slug',
+                'public_slug',
                 'visibility',
                 'created_at',
                 'updated_at',
             ])
             ->assertJsonPath('name', 'Club Signs')
             ->assertJsonPath('slug', 'club-signs')
+            ->assertJsonPath('public_slug', 'club-signs')
             ->assertJsonPath('visibility', FolderVisibility::Private->value)
             ->assertJsonMissingPath('password_hash');
 
@@ -128,6 +130,33 @@ class FolderManagementTest extends TestCase
         $this->assertSame('updated-club-signs', $folder->slug);
         $this->assertSame(FolderVisibility::Private->value, $folder->visibility->value);
         $this->assertNull($folder->password_hash);
+    }
+
+    public function test_private_folder_gets_new_public_slug_when_made_public(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Test Folder',
+            'slug' => 'test-folder',
+            'public_slug' => 'test-folder',
+            'visibility' => FolderVisibility::Private,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson("/api/folders/{$folder->id}", [
+            'name' => 'Dom Torettos Ice Family',
+            'visibility' => FolderVisibility::Public->value,
+        ])
+            ->assertOk()
+            ->assertJsonPath('slug', 'dom-torettos-ice-family')
+            ->assertJsonPath('public_slug', 'dom-torettos-ice-family')
+            ->assertJsonPath('visibility', FolderVisibility::Public->value);
+
+        $folder->refresh();
+
+        $this->assertSame('dom-torettos-ice-family', $folder->public_slug);
+        $this->assertSame(FolderVisibility::Public->value, $folder->visibility->value);
     }
 
     public function test_authenticated_user_can_delete_own_folder(): void

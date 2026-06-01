@@ -52,13 +52,18 @@ class FolderController extends Controller
         $this->authorize('update', $folder);
 
         $validated = $request->validated();
+        $wasPrivate = $folder->visibility === FolderVisibility::Private;
+        $isBecomingPublicFacing = $validated['visibility'] !== FolderVisibility::Private->value;
 
         $folder->fill([
             'name' => $validated['name'],
             'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
-            'public_slug' => $folder->public_slug ?? Folder::generatePublicSlugFor($validated['name'], $folder->id),
             'visibility' => $validated['visibility'],
         ]);
+
+        if ($wasPrivate && $isBecomingPublicFacing) {
+            $folder->public_slug = Folder::generatePublicSlugFor($validated['name'], $folder->id);
+        }
 
         $folder->password_hash = $this->passwordHashFor($validated);
 

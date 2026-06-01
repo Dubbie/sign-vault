@@ -383,6 +383,30 @@ class SignManagementTest extends TestCase
             ->assertJsonValidationErrors('files');
     }
 
+    public function test_too_many_files_are_rejected(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $this->fakeSignStorage();
+        Sanctum::actingAs($user);
+        config()->set('signs.max_upload_files', 20);
+
+        $files = array_map(
+            fn (int $index) => UploadedFile::fake()->image("sign-{$index}.png", 1024, 256),
+            range(1, 21)
+        );
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => $files,
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('files');
+    }
+
     public function test_sign_name_can_be_derived_from_filename(): void
     {
         $user = User::factory()->create();

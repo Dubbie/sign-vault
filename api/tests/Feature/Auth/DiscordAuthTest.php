@@ -127,6 +127,7 @@ class DiscordAuthTest extends TestCase
 
         $this->getJson('/api/me')
             ->assertOk()
+            ->assertJsonPath('limits.sign_upload_max_files', 20)
             ->assertJsonPath('user.discord_id', '123456789')
             ->assertJsonPath('user.discord_username', 'exampleuser')
             ->assertJsonPath('user.email', 'user@example.com');

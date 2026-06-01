@@ -30,6 +30,7 @@ class StoreSignRequest extends FormRequest
                 'required',
                 'array',
                 'min:1',
+                'max:'.config('signs.max_upload_files'),
             ],
             'files.*' => [
                 'required',
@@ -38,6 +39,16 @@ class StoreSignRequest extends FormRequest
                 'mimetypes:image/png,image/jpeg,image/webp',
                 'max:10240',
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'files.max' => 'You may upload at most :max files at a time.',
         ];
     }
 }

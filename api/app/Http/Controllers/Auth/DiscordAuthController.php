@@ -77,6 +77,9 @@ class DiscordAuthController extends Controller
     {
         return response()->json([
             'user' => $this->userResponse($request->user()),
+            'limits' => [
+                'sign_upload_max_files' => config('signs.max_upload_files'),
+            ],
         ]);
     }
 

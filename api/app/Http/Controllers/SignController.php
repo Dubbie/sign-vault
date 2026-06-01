@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Sign\DeleteSignsRequest;
 use App\Http\Requests\Sign\StoreSignRequest;
 use App\Http\Resources\SignResource;
 use App\Models\Folder;
 use App\Models\Sign;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -86,16 +88,24 @@ class SignController extends Controller
         return (new SignResource($sign))->response();
     }
 
-    public function destroy(Sign $sign): JsonResponse
+    public function destroy(DeleteSignsRequest $request): JsonResponse|Response
     {
-        $this->authorize('delete', $sign);
+        $ids = $request->validated('ids');
 
-        Storage::disk($sign->storage_disk)->delete($sign->storage_key);
-        $sign->delete();
+        $signs = Sign::whereIn('id', $ids)
+            ->where('user_id', $request->user()->id)
+            ->get();
 
-        return response()->json([
-            'message' => 'Sign deleted.',
-        ]);
+        if ($signs->isEmpty()) {
+            return response()->json(['message' => 'No signs found.'], 404);
+        }
+
+        foreach ($signs as $sign) {
+            Storage::disk($sign->storage_disk)->delete($sign->storage_key);
+            $sign->delete();
+        }
+
+        return response()->noContent();
     }
 
     private function signNameFor(UploadedFile $file): string

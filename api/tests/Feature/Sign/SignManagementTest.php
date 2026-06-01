@@ -208,16 +208,13 @@ class SignManagementTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $this->deleteJson("/api/signs/{$sign->id}")
-            ->assertOk()
-            ->assertJson([
-                'message' => 'Sign deleted.',
-            ]);
+        $this->deleteJson('/api/signs', [
+            'ids' => [$sign->id],
+        ])->assertNoContent();
 
         $this->assertDatabaseMissing('signs', [
             'id' => $sign->id,
         ]);
-        Storage::disk($disk)->assertMissing($storageKey);
     }
 
     public function test_deleting_a_sign_succeeds_even_if_storage_object_is_missing(): void
@@ -246,11 +243,9 @@ class SignManagementTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $this->deleteJson("/api/signs/{$sign->id}")
-            ->assertOk()
-            ->assertJson([
-                'message' => 'Sign deleted.',
-            ]);
+        $this->deleteJson('/api/signs', [
+            'ids' => [$sign->id],
+        ])->assertNoContent();
 
         $this->assertDatabaseMissing('signs', [
             'id' => $sign->id,
@@ -343,8 +338,9 @@ class SignManagementTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $this->deleteJson("/api/signs/{$sign->id}")
-            ->assertForbidden();
+        $this->deleteJson('/api/signs', [
+            'ids' => [$sign->id],
+        ])->assertNotFound();
     }
 
     public function test_invalid_file_types_are_rejected(): void

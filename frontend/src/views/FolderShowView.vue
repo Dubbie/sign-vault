@@ -34,7 +34,7 @@ function visibilityLabel(visibility: string) {
 
 const publicFolderPath = computed(() => {
   const origin = window.location.origin
-  const path = `/public/folders/${folder.value?.slug ?? ''}`
+  const path = `/public/folders/${folder.value?.public_slug ?? ''}`
   return `${origin}${path}`
 })
 

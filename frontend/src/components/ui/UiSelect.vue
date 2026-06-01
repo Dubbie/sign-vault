@@ -34,7 +34,7 @@ function selectOption(index: number) {
   const opt = props.options[index]
   if (opt) {
     emit('update:modelValue', opt.value)
-    close()
+    close(false)
   }
 }
 
@@ -49,10 +49,13 @@ function openDropdown() {
   })
 }
 
-function close() {
+function close(focusTrigger = true) {
   open.value = false
   activeIndex.value = -1
-  triggerRef.value?.focus()
+
+  if (focusTrigger) {
+    triggerRef.value?.focus()
+  }
 }
 
 function toggle() {

@@ -19,7 +19,7 @@ const emit = defineEmits<{
     :type="type"
     :disabled="disabled"
     :class="[
-      'inline-flex items-center justify-center rounded px-3.5 py-1.5 text-sm font-semibold no-underline transition duration-150 ease-in-out',
+      'inline-flex items-center justify-center rounded px-3.5 h-9 text-sm font-semibold no-underline transition duration-150 ease-in-out',
       fullWidth ? 'w-full' : '',
       variant === 'primary'
         ? 'border-0 bg-emerald-400 text-background disabled:cursor-wait disabled:opacity-75 hover:bg-emerald-200'

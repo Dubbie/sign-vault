@@ -5,6 +5,8 @@
 
   --color-background: #0c1111;
   --color-surface: #151a1a;
+  --color-surface-hover: #2c3131;
+  --color-surface-focus: #444848;
 
   --color-surface-strong: rgba(30, 41, 59, 0.75);
   --color-surface-card: rgba(2, 6, 23, 0.18);

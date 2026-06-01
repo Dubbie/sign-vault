@@ -22,7 +22,7 @@ function close() {
         @click.self="close"
       >
         <div
-          class="modal-box w-full max-w-lg rounded-3xl bg-background ring-2 ring-white p-6 shadow-2xl"
+          class="modal-box ring-2 ring-white/20 w-full max-w-lg rounded-md bg-background p-6 shadow-2xl"
         >
           <div class="mb-6 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-zinc-100">{{ title }}</h2>

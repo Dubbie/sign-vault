@@ -57,7 +57,7 @@ async function handleLogout() {
           </span>
           <button
             type="button"
-            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-zinc-100"
+            class="cursor-pointer rounded border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-zinc-100"
             @click="handleLogout"
           >
             Logout

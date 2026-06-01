@@ -1,9 +1,11 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-background: #0c1111;
+  --font-sans: 'Barlow', sans-serif;
 
-  --color-surface: rgba(30, 41, 59, 0.5);
+  --color-background: #0c1111;
+  --color-surface: #151a1a;
+
   --color-surface-strong: rgba(30, 41, 59, 0.75);
   --color-surface-card: rgba(2, 6, 23, 0.18);
   --color-surface-input: rgba(2, 6, 23, 0.35);

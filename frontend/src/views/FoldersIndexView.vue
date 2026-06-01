@@ -114,14 +114,14 @@ function handleCreateSaved() {
               <div class="flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  class="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-zinc-100 transition hover:bg-white/5"
+                  class="rounded border border-border px-3 py-1.5 text-xs font-semibold text-zinc-100 transition hover:bg-white/5"
                   @click="handleEdit(folder.id)"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
-                  class="rounded-lg border border-border-danger px-3 py-1.5 text-xs font-semibold text-danger-text transition hover:bg-white/5"
+                  class="rounded border border-border-danger px-3 py-1.5 text-xs font-semibold text-danger-text transition hover:bg-white/5"
                   @click="handleDelete(folder.id)"
                 >
                   Delete

@@ -38,7 +38,7 @@ onMounted(async () => {
 
 <template>
   <div class="max-w-sm">
-    <p class="mb-3 text-xs text-orange-400 font-semibold">Discord callback</p>
+    <p class="mb-3 text-xs text-emerald-400 font-semibold">Discord callback</p>
     <h1 class="text-[clamp(1.5rem,5vw,2rem)] leading-tight text-white">Signing you in</h1>
     <p class="mt-4 text-zinc-400">
       {{ statusMessage }}

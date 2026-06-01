@@ -195,7 +195,7 @@ watch(folderSlug, () => {
       <div>
         <p v-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
 
-        <SignGrid v-else :signs="signs" :copied-sign-id="copiedSignId" @copy="handleCopy" />
+        <SignGrid v-else :signs="signs" :copied-sign-id="copiedSignId" :selectable="false" @copy="handleCopy" />
       </div>
     </div>
   </div>

@@ -22,7 +22,7 @@ async function handleLogin() {
 <template>
   <div class="max-w-sm">
     <p class="mb-3 text-2xl text-white tracking-tight font-black">
-      Sign<span class="text-orange-400">Vault</span>
+      Sign<span class="text-emerald-400">Vault</span>
     </p>
     <h1 class="text-[clamp(1.5rem,5vw,2rem)] leading-tight text-white">Login with Discord</h1>
     <p class="mt-3 mb-6 text-zinc-400">

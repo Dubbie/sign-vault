@@ -64,7 +64,7 @@ function handleCreateSaved() {
 
       <RouterLink
         to="/folders"
-        class="rounded-2xl ring ring-white/20 bg-zinc-900/50 p-6 no-underline transition hover:border-orange-400/50 hover:bg-zinc-900"
+        class="rounded-2xl ring ring-white/20 bg-zinc-900/50 p-6 no-underline transition hover:border-emerald-400/50 hover:bg-zinc-900"
       >
         <p class="text-xl font-semibold text-white">View your folders</p>
         <p class="mt-1 text-sm text-zinc-400">Browse and manage your sign folders</p>
@@ -72,7 +72,7 @@ function handleCreateSaved() {
 
       <button
         type="button"
-        class="rounded-2xl bg-orange-400 p-6 text-left no-underline transition hover:bg-orange-200 cursor-pointer"
+        class="rounded-2xl bg-emerald-400 p-6 text-left no-underline transition hover:bg-emerald-200 cursor-pointer"
         @click="showCreateModal = true"
       >
         <p class="text-xl font-semibold text-black">Create a folder</p>
@@ -85,7 +85,7 @@ function handleCreateSaved() {
         <h2 class="text-lg font-semibold text-white">Recent folders</h2>
         <RouterLink
           to="/folders"
-          class="text-sm text-orange-400 underline-offset-2 hover:underline"
+          class="text-sm text-emerald-400 underline-offset-2 hover:underline"
         >
           View all folders &rarr;
         </RouterLink>
@@ -120,16 +120,13 @@ function handleCreateSaved() {
       <p class="text-zinc-400">No folders yet</p>
       <button
         type="button"
-        class="mt-2 inline-flex cursor-pointer text-sm text-orange-400 underline-offset-2 hover:underline"
+        class="mt-2 inline-flex cursor-pointer text-sm text-emerald-400 underline-offset-2 hover:underline"
         @click="showCreateModal = true"
       >
         Create your first folder
       </button>
     </div>
 
-    <CreateFolderModal
-      v-model="showCreateModal"
-      @saved="handleCreateSaved"
-    />
+    <CreateFolderModal v-model="showCreateModal" @saved="handleCreateSaved" />
   </div>
 </template>

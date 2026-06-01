@@ -22,7 +22,7 @@ const emit = defineEmits<{
       'inline-flex items-center justify-center rounded-xl px-3.5 py-1.5 text-sm font-semibold no-underline transition duration-150 ease-in-out',
       fullWidth ? 'w-full' : '',
       variant === 'primary'
-        ? 'border-0 bg-orange-400 text-black disabled:cursor-wait disabled:opacity-75 hover:bg-orange-200'
+        ? 'border-0 bg-emerald-400 text-black disabled:cursor-wait disabled:opacity-75 hover:bg-emerald-200'
         : '',
       variant === 'danger'
         ? 'cursor-pointer border border-border-danger bg-transparent text-danger-text hover:bg-white/5'

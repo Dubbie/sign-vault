@@ -38,7 +38,7 @@ async function handleLogout() {
         </ul>
 
         <RouterLink to="/" class="text-xl font-black tracking-tight text-white no-underline">
-          Sign<span class="text-orange-400">Vault</span>
+          Sign<span class="text-emerald-400">Vault</span>
         </RouterLink>
 
         <div v-if="auth.user" class="flex items-center gap-3">
@@ -55,7 +55,7 @@ async function handleLogout() {
           </span>
           <button
             type="button"
-            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-orange-400 hover:text-white"
+            class="cursor-pointer rounded-lg border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-white"
             @click="handleLogout"
           >
             Logout

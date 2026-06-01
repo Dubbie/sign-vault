@@ -8,6 +8,7 @@ import { useSignsStore } from '@/stores/signs'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
+import UiModal from '@/components/ui/UiModal.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 import UploadSignsModal from '@/components/signs/UploadSignsModal.vue'
 import EditFolderModal from '@/components/folders/EditFolderModal.vue'
@@ -21,14 +22,21 @@ const folder = computed(() => foldersStore.currentFolder)
 
 const showUploadModal = ref(false)
 const showEditModal = ref(false)
+const showDeleteConfirm = ref(false)
 const copiedSignId = ref<number | null>(null)
 const copiedPublicUrl = ref(false)
+const selectedSignIds = ref<number[]>([])
+const isDeleting = ref(false)
 
 function visibilityLabel(visibility: string) {
   return visibility.charAt(0).toUpperCase() + visibility.slice(1)
 }
 
-const publicFolderPath = computed(() => `/public/folders/${folder.value?.slug ?? ''}`)
+const publicFolderPath = computed(() => {
+  const origin = window.location.origin
+  const path = `/public/folders/${folder.value?.slug ?? ''}`
+  return `${origin}${path}`
+})
 
 function canShareFolder() {
   return folder.value?.visibility !== 'private'
@@ -58,6 +66,7 @@ watch(folderId, () => {
   signsStore.signs = []
   copiedSignId.value = null
   copiedPublicUrl.value = false
+  selectedSignIds.value = []
   void loadFolder()
 })
 
@@ -86,13 +95,30 @@ async function handleCopyPublicUrl() {
     signsStore.error = 'Could not copy the public URL. Please copy it manually.'
   }
 }
+
+async function handleDeleteSelected() {
+  isDeleting.value = true
+  try {
+    await signsStore.deleteSigns(selectedSignIds.value)
+    selectedSignIds.value = []
+    showDeleteConfirm.value = false
+  } catch {
+    // error is set in the store
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+function clearSelection() {
+  selectedSignIds.value = []
+}
 </script>
 
 <template>
   <div>
     <RouterLink
       to="/folders"
-      class="text-sm flex items-center gap-x-2 text-orange-400 underline-offset-2 hover:text-orange-200"
+      class="text-sm flex items-center gap-x-2 text-emerald-400 underline-offset-2 hover:text-emerald-200"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -161,8 +187,10 @@ async function handleCopyPublicUrl() {
         </p>
         <SignGrid
           v-else
+          class="mb-13"
           :signs="signsStore.signs"
           :copied-sign-id="copiedSignId"
+          v-model="selectedSignIds"
           @copy="handleCopy"
         />
       </div>
@@ -175,10 +203,81 @@ async function handleCopyPublicUrl() {
       @saved="signsStore.fetchFolderSigns(folder.id)"
     />
 
-    <EditFolderModal
-      v-if="folder"
-      v-model="showEditModal"
-      :folder-id="folder.id"
-    />
+    <EditFolderModal v-if="folder" v-model="showEditModal" :folder-id="folder.id" />
+
+    <Transition name="toolbar">
+      <div v-if="selectedSignIds.length > 0" class="fixed flex flex-col bottom-0 top-0 left-2 z-40">
+        <div
+          class="bg-black/60 backdrop-blur border border-white/20 shadow-2xl px-4 py-3 rounded-2xl my-auto flex flex-col max-w-3xl items-center justify-between"
+        >
+          <p class="text-sm text-zinc-300 mb-6">
+            <span class="font-semibold text-white">{{ selectedSignIds.length }}</span>
+            selected
+          </p>
+
+          <div class="flex flex-col items-center gap-3">
+            <UiButton class="w-full" variant="secondary" type="button" @click="clearSelection">
+              Clear
+            </UiButton>
+
+            <UiButton
+              class="w-full"
+              variant="primary"
+              type="button"
+              @click="showDeleteConfirm = true"
+            >
+              Move
+            </UiButton>
+
+            <UiButton
+              class="w-full"
+              variant="danger"
+              type="button"
+              @click="showDeleteConfirm = true"
+            >
+              Delete
+            </UiButton>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <UiModal v-model="showDeleteConfirm" title="Delete signs">
+      <p class="text-zinc-300 text-sm">
+        Are you sure you want to delete
+        <span class="font-semibold text-white">{{ selectedSignIds.length }}</span>
+        sign{{ selectedSignIds.length === 1 ? '' : 's' }}? This action cannot be undone.
+      </p>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <UiButton variant="secondary" type="button" @click="showDeleteConfirm = false">
+          Cancel
+        </UiButton>
+
+        <UiButton
+          variant="danger"
+          type="button"
+          :disabled="isDeleting"
+          @click="handleDeleteSelected"
+        >
+          {{ isDeleting ? 'Deleting...' : 'Delete' }}
+        </UiButton>
+      </div>
+    </UiModal>
   </div>
 </template>
+
+<style scoped>
+.toolbar-enter-active {
+  transition: transform 0.25s ease-out;
+}
+
+.toolbar-leave-active {
+  transition: transform 0.2s ease-in;
+}
+
+.toolbar-enter-from,
+.toolbar-leave-to {
+  transform: translateX(-100%);
+}
+</style>

@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 import {
   createSigns as createSignsRequest,
-  deleteSign as deleteSignRequest,
+  deleteSigns as deleteSignsRequest,
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
   getSignErrorMessage,
@@ -98,12 +98,12 @@ export const useSignsStore = defineStore('signs', () => {
     }
   }
 
-  async function deleteSign(id: number) {
+  async function deleteSigns(ids: number[]) {
     clearError()
 
     try {
-      await deleteSignRequest(id)
-      removeSign(id)
+      await deleteSignsRequest(ids)
+      ids.forEach(removeSign)
     } catch (exception) {
       setErrorFromUnknown(exception)
     }
@@ -130,7 +130,7 @@ export const useSignsStore = defineStore('signs', () => {
     fetchFolderSigns,
     fetchSign,
     uploadSign,
-    deleteSign,
+    deleteSigns,
     copySignUrl,
     clearCurrentSign,
     clearError,

@@ -51,6 +51,6 @@ export async function createSigns(folderId: number, payload: CreateSignPayload):
   return data.signs
 }
 
-export async function deleteSign(id: number): Promise<void> {
-  await api.delete(`/api/signs/${id}`)
+export async function deleteSigns(ids: number[]): Promise<void> {
+  await api.delete('/api/signs', { data: { ids } })
 }

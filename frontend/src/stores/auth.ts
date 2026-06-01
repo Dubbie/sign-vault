@@ -50,12 +50,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function handleDiscordCallback(code: string) {
+  async function handleDiscordCallback(code: string, state: string) {
     isLoading.value = true
 
     try {
       const { data } = await api.post<DiscordCallbackResponse>('/api/auth/discord/callback', {
         code,
+        state,
       })
 
       token.value = data.token

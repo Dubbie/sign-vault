@@ -9,6 +9,7 @@ export interface AuthUser {
 
 export interface DiscordRedirectResponse {
   url: string
+  state: string
 }
 
 export interface DiscordCallbackResponse {

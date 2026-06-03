@@ -24,15 +24,6 @@ async function handleLogin() {
     >
       <nav class="mx-auto grid w-full max-w-7xl grid-cols-3 items-center">
         <ul class="hidden items-center gap-6 sm:flex">
-          <li>
-            <RouterLink
-              to="/"
-              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
-            >
-              Explore
-            </RouterLink>
-          </li>
           <li v-if="auth.user">
             <RouterLink
               to="/dashboard"
@@ -40,6 +31,15 @@ async function handleLogin() {
               active-class="text-zinc-100"
             >
               Dashboard
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink
+              to="/"
+              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
+              active-class="text-zinc-100"
+            >
+              Explore
             </RouterLink>
           </li>
           <li v-if="auth.user">

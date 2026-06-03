@@ -1,0 +1,8 @@
+{
+  "name": "sign-vault",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "landing"
+  ]
+}

@@ -19,6 +19,7 @@ class PublicSignResource extends JsonResource
             'mime_type' => $this->mime_type,
             'width' => $this->width,
             'height' => $this->height,
+            'column_ratio' => $this->column_ratio,
         ];
     }
 }

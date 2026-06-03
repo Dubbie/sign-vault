@@ -21,6 +21,7 @@ class SignResource extends JsonResource
             'size_bytes' => $this->size_bytes,
             'width' => $this->width,
             'height' => $this->height,
+            'column_ratio' => $this->column_ratio,
             'created_at' => $this->created_at?->toIso8601ZuluString(),
             'updated_at' => $this->updated_at?->toIso8601ZuluString(),
         ];

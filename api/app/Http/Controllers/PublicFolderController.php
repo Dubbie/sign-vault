@@ -24,7 +24,7 @@ class PublicFolderController extends Controller
                 'user',
                 'signs' => function ($query): void {
                     $query->orderBy('id')
-                        ->select(['id', 'name', 'public_url', 'width', 'height', 'folder_id']);
+                        ->select(['id', 'name', 'public_url', 'width', 'height', 'column_ratio', 'folder_id']);
                 },
             ])
             ->withCount('signs');
@@ -52,7 +52,9 @@ class PublicFolderController extends Controller
             ]);
         }
 
-        return $this->folderResponse($folder);
+        return response()->json([
+            'folder' => new PublicFolderResource($folder),
+        ]);
     }
 
     public function unlock(Request $request, string $slug): JsonResponse
@@ -64,7 +66,9 @@ class PublicFolderController extends Controller
         }
 
         if ($folder->visibility === FolderVisibility::Public) {
-            return $this->folderResponse($folder);
+            return response()->json([
+                'folder' => new PublicFolderResource($folder),
+            ]);
         }
 
         $validated = $request->validate([
@@ -77,7 +81,35 @@ class PublicFolderController extends Controller
             ]);
         }
 
-        return $this->folderResponse($folder);
+        return response()->json([
+            'folder' => new PublicFolderResource($folder),
+        ]);
+    }
+
+    public function signs(Request $request, string $slug): JsonResponse
+    {
+        $folder = $this->resolveFolder($slug);
+
+        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
+            abort(404);
+        }
+
+        if ($folder->visibility === FolderVisibility::Password) {
+            $password = (string) $request->input('password', '');
+            if (! Hash::check($password, (string) $folder->password_hash)) {
+                abort(403);
+            }
+        }
+
+        $perPage = min((int) $request->input('per_page', 10), 100);
+
+        $query = $folder->signs()->orderBy('sort_key');
+
+        if ($columnRatio = $request->integer('column_ratio')) {
+            $query->where('column_ratio', $columnRatio);
+        }
+
+        return PublicSignResource::collection($query->paginate($perPage))->response();
     }
 
     private function resolveFolder(string $slug): ?Folder
@@ -85,17 +117,5 @@ class PublicFolderController extends Controller
         return Folder::query()
             ->where('public_slug', $slug)
             ->first();
-    }
-
-    private function folderResponse(Folder $folder): JsonResponse
-    {
-        $signs = $folder->signs()
-            ->latest()
-            ->get();
-
-        return response()->json([
-            'folder' => new PublicFolderResource($folder),
-            'signs' => PublicSignResource::collection($signs),
-        ]);
     }
 }

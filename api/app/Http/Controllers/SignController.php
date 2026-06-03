@@ -24,11 +24,15 @@ class SignController extends Controller
     {
         $this->authorize('view', $folder);
 
-        $signs = $folder->signs()
-            ->latest()
-            ->get();
+        $perPage = min((int) $request->query('per_page', 10), 100);
 
-        return SignResource::collection($signs)->response();
+        $query = $folder->signs()->orderBy('sort_key');
+
+        if ($columnRatio = $request->integer('column_ratio')) {
+            $query->where('column_ratio', $columnRatio);
+        }
+
+        return SignResource::collection($query->paginate($perPage))->response();
     }
 
     public function store(StoreSignRequest $request, Folder $folder): JsonResponse
@@ -83,6 +87,8 @@ class SignController extends Controller
                 'size_bytes' => $file->getSize() ?? 0,
                 'width' => $width,
                 'height' => $height,
+                'column_ratio' => $this->columnRatioFor($width, $height),
+                'sort_key' => $this->naturalSortKey($name),
             ]);
 
             $sign->save();
@@ -214,6 +220,37 @@ class SignController extends Controller
         ]);
 
         return $result;
+    }
+
+    private function naturalSortKey(string $name): string
+    {
+        $lower = mb_strtolower($name);
+
+        return preg_replace_callback('/\d+/', function (array $matches): string {
+            return str_pad($matches[0], 10, '0', STR_PAD_LEFT);
+        }, $lower) ?? $lower;
+    }
+
+    private function columnRatioFor(?int $width, ?int $height): int
+    {
+        if (! $width || ! $height) {
+            return 1;
+        }
+
+        $ratio = $width / $height;
+        $columns = [6, 4, 2, 1];
+        $closest = $columns[0];
+        $minDiff = abs($ratio - $closest);
+
+        foreach ($columns as $col) {
+            $diff = abs($ratio - $col);
+            if ($diff < $minDiff) {
+                $minDiff = $diff;
+                $closest = $col;
+            }
+        }
+
+        return $closest;
     }
 
     /**

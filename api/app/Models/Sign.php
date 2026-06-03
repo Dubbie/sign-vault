@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'folder_id',
     'name',
+    'sort_key',
     'storage_disk',
     'storage_key',
     'public_url',
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'size_bytes',
     'width',
     'height',
+    'column_ratio',
 ])]
 class Sign extends Model
 {
@@ -36,6 +38,7 @@ class Sign extends Model
             'size_bytes' => 'integer',
             'width' => 'integer',
             'height' => 'integer',
+            'column_ratio' => 'integer',
         ];
     }
 

@@ -58,6 +58,7 @@ class BrowseFolderResource extends JsonResource
                     'public_url' => $sign->public_url,
                     'width' => $sign->width,
                     'height' => $sign->height,
+                    'column_ratio' => $sign->column_ratio,
                 ];
             }
         }

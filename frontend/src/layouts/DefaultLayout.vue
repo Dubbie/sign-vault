@@ -62,7 +62,24 @@ async function handleLogin() {
           </RouterLink>
         </div>
 
-        <div class="flex items-center justify-end">
+        <div class="flex items-center justify-end gap-x-8">
+          <div v-if="auth.isAdmin">
+            <RouterLink
+              to="/admin/users"
+              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
+              active-class="text-zinc-100"
+            >
+              Users
+            </RouterLink>
+            <RouterLink
+              to="/admin/explore"
+              class="ml-3 text-zinc-400 no-underline transition-colors hover:text-zinc-100"
+              active-class="text-zinc-100"
+            >
+              Explore All
+            </RouterLink>
+          </div>
+
           <div v-if="auth.user" class="flex items-center gap-3">
             <span class="hidden text-sm text-zinc-100 sm:inline">
               {{ auth.user.discord_global_name || auth.user.discord_username }}

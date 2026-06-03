@@ -10,6 +10,8 @@ import FolderShowView from '../views/FolderShowView.vue'
 import FolderEditView from '../views/FolderEditView.vue'
 import ExploreView from '../views/ExploreView.vue'
 import PublicFolderView from '../views/PublicFolderView.vue'
+import AdminUsersView from '../views/AdminUsersView.vue'
+import AdminExploreView from '../views/AdminExploreView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -86,6 +88,26 @@ const router = createRouter({
       component: PublicFolderView,
       meta: { title: 'Public Folder — SignVault' },
     },
+    {
+      path: '/admin/users',
+      name: 'admin-users',
+      component: AdminUsersView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'Users — SignVault Admin',
+      },
+    },
+    {
+      path: '/admin/explore',
+      name: 'admin-explore',
+      component: AdminExploreView,
+      meta: {
+        requiresAuth: true,
+        requiresAdmin: true,
+        title: 'Explore — SignVault Admin',
+      },
+    },
   ],
 })
 
@@ -105,6 +127,10 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return { name: 'explore' }
+  }
+
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
     return { name: 'explore' }
   }
 

@@ -12,7 +12,7 @@ interface PreviewSign {
 
 const props = defineProps<{
   signs: PreviewSign[]
-  folderSlug: string
+  folderSlug?: string
 }>()
 
 const nameCollator = new Intl.Collator(undefined, {
@@ -80,7 +80,7 @@ const columns = computed(() => {
       </div>
     </div>
 
-    <div class="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-background">
+    <div v-if="folderSlug" class="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-background">
       <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
         <RouterLink
           :to="{ name: 'public-folder', params: { slug: folderSlug } }"

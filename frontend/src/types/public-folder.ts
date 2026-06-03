@@ -5,6 +5,12 @@ export type PublicFolder = {
   name: string
   slug: string
   visibility: PublicFolderVisibility
+  user_id: number
+  owner: {
+    discord_username: string
+    discord_global_name: string | null
+    discord_avatar: string | null
+  }
 }
 
 export type OwnerInfo = {

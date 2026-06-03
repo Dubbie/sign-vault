@@ -10,12 +10,14 @@ import {
 import type { PublicFolder, PublicFolderContentsResponse, PublicSign } from '@/types/public-folder'
 import { useAuthStore } from '@/stores/auth'
 import { useFoldersStore } from '@/stores/folders'
+import { banUser } from '@/lib/admin'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
+import UiModal from '@/components/ui/UiModal.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 
 const route = useRoute()
@@ -42,6 +44,39 @@ const isUnlocking = ref(false)
 const isAuthor = ref(false)
 const error = ref<string | null>(null)
 const copiedSignId = ref<number | null>(null)
+
+const showBanModal = ref(false)
+const banReason = ref('')
+const isBanning = ref(false)
+const bannedUserName = ref('')
+
+function canBan() {
+  return (
+    authStore.isAdmin &&
+    folder.value &&
+    folder.value.user_id !== authStore.user?.id
+  )
+}
+
+async function handleBan() {
+  if (!folder.value || !banReason.value.trim()) return
+
+  isBanning.value = true
+  error.value = null
+
+  try {
+    await banUser(folder.value.user_id, banReason.value.trim())
+    bannedUserName.value = folder.value.owner?.discord_global_name || folder.value.owner?.discord_username || 'User'
+    showBanModal.value = false
+    banReason.value = ''
+    folder.value = null
+    signs.value = []
+  } catch {
+    error.value = 'Failed to ban user.'
+  } finally {
+    isBanning.value = false
+  }
+}
 
 const unlockForm = reactive({
   password: '',
@@ -215,6 +250,17 @@ watch(folderSlug, () => {
       </form>
     </div>
 
+    <div
+      v-else-if="bannedUserName"
+      class="mx-auto mt-12 max-w-md text-center"
+    >
+      <p class="inline-block rounded-full border border-red-900/50 bg-red-950/20 px-3 py-0.5 text-xs font-semibold text-red-400">
+        User Banned
+      </p>
+      <h2 class="mt-3 text-xl text-heading">{{ bannedUserName }} has been banned</h2>
+      <p class="mt-1 text-sm text-muted">All their folders and signs have been removed.</p>
+    </div>
+
     <div v-else-if="folder" class="grid gap-5">
       <header class="flex items-start justify-between gap-4 max-sm:flex-col">
         <div>
@@ -229,6 +275,9 @@ watch(folderSlug, () => {
           <RouterLink v-if="isAuthor" :to="`/folders/${folder.id}`">
             <UiButton variant="primary" type="button"> Manage folder </UiButton>
           </RouterLink>
+          <UiButton v-if="canBan()" variant="danger" type="button" @click="showBanModal = true">
+            Ban User
+          </UiButton>
         </div>
       </header>
 
@@ -244,5 +293,43 @@ watch(folderSlug, () => {
         />
       </div>
     </div>
+
+    <UiModal
+      :model-value="showBanModal"
+      title="Ban User"
+      @update:model-value="showBanModal = false"
+    >
+      <div v-if="folder">
+        <p class="text-sm text-zinc-300">
+          Ban <strong>{{ folder.owner?.discord_global_name || folder.owner?.discord_username }}</strong
+          >? This will:
+        </p>
+        <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">
+          <li>Delete all their folders and signs</li>
+          <li>Revoke all active sessions</li>
+          <li>Prevent them from logging in</li>
+        </ul>
+
+        <UiFormField label="Ban reason" name="reason" class="mt-4">
+          <UiInput
+            v-model="banReason"
+            placeholder="Why is this user being banned?"
+            maxlength="500"
+            required
+          />
+        </UiFormField>
+
+        <div class="mt-4 flex justify-end gap-3">
+          <UiButton variant="secondary" @click="showBanModal = false"> Cancel </UiButton>
+          <UiButton
+            variant="danger"
+            :disabled="!banReason.trim() || isBanning"
+            @click="handleBan"
+          >
+            {{ isBanning ? 'Banning...' : 'Ban & Nuke Content' }}
+          </UiButton>
+        </div>
+      </div>
+    </UiModal>
   </div>
 </template>

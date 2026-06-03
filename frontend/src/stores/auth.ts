@@ -39,6 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoading = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
+  const isAdmin = computed(() => user.value?.is_admin === true)
 
   async function loginWithDiscord() {
     isLoading.value = true
@@ -118,6 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
     signUploadMaxFiles,
     isLoading,
     isAuthenticated,
+    isAdmin,
     loginWithDiscord,
     handleDiscordCallback,
     fetchUser,

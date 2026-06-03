@@ -2,14 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 
-import RootRedirectView from '../views/RootRedirectView.vue'
-import LoginView from '../views/LoginView.vue'
 import DiscordCallbackView from '../views/DiscordCallbackView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import FoldersIndexView from '../views/FoldersIndexView.vue'
 import FolderCreateView from '../views/FolderCreateView.vue'
 import FolderShowView from '../views/FolderShowView.vue'
 import FolderEditView from '../views/FolderEditView.vue'
+import ExploreView from '../views/ExploreView.vue'
 import PublicFolderView from '../views/PublicFolderView.vue'
 
 const router = createRouter({
@@ -17,21 +16,23 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'root',
-      component: RootRedirectView,
-      meta: { layout: 'auth', title: 'SignVault' },
+      name: 'explore',
+      component: ExploreView,
+      meta: { title: 'Explore — SignVault' },
+    },
+    {
+      path: '/explore',
+      redirect: '/',
     },
     {
       path: '/login',
-      name: 'login',
-      component: LoginView,
-      meta: { layout: 'auth', title: 'Sign In — SignVault' },
+      redirect: '/',
     },
     {
       path: '/auth/discord/callback',
       name: 'discord-callback',
       component: DiscordCallbackView,
-      meta: { layout: 'auth', title: 'Signing In — SignVault' },
+      meta: { title: 'Signing In — SignVault' },
     },
     {
       path: '/dashboard',
@@ -78,6 +79,7 @@ const router = createRouter({
         title: 'Edit Folder — SignVault',
       },
     },
+
     {
       path: '/public/folders/:slug',
       name: 'public-folder',
@@ -94,7 +96,7 @@ router.beforeEach(async (to) => {
     await auth.fetchUser()
   }
 
-  if (to.name === 'login' || to.name === 'discord-callback') {
+  if (to.name === 'discord-callback') {
     if (auth.isAuthenticated) {
       return { name: 'dashboard' }
     }
@@ -103,7 +105,7 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'login' }
+    return { name: 'explore' }
   }
 
   return true

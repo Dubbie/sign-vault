@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import { useFoldersStore } from '@/stores/folders'
 import type { FolderVisibility, UpdateFolderPayload } from '@/types/folder'
@@ -23,6 +23,7 @@ const emit = defineEmits<{
 
 const foldersStore = useFoldersStore()
 
+const isFolderReady = ref(false)
 const form = reactive({
   name: '',
   visibility: 'private' as FolderVisibility,
@@ -46,30 +47,38 @@ function fillFormFromFolder() {
   form.password = ''
 }
 
-async function loadFolder() {
-  if (!Number.isFinite(props.folderId)) {
+async function loadFolder(folderId: number) {
+  if (!Number.isFinite(folderId)) {
     foldersStore.error = 'Invalid folder id.'
-    return
+    return false
   }
 
-  const folder = await foldersStore.fetchFolder(props.folderId)
-  if (folder) fillFormFromFolder()
+  const folder = await foldersStore.fetchFolder(folderId)
+  if (folder) {
+    fillFormFromFolder()
+    return true
+  }
+
+  return false
 }
 
 watch(
-  () => props.modelValue,
-  async (open) => {
+  [() => props.modelValue, () => props.folderId],
+  async ([open, folderId]) => {
     if (!open) return
 
+    isFolderReady.value = false
     foldersStore.clearError()
 
-    if (foldersStore.currentFolder?.id === props.folderId) {
+    if (foldersStore.currentFolder?.id === folderId) {
       fillFormFromFolder()
+      isFolderReady.value = true
       return
     }
 
-    await loadFolder()
+    isFolderReady.value = await loadFolder(folderId)
   },
+  { immediate: true },
 )
 
 watch(requiresPassword, (next) => {
@@ -107,12 +116,16 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <UiModal :model-value="modelValue" title="Edit folder" @update:model-value="close">
+  <UiModal
+    :model-value="modelValue"
+    title="Edit folder"
+    @update:model-value="close"
+  >
     <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}
     </UiErrorBanner>
 
-    <p v-if="!foldersStore.currentFolder" class="text-zinc-400">Loading folder...</p>
+    <p v-if="!isFolderReady" class="text-zinc-400">Loading folder...</p>
 
     <form v-else class="grid gap-4" @submit.prevent="handleSubmit">
       <UiFormField label="Name" name="name">

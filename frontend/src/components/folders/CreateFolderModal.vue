@@ -17,7 +17,7 @@ defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  saved: []
+  saved: [folderId: number]
 }>()
 
 const foldersStore = useFoldersStore()
@@ -77,7 +77,7 @@ async function handleSubmit() {
   const folder = await foldersStore.createFolder(payload)
 
   if (folder) {
-    emit('saved')
+    emit('saved', folder.id)
     close()
   }
 }

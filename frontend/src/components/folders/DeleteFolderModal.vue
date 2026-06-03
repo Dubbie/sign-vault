@@ -32,7 +32,11 @@ async function handleConfirm() {
 </script>
 
 <template>
-  <UiModal :model-value="modelValue" title="Delete folder" @update:model-value="close">
+  <UiModal
+    :model-value="modelValue"
+    title="Delete folder"
+    @update:model-value="close"
+  >
     <p class="text-zinc-300">
       Are you sure you want to delete
       <span class="font-semibold text-zinc-100">{{ folder?.name ?? 'this folder' }}</span

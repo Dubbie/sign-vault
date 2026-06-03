@@ -34,7 +34,7 @@ function selectOption(index: number) {
   const opt = props.options[index]
   if (opt) {
     emit('update:modelValue', opt.value)
-    close(false)
+    close()
   }
 }
 
@@ -184,56 +184,36 @@ onUnmounted(() => {
       </svg>
     </button>
 
-    <Transition name="dropdown">
-      <ul
-        v-if="open"
-        :id="listboxId"
-        ref="listboxRef"
-        role="listbox"
-        tabindex="-1"
-        :aria-label="name"
-        class="absolute z-50 mt-1 w-full rounded-md bg-surface py-1 shadow-lg ring-1 ring-white/10 focus:outline-hidden"
-        @keydown="onListboxKeydown"
+    <ul
+      ref="listboxRef"
+      role="listbox"
+      tabindex="-1"
+      :id="listboxId"
+      :aria-label="name"
+      :class="[
+        'absolute z-50 mt-1 w-full rounded-md bg-surface py-1 shadow-lg ring-1 ring-white/10 focus:outline-hidden',
+        open ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none',
+      ]"
+      @keydown="onListboxKeydown"
+    >
+      <li
+        v-for="(opt, idx) in options"
+        :key="opt.value"
+        :id="`option-${name ?? 'select'}-${idx}`"
+        role="option"
+        :aria-selected="opt.value === modelValue"
+        :class="[
+          'cursor-pointer px-3 py-1.5 text-sm transition',
+          opt.value === modelValue
+            ? 'text-zinc-100'
+            : 'text-zinc-400',
+          idx === activeIndex ? 'bg-white/10' : '',
+        ]"
+        @mousedown.prevent="selectOption(idx)"
+        @mouseenter="onOptionHover(idx)"
       >
-        <li
-          v-for="(opt, idx) in options"
-          :key="opt.value"
-          :id="`option-${name ?? 'select'}-${idx}`"
-          role="option"
-          :aria-selected="opt.value === modelValue"
-          :class="[
-            'cursor-pointer px-3 py-1.5 text-sm transition',
-            opt.value === modelValue
-              ? 'text-zinc-100'
-              : 'text-zinc-400',
-            idx === activeIndex ? 'bg-white/10' : '',
-          ]"
-          @click="selectOption(idx)"
-          @mouseenter="onOptionHover(idx)"
-        >
-          {{ opt.label }}
-        </li>
-      </ul>
-    </Transition>
+        {{ opt.label }}
+      </li>
+    </ul>
   </div>
 </template>
-
-<style scoped>
-.dropdown-enter-active {
-  transition:
-    opacity 0.15s ease-out,
-    transform 0.15s ease-out;
-}
-
-.dropdown-leave-active {
-  transition:
-    opacity 0.1s ease-in,
-    transform 0.1s ease-in;
-}
-
-.dropdown-enter-from,
-.dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-</style>

@@ -69,9 +69,7 @@ const columns = computed(() => {
   return COLUMNS.map((col) => ({
     label: col.label,
     value: col.value,
-    signs: [...(byRatio[col.value] ?? [])].sort((a, b) =>
-      nameCollator.compare(a.name, b.name),
-    ),
+    signs: [...(byRatio[col.value] ?? [])].sort((a, b) => nameCollator.compare(a.name, b.name)),
   }))
 })
 
@@ -142,7 +140,7 @@ function toggleColumn(signs: GridSign[]) {
       <article
         v-for="sign in col.signs"
         :key="sign.id"
-        class="group relative cursor-pointer ring ring-white transition duration-150 ease-in-out hover:ring-4"
+        class="group relative cursor-pointer transition duration-150 ease-in-out hover:ring-4"
         :class="selectable && isSelected(sign.id) ? 'ring-emerald-400 ring-4' : ''"
         @click="selectable ? toggleSelect(sign.id) : emit('copy', sign.id)"
       >

@@ -40,31 +40,40 @@ function formatDate(value: string) {
   return dateFormatter.format(new Date(value))
 }
 
-function handleCreateSaved() {
-  const folder = foldersStore.currentFolder
-  if (!folder) return
-  router.push({ name: 'folders-show', params: { id: folder.id } })
+function handleCreateSaved(folderId: number) {
+  router.push({ name: 'folders-show', params: { id: folderId } })
 }
 </script>
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="mb-8">
-      <h1 class="text-[clamp(1.5rem,3vw,2rem)] text-zinc-500 font-normal">Welcome back</h1>
-      <p class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100 font-bold">
-        {{ auth.user?.discord_global_name ?? auth.user?.discord_username ?? 'Dude' }}
-      </p>
+    <div class="flex items-start justify-between gap-4 mb-8">
+      <div>
+        <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100">Dashboard</h1>
+        <p class="mt-1 text-sm text-zinc-400">
+          Welcome back,
+          {{ auth.user?.discord_global_name ?? auth.user?.discord_username ?? 'Dude' }}
+        </p>
+      </div>
     </div>
 
-    <div class="grid gap-6 sm:grid-cols-3">
-      <div class="rounded-2xl ring ring-white/20 bg-zinc-900/50 p-6">
+    <div class="grid gap-6 sm:grid-cols-4">
+      <div class="rounded-2xl ring ring-white/20 bg-surface p-6">
         <p class="text-3xl font-bold text-zinc-100">{{ foldersStore.folderCount }}</p>
-        <p class="mt-1 text-sm text-zinc-400">Folders</p>
+        <p class="mt-1 text-sm text-zinc-400">Folders owned</p>
       </div>
 
       <RouterLink
+        to="/explore"
+        class="rounded-2xl ring ring-emerald-400 bg-surface p-6 no-underline transition hover:bg-surface-hover/50"
+      >
+        <p class="text-xl font-semibold text-zinc-100">Explore</p>
+        <p class="mt-1 text-sm text-zinc-400">Discover signs from the community</p>
+      </RouterLink>
+
+      <RouterLink
         to="/folders"
-        class="rounded-2xl ring ring-white/20 bg-zinc-900/50 p-6 no-underline transition hover:border-emerald-400/50 hover:bg-zinc-900"
+        class="rounded-2xl ring ring-emerald-400 bg-surface p-6 no-underline transition hover:bg-surface-hover/50"
       >
         <p class="text-xl font-semibold text-zinc-100">View your folders</p>
         <p class="mt-1 text-sm text-zinc-400">Browse and manage your sign folders</p>
@@ -96,7 +105,7 @@ function handleCreateSaved() {
           v-for="folder in recentFolders"
           :key="folder.id"
           :to="{ name: 'folders-show', params: { id: folder.id } }"
-          class="flex items-center justify-between rounded-xl border border-white/20 bg-zinc-900/50 px-5 py-4 no-underline transition hover:border-white/20 hover:bg-zinc-900"
+          class="flex items-center justify-between rounded-xl ring ring-white/20 bg-surface px-5 py-4 no-underline transition hover:ring-emerald-400 hover:bg-surface-hover/50"
         >
           <div class="min-w-0">
             <p class="truncate font-semibold text-zinc-100">{{ folder.name }}</p>

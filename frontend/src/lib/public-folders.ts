@@ -2,6 +2,7 @@ import type { AxiosError } from 'axios'
 
 import api from '@/lib/api'
 import type {
+  PaginatedPublicFolderResponse,
   PublicFolderContentsResponse,
   PublicFolderResponse,
   UnlockPublicFolderPayload,
@@ -49,5 +50,13 @@ export async function unlockPublicFolder(
     payload,
   )
 
+  return data
+}
+
+export async function getPublicFolders(params?: {
+  q?: string
+  page?: number
+}): Promise<PaginatedPublicFolderResponse> {
+  const { data } = await api.get<PaginatedPublicFolderResponse>('/api/public/folders', { params })
   return data
 }

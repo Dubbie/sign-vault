@@ -6,16 +6,21 @@ defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
+  closed: []
 }>()
 
 function close() {
   emit('update:modelValue', false)
 }
+
+function handleAfterLeave() {
+  emit('closed')
+}
 </script>
 
 <template>
   <Teleport to="body">
-    <Transition name="modal">
+    <Transition name="modal" @after-leave="handleAfterLeave">
       <div
         v-if="modelValue"
         class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur px-4"

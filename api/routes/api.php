@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/folders/{folder}/signs', [SignController::class, 'index']);
     Route::post('/folders/{folder}/signs', [SignController::class, 'store']);
     Route::get('/signs/{sign}', [SignController::class, 'show']);
+    Route::patch('/signs/move', [SignController::class, 'move']);
     Route::delete('/signs', [SignController::class, 'destroy']);
 });
 

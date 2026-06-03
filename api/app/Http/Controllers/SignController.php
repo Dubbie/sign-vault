@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Sign\DeleteSignsRequest;
+use App\Http\Requests\Sign\MoveSignsRequest;
 use App\Http\Requests\Sign\StoreSignRequest;
 use App\Http\Resources\SignResource;
 use App\Models\Folder;
@@ -123,6 +124,22 @@ class SignController extends Controller
         }
 
         return response()->noContent();
+    }
+
+    public function move(MoveSignsRequest $request): JsonResponse
+    {
+        $ids = $request->validated('ids');
+        $targetFolderId = (int) $request->validated('folder_id');
+
+        $updated = Sign::whereIn('id', $ids)
+            ->where('user_id', $request->user()->id)
+            ->where('folder_id', '!=', $targetFolderId)
+            ->update(['folder_id' => $targetFolderId]);
+
+        return response()->json([
+            'message' => "{$updated} sign(s) moved successfully.",
+            'moved_count' => $updated,
+        ]);
     }
 
     private function signNameFor(UploadedFile $file): string

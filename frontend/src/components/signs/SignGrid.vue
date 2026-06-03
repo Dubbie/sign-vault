@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 
 interface GridSign {
   id: number
@@ -104,6 +104,18 @@ function toggleColumn(signs: GridSign[]) {
   }
 }
 
+const imageLoaded = reactive<Record<number, boolean>>({})
+
+function onImageLoad(id: number) {
+  imageLoaded[id] = true
+}
+
+function signAspectRatio(sign: GridSign): string {
+  if (sign.width && sign.height) return `${sign.width} / ${sign.height}`
+  if (sign.column_ratio) return `${sign.column_ratio} / 1`
+  return '1 / 1'
+}
+
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
@@ -164,12 +176,20 @@ onUnmounted(() => {
           :class="selectable && isSelected(sign.id) ? 'ring-emerald-400 ring-4' : ''"
           @click="selectable ? toggleSelect(sign.id) : emit('copy', sign.id)"
         >
-          <img
-            :src="sign.public_url"
-            :alt="sign.name"
-            loading="lazy"
-            class="block w-full transition duration-300 ease-in-out"
-          />
+          <div class="relative w-full" :style="{ aspectRatio: signAspectRatio(sign) }">
+            <div
+              v-if="!imageLoaded[sign.id]"
+              class="absolute inset-0 animate-pulse rounded bg-zinc-800"
+            />
+            <img
+              :src="sign.public_url"
+              :alt="sign.name"
+              loading="lazy"
+              class="absolute inset-0 block h-full w-full object-contain transition-opacity duration-300 ease-in-out"
+              :class="imageLoaded[sign.id] ? 'opacity-100' : 'opacity-0'"
+              @load="onImageLoad(sign.id)"
+            />
+          </div>
 
           <div
             v-if="selectable"

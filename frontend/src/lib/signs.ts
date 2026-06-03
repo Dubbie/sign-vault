@@ -1,7 +1,7 @@
 import type { AxiosError } from 'axios'
 
 import api from '@/lib/api'
-import type { CreateSignPayload, Sign } from '@/types/sign'
+import type { CreateSignPayload, PaginatedSignResponse, Sign } from '@/types/sign'
 
 type SignApiError = {
   message?: string
@@ -31,8 +31,16 @@ export function getSignErrorMessage(error: unknown) {
   return getErrorMessage(error)
 }
 
-export async function getFolderSigns(folderId: number): Promise<Sign[]> {
-  const { data } = await api.get<Sign[]>(`/api/folders/${folderId}/signs`)
+export async function getFolderSigns(
+  folderId: number,
+  page = 1,
+  perPage = 10,
+  columnRatio?: number,
+): Promise<PaginatedSignResponse> {
+  const params: Record<string, number> = { page, per_page: perPage }
+  if (columnRatio !== undefined) params.column_ratio = columnRatio
+
+  const { data } = await api.get<PaginatedSignResponse>(`/api/folders/${folderId}/signs`, { params })
   return data
 }
 

@@ -7,8 +7,19 @@ export type Sign = {
   size_bytes: number
   width: number | null
   height: number | null
+  column_ratio: number | null
   created_at: string
   updated_at: string
+}
+
+export type PaginatedSignResponse = {
+  data: Sign[]
+  meta: {
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+  }
 }
 
 export type CreateSignPayload = {

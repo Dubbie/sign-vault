@@ -195,8 +195,11 @@ function clearSelection() {
           class="mb-13"
           :signs="signsStore.signs"
           :copied-sign-id="copiedSignId"
+          :has-more="signsStore.hasMore"
+          :is-loading-more="signsStore.isLoadingMore"
           v-model="selectedSignIds"
           @copy="handleCopy"
+          @load-more="signsStore.fetchMoreSigns(folderId)"
         />
       </div>
     </div>

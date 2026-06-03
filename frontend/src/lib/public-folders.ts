@@ -3,8 +3,10 @@ import type { AxiosError } from 'axios'
 import api from '@/lib/api'
 import type {
   PaginatedPublicFolderResponse,
+  PaginationMeta,
   PublicFolderContentsResponse,
   PublicFolderResponse,
+  PublicSign,
   UnlockPublicFolderPayload,
 } from '@/types/public-folder'
 
@@ -58,5 +60,22 @@ export async function getPublicFolders(params?: {
   page?: number
 }): Promise<PaginatedPublicFolderResponse> {
   const { data } = await api.get<PaginatedPublicFolderResponse>('/api/public/folders', { params })
+  return data
+}
+
+export async function getPublicFolderSigns(
+  slug: string,
+  page: number,
+  password?: string,
+  columnRatio?: number,
+): Promise<{ data: PublicSign[]; meta: PaginationMeta }> {
+  const payload: Record<string, number | string> = { page }
+  if (password) payload.password = password
+  if (columnRatio !== undefined) payload.column_ratio = columnRatio
+
+  const { data } = await api.post<{ data: PublicSign[]; meta: PaginationMeta }>(
+    `/api/public/folders/${slug}/signs`,
+    payload,
+  )
   return data
 }

@@ -25,6 +25,7 @@ export type PreviewSign = {
   public_url: string
   width: number | null
   height: number | null
+  column_ratio: number | null
 }
 
 export type PublicFolderListing = {
@@ -56,11 +57,11 @@ export type PublicSign = {
   mime_type: string
   width: number | null
   height: number | null
+  column_ratio: number | null
 }
 
 export type PublicFolderContentsResponse = {
   folder: PublicFolder
-  signs: PublicSign[]
 }
 
 export type PublicFolderRequiresPasswordResponse = {

@@ -5,9 +5,10 @@ import { RouterLink, useRoute } from 'vue-router'
 import {
   getPublicFolder,
   getPublicFolderErrorMessage,
+  getPublicFolderSigns,
   unlockPublicFolder,
 } from '@/lib/public-folders'
-import type { PublicFolder, PublicFolderContentsResponse, PublicSign } from '@/types/public-folder'
+import type { PublicFolder, PublicSign } from '@/types/public-folder'
 import { useAuthStore } from '@/stores/auth'
 import { useFoldersStore } from '@/stores/folders'
 import { banUser } from '@/lib/admin'
@@ -36,10 +37,26 @@ async function checkIsAuthor() {
   return foldersStore.folders.some((f) => f.public_slug === folder.value!.slug)
 }
 
+const COLUMN_RATIOS = [6, 4, 2, 1] as const
+type ColumnRatio = (typeof COLUMN_RATIOS)[number]
+const PER_COLUMN = 10
+
+type ColumnState = { currentPage: number; hasMore: boolean }
+
+function initialColumnState(): Record<ColumnRatio, ColumnState> {
+  return { 6: { currentPage: 0, hasMore: false }, 4: { currentPage: 0, hasMore: false }, 2: { currentPage: 0, hasMore: false }, 1: { currentPage: 0, hasMore: false } }
+}
+
 const folder = ref<PublicFolder | null>(null)
 const signs = ref<PublicSign[]>([])
+const signsTotal = ref(0)
+const columnState = ref<Record<ColumnRatio, ColumnState>>(initialColumnState())
+const signsHasMore = computed(() => COLUMN_RATIOS.some((r) => columnState.value[r].hasMore))
+const unlockedPassword = ref<string | null>(null)
 const requiresPassword = ref(false)
 const isLoading = ref(false)
+const isLoadingSigns = ref(false)
+const isLoadingMore = ref(false)
 const isUnlocking = ref(false)
 const isAuthor = ref(false)
 const error = ref<string | null>(null)
@@ -51,11 +68,7 @@ const isBanning = ref(false)
 const bannedUserName = ref('')
 
 function canBan() {
-  return (
-    authStore.isAdmin &&
-    folder.value &&
-    folder.value.user_id !== authStore.user?.id
-  )
+  return authStore.isAdmin && folder.value && folder.value.user_id !== authStore.user?.id
 }
 
 async function handleBan() {
@@ -66,7 +79,8 @@ async function handleBan() {
 
   try {
     await banUser(folder.value.user_id, banReason.value.trim())
-    bannedUserName.value = folder.value.owner?.discord_global_name || folder.value.owner?.discord_username || 'User'
+    bannedUserName.value =
+      folder.value.owner?.discord_global_name || folder.value.owner?.discord_username || 'User'
     showBanModal.value = false
     banReason.value = ''
     folder.value = null
@@ -78,33 +92,81 @@ async function handleBan() {
   }
 }
 
-const unlockForm = reactive({
-  password: '',
-})
+const unlockForm = reactive({ password: '' })
 
 function visibilityLabel(visibility: string) {
   return visibility.charAt(0).toUpperCase() + visibility.slice(1)
 }
 
-function normalizeFolderResponse(response: PublicFolderContentsResponse) {
-  folder.value = response.folder
-  signs.value = response.signs
-  requiresPassword.value = false
-  error.value = null
-  document.title = `${response.folder.name} — SignVault`
-  checkIsAuthor().then((result) => {
-    isAuthor.value = result
-  })
-}
-
-function resetStateForPasswordPrompt() {
-  folder.value = null
-  signs.value = []
-  requiresPassword.value = true
-}
-
 function clearUnlockForm() {
   unlockForm.password = ''
+}
+
+async function loadSignsPerColumn(password: string | null) {
+  isLoadingSigns.value = true
+  columnState.value = initialColumnState()
+  signs.value = []
+  signsTotal.value = 0
+
+  try {
+    const results = await Promise.all(
+      COLUMN_RATIOS.map((ratio) =>
+        getPublicFolderSigns(folderSlug.value, 1, password ?? undefined, ratio),
+      ),
+    )
+
+    signs.value = results.flatMap((r) => r.data)
+    signsTotal.value = results.reduce((sum, r) => sum + r.meta.total, 0)
+
+    for (let i = 0; i < COLUMN_RATIOS.length; i++) {
+      const ratio = COLUMN_RATIOS[i]
+      const meta = results[i]!.meta
+      columnState.value[ratio] = {
+        currentPage: meta.current_page,
+        hasMore: meta.current_page < meta.last_page,
+      }
+    }
+  } catch (exception) {
+    error.value = getPublicFolderErrorMessage(exception)
+  } finally {
+    isLoadingSigns.value = false
+  }
+}
+
+async function loadMoreSigns() {
+  if (!signsHasMore.value || isLoadingMore.value) return
+
+  isLoadingMore.value = true
+
+  try {
+    const ratiosWithMore = COLUMN_RATIOS.filter((r) => columnState.value[r].hasMore)
+
+    const results = await Promise.all(
+      ratiosWithMore.map((ratio) =>
+        getPublicFolderSigns(
+          folderSlug.value,
+          columnState.value[ratio].currentPage + 1,
+          unlockedPassword.value ?? undefined,
+          ratio,
+        ),
+      ),
+    )
+
+    signs.value = [...signs.value, ...results.flatMap((r) => r.data)]
+
+    for (let i = 0; i < ratiosWithMore.length; i++) {
+      const ratio = ratiosWithMore[i]!
+      const meta = results[i]!.meta
+      columnState.value[ratio] = {
+        currentPage: meta.current_page,
+        hasMore: meta.current_page < meta.last_page,
+      }
+    }
+  } catch (exception) {
+    error.value = getPublicFolderErrorMessage(exception)
+  } finally {
+    isLoadingMore.value = false
+  }
 }
 
 async function loadPublicFolder() {
@@ -115,18 +177,24 @@ async function loadPublicFolder() {
     const response = await getPublicFolder(folderSlug.value)
 
     if ('requires_password' in response) {
-      resetStateForPasswordPrompt()
+      requiresPassword.value = true
       return
     }
 
-    normalizeFolderResponse(response)
+    folder.value = response.folder
+    requiresPassword.value = false
+    document.title = `${response.folder.name} — SignVault`
+    checkIsAuthor().then((result) => {
+      isAuthor.value = result
+    })
+
+    void loadSignsPerColumn(null)
   } catch (exception) {
     const axiosError = exception as { response?: { status?: number } }
 
     if (axiosError.response?.status === 404) {
       error.value = 'Folder not found.'
       folder.value = null
-      signs.value = []
       requiresPassword.value = false
       isAuthor.value = false
       return
@@ -147,15 +215,22 @@ async function handleUnlock() {
       password: unlockForm.password,
     })
 
-    normalizeFolderResponse(response)
+    unlockedPassword.value = unlockForm.password
+    folder.value = response.folder
+    requiresPassword.value = false
+    document.title = `${response.folder.name} — SignVault`
+    checkIsAuthor().then((result) => {
+      isAuthor.value = result
+    })
+
     clearUnlockForm()
+    void loadSignsPerColumn(unlockedPassword.value)
   } catch (exception) {
     const axiosError = exception as { response?: { status?: number } }
 
     if (axiosError.response?.status === 404) {
       error.value = 'Folder not found.'
       folder.value = null
-      signs.value = []
       requiresPassword.value = false
       isAuthor.value = false
       return
@@ -190,6 +265,9 @@ watch(folderSlug, () => {
   clearUnlockForm()
   folder.value = null
   signs.value = []
+  signsTotal.value = 0
+  columnState.value = initialColumnState()
+  unlockedPassword.value = null
   requiresPassword.value = false
   isAuthor.value = false
   copiedSignId.value = null
@@ -250,11 +328,10 @@ watch(folderSlug, () => {
       </form>
     </div>
 
-    <div
-      v-else-if="bannedUserName"
-      class="mx-auto mt-12 max-w-md text-center"
-    >
-      <p class="inline-block rounded-full border border-red-900/50 bg-red-950/20 px-3 py-0.5 text-xs font-semibold text-red-400">
+    <div v-else-if="bannedUserName" class="mx-auto mt-12 max-w-md text-center">
+      <p
+        class="inline-block rounded-full border border-red-900/50 bg-red-950/20 px-3 py-0.5 text-xs font-semibold text-red-400"
+      >
         User Banned
       </p>
       <h2 class="mt-3 text-xl text-heading">{{ bannedUserName }} has been banned</h2>
@@ -270,7 +347,7 @@ watch(folderSlug, () => {
         <div class="flex flex-wrap items-center gap-3">
           <div class="text-right">
             <UiBadge :label="visibilityLabel(folder.visibility)" />
-            <p class="text-xs font-mono mt-1 text-zinc-400">{{ signs.length }} total</p>
+            <p class="text-xs font-mono mt-1 text-zinc-400">{{ signsTotal }} total</p>
           </div>
           <RouterLink v-if="isAuthor" :to="`/folders/${folder.id}`">
             <UiButton variant="primary" type="button"> Manage folder </UiButton>
@@ -282,14 +359,18 @@ watch(folderSlug, () => {
       </header>
 
       <div>
-        <p v-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
+        <p v-if="isLoadingSigns" class="text-zinc-400">Loading signs...</p>
+        <p v-else-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
 
         <SignGrid
           v-else
           :signs="signs"
           :copied-sign-id="copiedSignId"
           :selectable="false"
+          :has-more="signsHasMore"
+          :is-loading-more="isLoadingMore"
           @copy="handleCopy"
+          @load-more="loadMoreSigns"
         />
       </div>
     </div>
@@ -301,7 +382,10 @@ watch(folderSlug, () => {
     >
       <div v-if="folder">
         <p class="text-sm text-zinc-300">
-          Ban <strong>{{ folder.owner?.discord_global_name || folder.owner?.discord_username }}</strong
+          Ban
+          <strong>{{
+            folder.owner?.discord_global_name || folder.owner?.discord_username
+          }}</strong
           >? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">

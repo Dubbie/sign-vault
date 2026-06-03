@@ -8,29 +8,30 @@ interface PreviewSign {
   public_url: string
   width: number | null
   height: number | null
+  column_ratio: number | null
 }
 
-const props = defineProps<{
-  signs: PreviewSign[]
-  folderSlug?: string
-}>()
-
-const nameCollator = new Intl.Collator(undefined, {
-  numeric: true,
-  sensitivity: 'base',
-})
+const props = withDefaults(
+  defineProps<{
+    signs: PreviewSign[]
+    folderSlug?: string
+    maxPerColumn?: number
+  }>(),
+  { maxPerColumn: 4 },
+)
 
 const COLUMNS: { value: number; label: string }[] = [
-  { value: 6, label: '6\u00D71' },
-  { value: 4, label: '4\u00D71' },
-  { value: 2, label: '2\u00D71' },
-  { value: 1, label: '1\u00D71' },
+  { value: 6, label: '6×1' },
+  { value: 4, label: '4×1' },
+  { value: 2, label: '2×1' },
+  { value: 1, label: '1×1' },
 ]
 
-function closestColumnRatio(width: number | null, height: number | null): number {
-  if (!width || !height) return 1
+function closestColumnRatio(sign: PreviewSign): number {
+  if (sign.column_ratio) return sign.column_ratio
+  if (!sign.width || !sign.height) return 1
 
-  const ratio = width / height
+  const ratio = sign.width / sign.height
   let closest = COLUMNS[0]!.value
   let minDiff = Math.abs(ratio - closest)
 
@@ -53,14 +54,14 @@ const columns = computed(() => {
   }
 
   for (const sign of props.signs) {
-    const ratio = closestColumnRatio(sign.width, sign.height)
+    const ratio = closestColumnRatio(sign)
     ;(byRatio[ratio] ?? []).push(sign)
   }
 
   return COLUMNS.map((col) => ({
     label: col.label,
     value: col.value,
-    signs: [...(byRatio[col.value] ?? [])].sort((a, b) => nameCollator.compare(a.name, b.name)),
+    signs: [...(byRatio[col.value] ?? [])].slice(0, props.maxPerColumn),
   }))
 })
 </script>

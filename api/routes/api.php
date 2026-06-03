@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBrowseController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\DiscordAuthController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PublicFolderController;
@@ -27,4 +29,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/folders/{folder}/signs', [SignController::class, 'store']);
     Route::get('/signs/{sign}', [SignController::class, 'show']);
     Route::delete('/signs', [SignController::class, 'destroy']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function (): void {
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::post('/users/{user}/ban', [AdminUserController::class, 'ban']);
+    Route::post('/users/{user}/unban', [AdminUserController::class, 'unban']);
+    Route::get('/folders', [AdminBrowseController::class, 'folders']);
+    Route::get('/folders/{folder}/signs', [AdminBrowseController::class, 'folderSigns']);
 });

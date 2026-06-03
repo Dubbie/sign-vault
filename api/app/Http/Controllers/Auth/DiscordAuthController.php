@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
 use Laravel\Socialite\Two\User as DiscordUser;
+use Symfony\Component\HttpFoundation\Response;
 
 class DiscordAuthController extends Controller
 {
@@ -65,6 +66,13 @@ class DiscordAuthController extends Controller
             $this->discordUserAttributes($discordUser)
         );
 
+        if ($user->isBanned()) {
+            return response()->json([
+                'message' => 'Your account has been banned.',
+                'ban_reason' => $user->ban_reason,
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $token = $user->createToken('discord');
 
         return response()->json([
@@ -75,8 +83,17 @@ class DiscordAuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        if ($user->isBanned()) {
+            return response()->json([
+                'banned' => true,
+                'ban_reason' => $user->ban_reason,
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         return response()->json([
-            'user' => $this->userResponse($request->user()),
+            'user' => $this->userResponse($user),
             'limits' => [
                 'sign_upload_max_files' => config('signs.max_upload_files'),
             ],
@@ -117,6 +134,7 @@ class DiscordAuthController extends Controller
             'discord_global_name',
             'discord_avatar',
             'email',
+            'is_admin',
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,11 +17,32 @@ use Laravel\Sanctum\HasApiTokens;
     'discord_global_name',
     'discord_avatar',
     'email',
+    'is_admin',
+    'banned_at',
+    'ban_reason',
 ])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected function casts(): array
+    {
+        return [
+            'is_admin' => 'boolean',
+            'banned_at' => 'datetime',
+        ];
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null;
+    }
+
+    public function scopeNotBanned(Builder $query): void
+    {
+        $query->whereNull('banned_at');
+    }
 
     public function folders(): HasMany
     {

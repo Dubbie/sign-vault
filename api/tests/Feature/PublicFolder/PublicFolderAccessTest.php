@@ -277,7 +277,8 @@ class PublicFolderAccessTest extends TestCase
             ->assertJsonPath('folder.visibility', FolderVisibility::Public->value)
             ->assertJsonPath('signs.0.name', 'Ice Warning')
             ->assertJsonPath('signs.0.public_url', 'https://cdn.example.com/signs/ice-warning.png')
-            ->assertJsonMissingPath('folder.user_id')
+            ->assertJsonPath('folder.user_id', $folder->user_id)
+            ->assertJsonPath('folder.owner.discord_username', $folder->user->discord_username)
             ->assertJsonMissingPath('folder.password_hash')
             ->assertJsonMissingPath('signs.0.storage_key')
             ->assertJsonMissingPath('signs.0.storage_disk');
@@ -365,7 +366,8 @@ class PublicFolderAccessTest extends TestCase
             ->assertJsonPath('folder.visibility', FolderVisibility::Password->value)
             ->assertJsonPath('signs.0.name', 'Hidden Banner')
             ->assertJsonPath('signs.0.public_url', 'https://cdn.example.com/signs/hidden-banner.png')
-            ->assertJsonMissingPath('folder.user_id')
+            ->assertJsonPath('folder.user_id', $folder->user_id)
+            ->assertJsonPath('folder.owner.discord_username', $folder->user->discord_username)
             ->assertJsonMissingPath('folder.password_hash')
             ->assertJsonMissingPath('signs.0.storage_key')
             ->assertJsonMissingPath('signs.0.storage_disk');

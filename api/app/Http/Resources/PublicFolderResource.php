@@ -20,6 +20,12 @@ class PublicFolderResource extends JsonResource
             'visibility' => $this->visibility instanceof FolderVisibility
                 ? $this->visibility->value
                 : $this->visibility,
+            'user_id' => $this->user_id,
+            'owner' => [
+                'discord_username' => $this->user->discord_username,
+                'discord_global_name' => $this->user->discord_global_name,
+                'discord_avatar' => $this->user->discord_avatar,
+            ],
         ];
     }
 }

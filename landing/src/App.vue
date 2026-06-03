@@ -168,7 +168,9 @@ async function loginWithDiscord() {
                 d="M18.942 5.556a16.299 16.299 0 0 0-4.126-1.297c-.178.321-.385.754-.529 1.097a15.175 15.175 0 0 0-4.573 0 11.583 11.583 0 0 0-.535-1.097 16.274 16.274 0 0 0-4.129 1.3c-2.611 3.946-3.319 7.794-2.965 11.587a16.494 16.494 0 0 0 5.061 2.593 12.65 12.65 0 0 0 1.084-1.785 10.689 10.689 0 0 1-1.707-.831c.143-.106.283-.217.418-.331 3.291 1.539 6.866 1.539 10.118 0 .137.114.277.225.418.331-.541.326-1.114.606-1.71.832a12.52 12.52 0 0 0 1.084 1.785 16.46 16.46 0 0 0 5.064-2.595c.415-4.396-.709-8.209-2.973-11.589zM8.678 14.813c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c.001 1.123-.793 2.045-1.798 2.045zm6.644 0c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c0 1.123-.793 2.045-1.798 2.045z"
               />
             </svg>
-            <span>{{ isLoggingIn ? "Redirecting..." : "Login with Discord" }}</span>
+            <span>{{
+              isLoggingIn ? "Redirecting..." : "Login with Discord"
+            }}</span>
           </button>
           <a
             :href="appUrl"
@@ -205,7 +207,7 @@ async function loginWithDiscord() {
         <div class="grid gap-6 sm:grid-cols-3 lg:max-w-5xl">
           <FeatureCard
             title="Browse with Previews"
-            description="Explore public sign collections from the community. Every folder shows image previews so you can see exactly what you're getting before you download."
+            description="Explore signs from the community. Folders show image previews so you know exactly what you're linking before you paste it in-game."
           >
             <template #icon>
               <svg

@@ -101,7 +101,7 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->slug.'/ice-warning.png';
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
 
         Storage::disk($disk)->put($storageKey, 'fake-image');
 
@@ -139,7 +139,7 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->slug.'/ice-warning.png';
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
 
         Storage::disk($disk)->put($storageKey, 'fake-image');
 
@@ -189,7 +189,7 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->slug.'/ice-warning.png';
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
 
         Storage::disk($disk)->put($storageKey, 'fake-image');
 
@@ -226,7 +226,7 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->slug.'/ice-warning.png';
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
 
         $sign = Sign::create([
             'user_id' => $user->id,
@@ -454,7 +454,7 @@ class SignManagementTest extends TestCase
         $firstResponse->assertCreated();
 
         $firstSignId = $firstResponse->json('signs.0.id');
-        $storageKey = "signs/{$user->id}/{$folder->slug}/ice-warning.png";
+        $storageKey = "signs/{$user->id}/{$folder->id}/ice-warning.png";
         $firstSign = Sign::query()->findOrFail($firstSignId);
 
         $this->assertSame($storageKey, $firstSign->storage_key);

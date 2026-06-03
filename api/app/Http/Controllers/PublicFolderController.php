@@ -30,7 +30,7 @@ class PublicFolderController extends Controller
             ->withCount('signs');
 
         if ($search = $request->string('q', '')) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         $folders = $query->latest()->paginate(20);

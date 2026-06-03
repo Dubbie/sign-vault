@@ -61,7 +61,7 @@ class SignController extends Controller
             ]);
 
             $existingSign = $this->existingSignFor($request->user()->id, $folder->id, $name);
-            $storageKey = $this->storageKeyFor($request->user()->id, $folder->slug, $name, $file);
+            $storageKey = $this->storageKeyFor($request->user()->id, $folder->id, $name, $file);
             [$width, $height] = $this->imageDimensions($file);
             $publicUrl = Storage::disk($disk)->url($storageKey);
 
@@ -144,11 +144,11 @@ class SignController extends Controller
 
     private function storageKeyFor(
         int $userId,
-        string $folderSlug,
+        int $folderId,
         string $name,
         UploadedFile $file
     ): string {
-        $directory = sprintf('signs/%d/%s', $userId, $folderSlug);
+        $directory = sprintf('signs/%d/%d', $userId, $folderId);
         $filename = sprintf(
             '%s.%s',
             Str::slug($name) ?: 'sign',

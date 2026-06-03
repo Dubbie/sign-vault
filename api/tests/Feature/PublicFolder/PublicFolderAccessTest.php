@@ -414,7 +414,7 @@ class PublicFolderAccessTest extends TestCase
             'folder_id' => $folder->id,
             'name' => 'Ice Warning',
             'storage_disk' => 's3',
-            'storage_key' => 'signs/'.$folder->user_id.'/'.$folder->slug.'/ice-warning.png',
+            'storage_key' => 'signs/'.$folder->user_id.'/'.$folder->id.'/ice-warning.png',
             'public_url' => 'https://cdn.example.com/signs/ice-warning.png',
             'mime_type' => 'image/png',
             'size_bytes' => 12345,

@@ -1,14 +1,6 @@
 import api from '@/lib/api'
-import type {
-  AdminUser,
-  PaginatedAdminUsers,
-} from '@/types/auth'
-import type {
-  PaginatedPublicFolderResponse,
-  PublicFolderContentsResponse,
-  PublicFolderListing,
-  PublicSign,
-} from '@/types/public-folder'
+import type { PaginatedAdminUsers } from '@/types/auth'
+import type { PaginatedPublicFolderResponse, PublicSign } from '@/types/public-folder'
 
 export async function getUsers(page = 1): Promise<PaginatedAdminUsers> {
   const { data } = await api.get<PaginatedAdminUsers>('/api/admin/users', {

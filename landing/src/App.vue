@@ -289,7 +289,7 @@ async function loginWithDiscord() {
           Privacy
         </a>
         <a
-          href="https://github.com/Dubbie/sign-vault-frontend"
+          href="https://github.com/Dubbie/sign-vault"
           target="_blank"
           rel="noopener noreferrer"
           class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"

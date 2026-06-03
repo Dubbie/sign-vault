@@ -248,7 +248,7 @@ onMounted(() => {
             </div>
 
             <div v-if="selectedFolderSigns.length > 0" class="mt-4">
-              <PreviewSignGrid :signs="selectedFolderSigns" />
+              <PreviewSignGrid :signs="selectedFolderSigns" :max-per-column="Infinity" />
             </div>
             <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>
           </div>

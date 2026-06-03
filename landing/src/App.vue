@@ -273,7 +273,7 @@ async function loginWithDiscord() {
       class="border-t border-border px-6 py-4 text-center text-xs text-zinc-400 sm:px-8"
     >
       <div class="flex items-center justify-center gap-4">
-        <span>SignVault &mdash; Trackmania sign library</span>
+        <span>SignVault - Trackmania sign library</span>
         <a
           :href="appUrl + 'terms'"
           target="_blank"

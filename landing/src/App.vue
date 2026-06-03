@@ -296,6 +296,14 @@ async function loginWithDiscord() {
         >
           Source
         </a>
+        <a
+          href="https://discord.gg/vkaXfkr4qa"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
+        >
+          Discord
+        </a>
       </div>
     </footer>
   </div>

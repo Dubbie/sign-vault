@@ -12,6 +12,8 @@ import ExploreView from '../views/ExploreView.vue'
 import PublicFolderView from '../views/PublicFolderView.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminExploreView from '../views/AdminExploreView.vue'
+import LegalTermsView from '../views/LegalTermsView.vue'
+import LegalPrivacyView from '../views/LegalPrivacyView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -107,6 +109,18 @@ const router = createRouter({
         requiresAdmin: true,
         title: 'Explore — SignVault Admin',
       },
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: LegalTermsView,
+      meta: { title: 'Terms of Service — SignVault' },
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: LegalPrivacyView,
+      meta: { title: 'Privacy Policy — SignVault' },
     },
   ],
 })

@@ -1,22 +1,50 @@
 # SignVault Frontend
 
-Vue 3 frontend for SignVault, a Trackmania sign hosting and sharing app.
+> Trackmania sign hosting and sharing platform — frontend
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+SignVault is a platform for Trackmania players to upload, organise, and share in-game signs with the community. This repository contains the Vue 3 frontend application.
+
+**Backend repository:** [Dubbie/sign-vault-backend](https://github.com/Dubbie/sign-vault-backend)
+
+## Features
+
+- **Browse public folders** — Discover sign collections shared by the community
+- **Create and manage folders** — Organise your signs into custom collections
+- **Share folders** — Public or password-protected sharing options
+- **Discord authentication** — Sign in with your Discord account
+- **Admin tools** — Moderate content and manage users
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | [Vue 3](https://vuejs.org/) with Composition API |
+| Language | [TypeScript](https://www.typescriptlang.org/) |
+| Routing | [Vue Router](https://router.vuejs.org/) |
+| State | [Pinia](https://pinia.vuejs.org/) |
+| Styling | [Tailwind CSS 4](https://tailwindcss.com/) |
+| HTTP | [Axios](https://axios-http.com/) |
+| Build | [Vite](https://vitejs.dev/) |
+| Lint | [Oxlint](https://oxc.rs/) + [ESLint](https://eslint.org/) |
+| Test | [Vitest](https://vitest.dev/) |
 
 ## Requirements
 
-- Node.js `20.19.0` or newer
-- npm
-- A running SignVault API
+- **Node.js** `^20.19.0` or `>=22.12.0`
+- **npm**
+- A running instance of the [SignVault API](https://github.com/Dubbie/sign-vault-backend)
 
-## Setup
+## Getting Started
 
-Install dependencies:
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-Create your local environment file:
+### 2. Configure environment
 
 ```bash
 cp .env.example .env
@@ -28,52 +56,53 @@ Edit `.env` if needed:
 VITE_API_URL=http://localhost:8000
 ```
 
-## Start The App
+### 3. Start the dev server
 
-The frontend runs over HTTPS in development so it can talk to an HTTPS API without mixed-content issues.
-
-Start the dev server:
+The frontend runs over HTTPS in development so it can communicate with an HTTPS API without mixed-content issues.
 
 ```bash
 npm run dev
 ```
 
-Then open:
-
-```text
-https://localhost:5173
-```
-
-If your browser warns about the local certificate, accept it for local development.
-
-## Auth Flow
-
-This frontend uses bearer-token auth for the MVP.
-
-- `/login` starts Discord login by calling `GET /api/auth/discord/redirect`
-- `/auth/discord/callback` exchanges the Discord `code` and `state` with `POST /api/auth/discord/callback`
-- The returned token is stored in `localStorage`
-- `/dashboard` is protected and refreshes the current user with `GET /api/me`
-- Logout calls `POST /api/auth/logout` and clears local auth state
+Open [https://localhost:5173](https://localhost:5173). If your browser warns about the local self-signed certificate, accept it for local development.
 
 ## Scripts
 
-- `npm run dev` - start the HTTPS Vite dev server
-- `npm run build` - type-check and build for production
-- `npm run preview` - preview the production build
-- `npm run test:unit` - run Vitest
-- `npm run lint` - run Oxlint and ESLint
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the HTTPS Vite dev server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview the production build locally |
+| `npm run test:unit` | Run unit tests with Vitest |
+| `npm run lint` | Run Oxlint and ESLint |
+| `npm run format` | Format source with Prettier |
+
+## Authentication
+
+SignVault uses **Discord OAuth2** with bearer-token authentication:
+
+1. The login flow redirects to `GET /api/auth/discord/redirect`
+2. Discord redirects back to `/auth/discord/callback` with a `code` and `state`
+3. The callback exchanges the code for a token via `POST /api/auth/discord/callback`
+4. The token is stored in `localStorage` and sent as a `Bearer` header on subsequent requests
+5. Logout calls `POST /api/auth/logout` and clears local state
 
 ## Project Structure
 
-- `src/lib/api.ts` - reusable Axios client with bearer token support
-- `src/stores/auth.ts` - Pinia auth store
-- `src/router/index.ts` - route definitions and auth guards
-- `src/views/LoginView.vue` - Discord login page
-- `src/views/DiscordCallbackView.vue` - OAuth callback handler
-- `src/views/DashboardView.vue` - protected dashboard
+| Path | Purpose |
+|---|---|
+| `src/lib/` | API clients and utilities |
+| `src/stores/` | Pinia state stores |
+| `src/router/` | Route definitions and navigation guards |
+| `src/views/` | Page-level components |
+| `src/components/ui/` | Reusable UI primitives |
+| `src/components/explore/` | Explore-related components |
+| `src/components/folders/` | Folder management components |
+| `src/components/signs/` | Sign display and upload components |
+| `src/types/` | TypeScript type definitions |
+| `src/layouts/` | Layout components |
+| `certs/` | Local HTTPS certificates (not committed) |
 
-## Notes
+## License
 
-- The frontend expects `VITE_API_URL` to point at the API origin.
-- Local HTTPS certs for development are stored in `certs/` and are not committed.
+[MIT](LICENSE)

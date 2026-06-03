@@ -3,6 +3,7 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 import logoUrl from '@/assets/logo.svg'
 import { useAuthStore } from '@/stores/auth'
+import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -119,10 +120,34 @@ async function handleLogin() {
       </div>
     </main>
 
+    <CookieDisclaimer />
+
     <footer
       class="relative z-10 border-t border-border px-6 py-4 text-center text-xs text-zinc-400 sm:px-8"
     >
-      SignVault &mdash; Trackmania sign library
+      <div class="flex items-center justify-center gap-4">
+        <span>SignVault &mdash; Trackmania sign library</span>
+        <RouterLink
+          to="/terms"
+          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
+        >
+          Terms
+        </RouterLink>
+        <RouterLink
+          to="/privacy"
+          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
+        >
+          Privacy
+        </RouterLink>
+        <a
+          href="https://github.com/Dubbie/sign-vault-frontend"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
+        >
+          Source
+        </a>
+      </div>
     </footer>
   </div>
 </template>

@@ -54,3 +54,10 @@ export async function createSigns(folderId: number, payload: CreateSignPayload):
 export async function deleteSigns(ids: number[]): Promise<void> {
   await api.delete('/api/signs', { data: { ids } })
 }
+
+export async function moveSigns(signIds: number[], targetFolderId: number): Promise<void> {
+  await api.patch('/api/signs/move', {
+    ids: signIds,
+    folder_id: targetFolderId,
+  })
+}

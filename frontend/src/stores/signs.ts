@@ -7,6 +7,7 @@ import {
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
   getSignErrorMessage,
+  moveSigns as moveSignsRequest,
 } from '@/lib/signs'
 import type { CreateSignPayload, Sign } from '@/types/sign'
 
@@ -15,6 +16,7 @@ export const useSignsStore = defineStore('signs', () => {
   const currentSign = ref<Sign | null>(null)
   const isLoading = ref(false)
   const isUploading = ref(false)
+  const isMoving = ref(false)
   const error = ref<string | null>(null)
 
   function clearCurrentSign() {
@@ -109,6 +111,22 @@ export const useSignsStore = defineStore('signs', () => {
     }
   }
 
+  async function moveSigns(signIds: number[], targetFolderId: number) {
+    isMoving.value = true
+    clearError()
+
+    try {
+      await moveSignsRequest(signIds, targetFolderId)
+      signIds.forEach(removeSign)
+      return true
+    } catch (exception) {
+      setErrorFromUnknown(exception)
+      return false
+    } finally {
+      isMoving.value = false
+    }
+  }
+
   async function copySignUrl(sign: Sign) {
     clearError()
 
@@ -131,6 +149,8 @@ export const useSignsStore = defineStore('signs', () => {
     fetchSign,
     uploadSign,
     deleteSigns,
+    moveSigns,
+    isMoving,
     copySignUrl,
     clearCurrentSign,
     clearError,

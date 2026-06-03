@@ -11,6 +11,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 import UploadSignsModal from '@/components/signs/UploadSignsModal.vue'
+import MoveSignsModal from '@/components/signs/MoveSignsModal.vue'
 import EditFolderModal from '@/components/folders/EditFolderModal.vue'
 
 const foldersStore = useFoldersStore()
@@ -21,6 +22,7 @@ const folderId = computed(() => Number(route.params.id))
 const folder = computed(() => foldersStore.currentFolder)
 
 const showUploadModal = ref(false)
+const showMoveModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 const copiedSignId = ref<number | null>(null)
@@ -206,12 +208,20 @@ function clearSelection() {
       @saved="signsStore.fetchFolderSigns(folder.id)"
     />
 
+    <MoveSignsModal
+      v-if="folder"
+      v-model="showMoveModal"
+      :folder-id="folder.id"
+      :sign-ids="selectedSignIds"
+      @saved="(signsStore.fetchFolderSigns(folder.id), (selectedSignIds = []))"
+    />
+
     <EditFolderModal v-if="folder" v-model="showEditModal" :folder-id="folder.id" />
 
     <Transition name="toolbar">
       <div v-if="selectedSignIds.length > 0" class="fixed flex flex-col bottom-0 top-0 left-2 z-40">
         <div
-          class="bg-background/60 backdrop-blur border border-white/20 shadow-2xl px-4 py-3 rounded-2xl my-auto flex flex-col max-w-3xl items-center justify-between"
+          class="bg-background/60 backdrop-blur border border-white/20 shadow-2xl p-3 rounded-md my-auto flex flex-col max-w-3xl items-center justify-between"
         >
           <p class="text-sm text-zinc-300 mb-6">
             <span class="font-semibold text-zinc-100">{{ selectedSignIds.length }}</span>
@@ -223,12 +233,7 @@ function clearSelection() {
               Clear
             </UiButton>
 
-            <UiButton
-              class="w-full"
-              variant="primary"
-              type="button"
-              @click="showDeleteConfirm = true"
-            >
+            <UiButton class="w-full" variant="primary" type="button" @click="showMoveModal = true">
               Move
             </UiButton>
 

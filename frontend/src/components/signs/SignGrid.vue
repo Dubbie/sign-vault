@@ -32,7 +32,7 @@ const COLUMNS: { value: number; label: string }[] = [
   { value: 6, label: '6×1' },
   { value: 4, label: '4×1' },
   { value: 2, label: '2×1' },
-  { value: 1, label: '1×1 / 1×4' },
+  { value: 1, label: '1×1' },
 ]
 
 function closestColumnRatio(sign: GridSign): number {

@@ -77,7 +77,7 @@ export const useSignsStore = defineStore('signs', () => {
       signs.value = results.flatMap((r) => r.data)
 
       for (let i = 0; i < COLUMN_RATIOS.length; i++) {
-        const ratio = COLUMN_RATIOS[i]
+        const ratio = COLUMN_RATIOS[i]!
         const meta = results[i]!.meta
         columnState.value[ratio] = {
           currentPage: meta.current_page,

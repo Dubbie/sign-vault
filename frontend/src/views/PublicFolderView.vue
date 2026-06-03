@@ -39,7 +39,6 @@ async function checkIsAuthor() {
 
 const COLUMN_RATIOS = [6, 4, 2, 1] as const
 type ColumnRatio = (typeof COLUMN_RATIOS)[number]
-const PER_COLUMN = 10
 
 type ColumnState = { currentPage: number; hasMore: boolean }
 
@@ -119,7 +118,7 @@ async function loadSignsPerColumn(password: string | null) {
     signsTotal.value = results.reduce((sum, r) => sum + r.meta.total, 0)
 
     for (let i = 0; i < COLUMN_RATIOS.length; i++) {
-      const ratio = COLUMN_RATIOS[i]
+      const ratio = COLUMN_RATIOS[i]!
       const meta = results[i]!.meta
       columnState.value[ratio] = {
         currentPage: meta.current_page,

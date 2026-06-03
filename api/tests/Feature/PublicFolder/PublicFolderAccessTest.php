@@ -14,6 +14,232 @@ class PublicFolderAccessTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_lists_only_public_folders_with_signs(): void
+    {
+        $user = User::factory()->create();
+
+        $publicWithSigns = Folder::factory()->for($user)->create([
+            'name' => 'Public With Signs',
+            'slug' => 'public-with-signs',
+            'public_slug' => 'public-with-signs',
+            'visibility' => FolderVisibility::Public,
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $publicWithSigns->id,
+        ]);
+
+        Folder::factory()->for(User::factory()->create())->create([
+            'name' => 'Private Folder',
+            'slug' => 'private-folder',
+            'public_slug' => 'private-folder',
+            'visibility' => FolderVisibility::Private,
+        ]);
+
+        Folder::factory()->for(User::factory()->create())->create([
+            'name' => 'Password Folder',
+            'slug' => 'password-folder',
+            'public_slug' => 'password-folder',
+            'visibility' => FolderVisibility::Password,
+        ]);
+
+        $publicEmpty = Folder::factory()->for(User::factory()->create())->create([
+            'name' => 'Public Empty',
+            'slug' => 'public-empty',
+            'public_slug' => 'public-empty',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Public With Signs')
+            ->assertJsonMissingPath('data.0.password_hash');
+    }
+
+    public function test_empty_public_folder_is_excluded(): void
+    {
+        $user = User::factory()->create();
+
+        Folder::factory()->for($user)->create([
+            'name' => 'Empty Folder',
+            'slug' => 'empty-folder',
+            'public_slug' => 'empty-folder',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_includes_owner_information(): void
+    {
+        $user = User::factory()->create([
+            'discord_username' => 'janedoe',
+            'discord_global_name' => 'Jane Doe',
+            'discord_avatar' => 'https://cdn.discord.com/avatars/123/abc.png',
+        ]);
+
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Jane Signs',
+            'slug' => 'jane-signs',
+            'public_slug' => 'jane-signs',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonPath('data.0.owner.discord_username', 'janedoe')
+            ->assertJsonPath('data.0.owner.discord_global_name', 'Jane Doe')
+            ->assertJsonPath('data.0.owner.discord_avatar', 'https://cdn.discord.com/avatars/123/abc.png');
+    }
+
+    public function test_includes_sign_count(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Folder With Signs',
+            'slug' => 'folder-with-signs',
+            'public_slug' => 'folder-with-signs',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        Sign::factory()->count(5)->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonPath('data.0.signs_count', 5);
+    }
+
+    public function test_includes_preview_signs(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Folder With Previews',
+            'slug' => 'folder-with-previews',
+            'public_slug' => 'folder-with-previews',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'width' => 200,
+            'height' => 200,
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'width' => 200,
+            'height' => 100,
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'width' => 400,
+            'height' => 100,
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'width' => 400,
+            'height' => 100,
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'width' => 600,
+            'height' => 100,
+        ]);
+
+        $response = $this->getJson('/api/public/folders')
+            ->assertOk();
+
+        $previewSigns = $response->json('data.0.preview_signs');
+
+        $this->assertCount(5, $previewSigns);
+        $this->assertArrayHasKey('id', $previewSigns[0]);
+        $this->assertArrayHasKey('name', $previewSigns[0]);
+        $this->assertArrayHasKey('public_url', $previewSigns[0]);
+        $this->assertArrayHasKey('width', $previewSigns[0]);
+        $this->assertArrayHasKey('height', $previewSigns[0]);
+        $this->assertSame(200, $previewSigns[0]['width']);
+        $this->assertSame(200, $previewSigns[0]['height']);
+        $this->assertSame(200, $previewSigns[1]['width']);
+        $this->assertSame(100, $previewSigns[1]['height']);
+        $this->assertSame(400, $previewSigns[2]['width']);
+        $this->assertSame(100, $previewSigns[2]['height']);
+        $this->assertSame(400, $previewSigns[3]['width']);
+        $this->assertSame(100, $previewSigns[3]['height']);
+        $this->assertSame(600, $previewSigns[4]['width']);
+        $this->assertSame(100, $previewSigns[4]['height']);
+    }
+
+    public function test_can_search_by_folder_name(): void
+    {
+        $user = User::factory()->create();
+
+        $club = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+            'public_slug' => 'club-signs',
+            'visibility' => FolderVisibility::Public,
+        ]);
+        Sign::factory()->create(['user_id' => $user->id, 'folder_id' => $club->id]);
+
+        $racing = Folder::factory()->for($user)->create([
+            'name' => 'Racing Signs',
+            'slug' => 'racing-signs',
+            'public_slug' => 'racing-signs',
+            'visibility' => FolderVisibility::Public,
+        ]);
+        Sign::factory()->create(['user_id' => $user->id, 'folder_id' => $racing->id]);
+
+        $this->getJson('/api/public/folders?q=club')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Club Signs');
+
+        $this->getJson('/api/public/folders?q=racing')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Racing Signs');
+
+        $this->getJson('/api/public/folders?q=nonexistent')
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+    }
+
+    public function test_is_paginated(): void
+    {
+        $user = User::factory()->create();
+        Folder::factory()->count(25)->for($user)->create([
+            'visibility' => FolderVisibility::Public,
+        ])->each(function (Folder $folder) use ($user): void {
+            Sign::factory()->create(['user_id' => $user->id, 'folder_id' => $folder->id]);
+        });
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonStructure([
+                'data',
+                'meta' => ['current_page', 'last_page', 'per_page', 'total'],
+            ])
+            ->assertJsonCount(20, 'data')
+            ->assertJsonPath('meta.total', 25)
+            ->assertJsonPath('meta.per_page', 20)
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
     public function test_public_folder_can_be_viewed_anonymously(): void
     {
         $folder = $this->makeFolder(FolderVisibility::Public, [

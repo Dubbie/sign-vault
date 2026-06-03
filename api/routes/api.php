@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/discord/redirect', [DiscordAuthController::class, 'redirect']);
 Route::post('/auth/discord/callback', [DiscordAuthController::class, 'callback']);
+Route::get('/public/folders', [PublicFolderController::class, 'index']);
 Route::get('/public/folders/{slug}', [PublicFolderController::class, 'show']);
 Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'unlock'])
     ->middleware('throttle:folder-unlock');

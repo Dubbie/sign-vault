@@ -1,52 +1,59 @@
 # SignVault API
 
-Backend API for SignVault, a Trackmania sign hosting and sharing platform.
+> Trackmania sign hosting and sharing platform — backend API
 
-## Overview
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](../frontend/LICENSE)
 
-SignVault allows users to:
+SignVault is a platform for Trackmania players to upload, organise, and share in-game signs with the community. This repository contains the Laravel API backend.
 
-- Authenticate using Discord
-- Upload Trackmania sign images
-- Organize signs into folders
-- Share folders publicly
-- Protect folders with passwords
-- Copy stable image URLs for use directly inside Trackmania
+**Frontend repository:** [Dubbie/sign-vault-frontend](https://github.com/Dubbie/sign-vault-frontend)
 
-The frontend is a separate Vue application.
+## Features
+
+- **Discord OAuth2 authentication** — One-click login with CSRF-protected state flow
+- **Folder management** — Create, edit, delete, and organise sign folders
+- **Sign uploads & hosting** — Upload Trackmania sign images with stable URLs
+- **Public sharing** — Share folders publicly or protect them with a password
+- **Admin moderation** — User management and content moderation tools
 
 ## Tech Stack
 
-- Laravel 13
-- PHP 8.4+
-- Laravel Sanctum
-- Laravel Socialite
-- MySQL or PostgreSQL
-- Cloudflare R2 (production)
-- MinIO (local development)
-- DDEV
+| Layer | Technology |
+|---|---|
+| Framework | [Laravel 13](https://laravel.com/) |
+| Language | [PHP 8.4](https://www.php.net/) |
+| Auth | [Laravel Sanctum](https://laravel.com/docs/sanctum) + [Socialite](https://laravel.com/docs/socialite) |
+| Database | MySQL or PostgreSQL |
+| Object Storage | Cloudflare R2 (production) / MinIO (local) |
+| Local Dev | [DDEV](https://ddev.com/) |
 
-## Local Development
+## Requirements
 
-Start DDEV:
+- [DDEV](https://ddev.com/get-started/)
+- PHP 8.4+ (managed by DDEV)
+- Composer (managed by DDEV)
+
+## Getting Started
+
+### 1. Start the environment
 
 ```bash
 ddev start
 ```
 
-Install dependencies:
+### 2. Install dependencies
 
 ```bash
 ddev composer install
 ```
 
-Run migrations:
+### 3. Run migrations
 
 ```bash
 ddev artisan migrate
 ```
 
-Run tests:
+### 4. Run tests
 
 ```bash
 ddev artisan test
@@ -54,19 +61,13 @@ ddev artisan test
 
 ## Object Storage
 
-Local development uses MinIO.
-
-MinIO Console:
+Local development uses **MinIO**. The MinIO console is available at:
 
 ```text
 http://localhost:9001
 ```
 
-Default bucket:
-
-```text
-sign-vault-local
-```
+Default bucket: `sign-vault-local`
 
 If direct `public_url` links return `AccessDenied`, make the bucket publicly readable:
 
@@ -77,37 +78,37 @@ mc anonymous set download local/sign-vault-local
 '
 ```
 
-Production uses Cloudflare R2 through Laravel's S3 filesystem driver.
+Production uses **Cloudflare R2** through Laravel's S3 filesystem driver. Configure it via your `.env`:
+
+```env
+FILESYSTEM_DISK=r2
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+AWS_BUCKET=your_bucket
+AWS_ENDPOINT=https://your_account.r2.cloudflarestorage.com
+AWS_URL=https://pub-xxxxx.r2.dev
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
 
 ## Authentication
 
-Authentication is handled through Discord OAuth.
+SignVault uses **Discord OAuth2** with a one-time `state` value for CSRF protection. The flow:
 
-Traditional email/password registration is not part of the MVP.
+1. `GET /api/auth/discord/redirect` — Returns the Discord authorization URL and a generated `state`
+2. The frontend redirects the user to Discord
+3. `POST /api/auth/discord/callback` — Exchanges the `code` and `state` for a bearer token
 
-The Discord flow uses a one-time `state` value for CSRF protection. The
-`/api/auth/discord/redirect` endpoint returns the authorization URL and the
-generated `state`; the frontend must forward both the `code` and `state` values
-to `/api/auth/discord/callback`.
+Traditional email/password registration is not currently supported.
 
-## Project Status
+## Scripts
 
-Current MVP goals:
+| Command | Description |
+|---|---|
+| `ddev artisan test` | Run the test suite |
+| `ddev artisan migrate` | Run database migrations |
+| `ddev artisan tinker` | Open an interactive shell |
+| `ddev npm run dev` | Start the Vite dev server for asset building |
 
-- Discord authentication
-- Folder management
-- Sign uploads
-- Public folder sharing
-- Password-protected folders
+## License
 
-Future features may include:
-
-- Teams
-- Shared ownership
-- Moderation tools
-- Search
-- Collections
-
-## Documentation
-
-See AGENTS.md for AI agent instructions and project conventions.
+[MIT](../frontend/LICENSE)

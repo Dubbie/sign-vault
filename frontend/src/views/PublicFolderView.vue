@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import {
   getPublicFolder,
@@ -8,6 +8,8 @@ import {
   unlockPublicFolder,
 } from '@/lib/public-folders'
 import type { PublicFolder, PublicFolderContentsResponse, PublicSign } from '@/types/public-folder'
+import { useAuthStore } from '@/stores/auth'
+import { useFoldersStore } from '@/stores/folders'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
@@ -17,14 +19,27 @@ import UiInput from '@/components/ui/UiInput.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
+const foldersStore = useFoldersStore()
 
 const folderSlug = computed(() => String(route.params.slug))
+
+async function checkIsAuthor() {
+  if (!authStore.isAuthenticated || !folder.value) return false
+
+  if (foldersStore.folders.length === 0) {
+    await foldersStore.fetchFolders()
+  }
+
+  return foldersStore.folders.some((f) => f.public_slug === folder.value!.slug)
+}
 
 const folder = ref<PublicFolder | null>(null)
 const signs = ref<PublicSign[]>([])
 const requiresPassword = ref(false)
 const isLoading = ref(false)
 const isUnlocking = ref(false)
+const isAuthor = ref(false)
 const error = ref<string | null>(null)
 const copiedSignId = ref<number | null>(null)
 
@@ -42,6 +57,9 @@ function normalizeFolderResponse(response: PublicFolderContentsResponse) {
   requiresPassword.value = false
   error.value = null
   document.title = `${response.folder.name} — SignVault`
+  checkIsAuthor().then((result) => {
+    isAuthor.value = result
+  })
 }
 
 function resetStateForPasswordPrompt() {
@@ -75,6 +93,7 @@ async function loadPublicFolder() {
       folder.value = null
       signs.value = []
       requiresPassword.value = false
+      isAuthor.value = false
       return
     }
 
@@ -103,6 +122,7 @@ async function handleUnlock() {
       folder.value = null
       signs.value = []
       requiresPassword.value = false
+      isAuthor.value = false
       return
     }
 
@@ -136,6 +156,7 @@ watch(folderSlug, () => {
   folder.value = null
   signs.value = []
   requiresPassword.value = false
+  isAuthor.value = false
   copiedSignId.value = null
   void loadPublicFolder()
 })
@@ -187,12 +208,7 @@ watch(folderSlug, () => {
         </UiFormField>
 
         <div class="mt-4">
-          <UiButton
-            variant="primary"
-            type="submit"
-            full-width
-            :disabled="isUnlocking"
-          >
+          <UiButton variant="primary" type="submit" full-width :disabled="isUnlocking">
             {{ isUnlocking ? 'Unlocking...' : 'Unlock folder' }}
           </UiButton>
         </div>
@@ -205,9 +221,14 @@ watch(folderSlug, () => {
           <h2 class="text-[1.35rem] text-zinc-100 font-semibold">{{ folder.name }}</h2>
           <p class="text-xs text-zinc-400 font-mono">{{ folder.slug }}</p>
         </div>
-        <div class="text-right">
-          <UiBadge :label="visibilityLabel(folder.visibility)" />
-          <p class="text-xs font-mono pr-2 mt-2 text-zinc-400">{{ signs.length }} total</p>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="text-right">
+            <UiBadge :label="visibilityLabel(folder.visibility)" />
+            <p class="text-xs font-mono mt-1 text-zinc-400">{{ signs.length }} total</p>
+          </div>
+          <RouterLink v-if="isAuthor" :to="`/folders/${folder.id}`">
+            <UiButton variant="primary" type="button"> Manage folder </UiButton>
+          </RouterLink>
         </div>
       </header>
 

@@ -177,10 +177,12 @@ onUnmounted(() => {
           @click="selectable ? toggleSelect(sign.id) : emit('copy', sign.id)"
         >
           <div class="relative w-full" :style="{ aspectRatio: signAspectRatio(sign) }">
-            <div
-              v-if="!imageLoaded[sign.id]"
-              class="absolute inset-0 animate-pulse rounded bg-zinc-800"
-            />
+            <Transition name="skeleton-fade">
+              <div
+                v-if="!imageLoaded[sign.id]"
+                class="absolute inset-0 animate-pulse rounded bg-zinc-800"
+              />
+            </Transition>
             <img
               :src="sign.public_url"
               :alt="sign.name"
@@ -256,6 +258,13 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.skeleton-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.skeleton-fade-leave-to {
+  opacity: 0;
+}
+
 .sign-grid {
   grid-template-columns: 4fr 4fr 2fr 1fr;
 }

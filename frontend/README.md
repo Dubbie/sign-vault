@@ -2,11 +2,7 @@
 
 > Trackmania sign hosting and sharing platform — frontend
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-SignVault is a platform for Trackmania players to upload, organise, and share in-game signs with the community. This repository contains the Vue 3 frontend application.
-
-**Backend repository:** [Dubbie/sign-vault-backend](https://github.com/Dubbie/sign-vault-backend)
+SignVault is a platform for Trackmania players to upload, organise, and share in-game signs with the community. This is the Vue 3 frontend application, part of the [sign-vault monorepo](https://github.com/Dubbie/sign-vault).
 
 ## Features
 
@@ -34,7 +30,7 @@ SignVault is a platform for Trackmania players to upload, organise, and share in
 
 - **Node.js** `^20.19.0` or `>=22.12.0`
 - **npm**
-- A running instance of the [SignVault API](https://github.com/Dubbie/sign-vault-backend)
+- A running instance of the SignVault API (`api/` in the monorepo)
 
 ## Getting Started
 
@@ -102,7 +98,3 @@ SignVault uses **Discord OAuth2** with bearer-token authentication:
 | `src/types/` | TypeScript type definitions |
 | `src/layouts/` | Layout components |
 | `certs/` | Local HTTPS certificates (not committed) |
-
-## License
-
-[MIT](LICENSE)

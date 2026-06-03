@@ -2,11 +2,7 @@
 
 > Trackmania sign hosting and sharing platform — backend API
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](../frontend/LICENSE)
-
-SignVault is a platform for Trackmania players to upload, organise, and share in-game signs with the community. This repository contains the Laravel API backend.
-
-**Frontend repository:** [Dubbie/sign-vault-frontend](https://github.com/Dubbie/sign-vault-frontend)
+SignVault is a platform for Trackmania players to upload, organise, and share in-game signs with the community. This is the Laravel API backend, part of the [sign-vault monorepo](https://github.com/Dubbie/sign-vault).
 
 ## Features
 
@@ -108,7 +104,3 @@ Traditional email/password registration is not currently supported.
 | `ddev artisan migrate` | Run database migrations |
 | `ddev artisan tinker` | Open an interactive shell |
 | `ddev npm run dev` | Start the Vite dev server for asset building |
-
-## License
-
-[MIT](../frontend/LICENSE)

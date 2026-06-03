@@ -6,8 +6,10 @@ use App\Http\Controllers\Auth\DiscordAuthController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PublicFolderController;
 use App\Http\Controllers\SignController;
+use App\Http\Controllers\StatsController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/stats', [StatsController::class, 'index']);
 Route::get('/auth/discord/redirect', [DiscordAuthController::class, 'redirect']);
 Route::post('/auth/discord/callback', [DiscordAuthController::class, 'callback']);
 Route::get('/public/folders', [PublicFolderController::class, 'index']);

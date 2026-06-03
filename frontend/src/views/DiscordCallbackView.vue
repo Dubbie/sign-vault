@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AxiosError } from 'axios'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -36,8 +37,10 @@ onMounted(async () => {
   try {
     await auth.handleDiscordCallback(code, state)
     await router.replace({ name: 'dashboard' })
-  } catch {
-    errorMessage.value = 'Discord sign-in failed. Please try logging in again.'
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }> | undefined
+    const serverMessage = axiosError?.response?.data?.message
+    errorMessage.value = serverMessage || 'Discord sign-in failed. Please try logging in again.'
   }
 })
 </script>

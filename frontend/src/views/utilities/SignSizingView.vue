@@ -7,6 +7,42 @@
 
     <div class="mt-8 space-y-10 text-sm text-zinc-300 leading-relaxed">
       <section>
+        <h2 class="text-base font-semibold text-zinc-100">Image sizes</h2>
+        <p class="mt-2 mb-4">
+          All signs share a fixed height of <strong class="text-zinc-200">512 px</strong>. The width
+          depends on how many block units wide the sign is.
+        </p>
+        <div class="overflow-x-auto rounded-xl border border-border">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-border bg-surface">
+                <th class="px-4 py-3 font-semibold text-zinc-300">Image size</th>
+                <th class="px-4 py-3 font-semibold text-zinc-300">Aspect ratio</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr class="transition-colors hover:bg-white/[0.02]">
+                <td class="px-4 py-3 font-mono text-emerald-400">512 × 512 px</td>
+                <td class="px-4 py-3 text-zinc-400">1 : 1</td>
+              </tr>
+              <tr class="transition-colors hover:bg-white/[0.02]">
+                <td class="px-4 py-3 font-mono text-emerald-400">1024 × 512 px</td>
+                <td class="px-4 py-3 text-zinc-400">2 : 1</td>
+              </tr>
+              <tr class="transition-colors hover:bg-white/[0.02]">
+                <td class="px-4 py-3 font-mono text-emerald-400">2048 × 512 px</td>
+                <td class="px-4 py-3 text-zinc-400">4 : 1</td>
+              </tr>
+              <tr class="transition-colors hover:bg-white/[0.02]">
+                <td class="px-4 py-3 font-mono text-emerald-400">3072 × 512 px</td>
+                <td class="px-4 py-3 text-zinc-400">6 : 1</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
         <h2 class="text-base font-semibold text-zinc-100">Sign types</h2>
         <p class="mt-2">
           There are two types of sign images in Trackmania, distinguished by their file format:
@@ -65,42 +101,6 @@
               finished sign, no layering needed.
             </p>
           </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 class="text-base font-semibold text-zinc-100">Image sizes</h2>
-        <p class="mt-2 mb-4">
-          All signs share a fixed height of <strong class="text-zinc-200">512 px</strong>. The width
-          depends on how many block units wide the sign is.
-        </p>
-        <div class="overflow-x-auto rounded-xl border border-border">
-          <table class="w-full text-left text-xs">
-            <thead>
-              <tr class="border-b border-border bg-surface">
-                <th class="px-4 py-3 font-semibold text-zinc-300">Image size</th>
-                <th class="px-4 py-3 font-semibold text-zinc-300">Aspect ratio</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-border">
-              <tr class="transition-colors hover:bg-white/[0.02]">
-                <td class="px-4 py-3 font-mono text-emerald-400">512 × 512 px</td>
-                <td class="px-4 py-3 text-zinc-400">1 : 1</td>
-              </tr>
-              <tr class="transition-colors hover:bg-white/[0.02]">
-                <td class="px-4 py-3 font-mono text-emerald-400">1024 × 512 px</td>
-                <td class="px-4 py-3 text-zinc-400">2 : 1</td>
-              </tr>
-              <tr class="transition-colors hover:bg-white/[0.02]">
-                <td class="px-4 py-3 font-mono text-emerald-400">2048 × 512 px</td>
-                <td class="px-4 py-3 text-zinc-400">4 : 1</td>
-              </tr>
-              <tr class="transition-colors hover:bg-white/[0.02]">
-                <td class="px-4 py-3 font-mono text-emerald-400">3072 × 512 px</td>
-                <td class="px-4 py-3 text-zinc-400">6 : 1</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </section>
 

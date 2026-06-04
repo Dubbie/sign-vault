@@ -49,7 +49,7 @@ cp .env.example .env
 Edit `.env` if needed:
 
 ```env
-VITE_API_URL=http://localhost:8000
+VITE_API_URL=https://api.sign-vault.ddev.site
 ```
 
 ### 3. Start the dev server

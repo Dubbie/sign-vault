@@ -18,8 +18,8 @@ export default defineConfig(({ command, isPreview }) => {
 
   return {
     plugins: [vue(), vueDevTools(), tailwindcss()],
-    server: httpsOptions ? { https: httpsOptions } : undefined,
-    preview: httpsOptions ? { https: httpsOptions } : undefined,
+    server: { port: 5173, ...(httpsOptions ? { https: httpsOptions } : {}) },
+    preview: { port: 5173, ...(httpsOptions ? { https: httpsOptions } : {}) },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -55,7 +55,7 @@ The landing page runs over HTTPS in development to stay consistent with the rest
 npm run dev
 ```
 
-Open [https://localhost:5173](https://localhost:5173). If your browser warns about the local self-signed certificate, accept it for local development.
+Open [https://localhost:5174](https://localhost:5174). If your browser warns about the local self-signed certificate, accept it for local development.
 
 ## Scripts
 

@@ -17,6 +17,7 @@ class FolderController extends Controller
     {
         $folders = $request->user()
             ->folders()
+            ->with('variants')
             ->latest()
             ->get();
 
@@ -43,6 +44,8 @@ class FolderController extends Controller
     public function show(Folder $folder): JsonResponse
     {
         $this->authorize('view', $folder);
+
+        $folder->load('variants');
 
         return (new FolderResource($folder))->response();
     }

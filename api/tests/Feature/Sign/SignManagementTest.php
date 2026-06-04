@@ -101,13 +101,15 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
+        $defaultVariant = $folder->defaultVariant;
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/'.$defaultVariant->id.'/ice-warning.png';
 
         Storage::disk($disk)->put($storageKey, 'fake-image');
 
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
+            'variant_id' => $defaultVariant->id,
             'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
@@ -122,12 +124,12 @@ class SignManagementTest extends TestCase
 
         $this->getJson("/api/folders/{$folder->id}/signs")
             ->assertOk()
-            ->assertJsonCount(1)
-            ->assertJsonPath('0.id', $sign->id)
-            ->assertJsonPath('0.folder_id', $folder->id)
-            ->assertJsonPath('0.public_url', Storage::disk($disk)->url($storageKey))
-            ->assertJsonMissingPath('0.storage_key')
-            ->assertJsonMissingPath('0.storage_disk');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $sign->id)
+            ->assertJsonPath('data.0.folder_id', $folder->id)
+            ->assertJsonPath('data.0.public_url', Storage::disk($disk)->url($storageKey))
+            ->assertJsonMissingPath('data.0.storage_key')
+            ->assertJsonMissingPath('data.0.storage_disk');
     }
 
     public function test_authenticated_user_can_view_own_sign(): void
@@ -139,13 +141,15 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
+        $defaultVariant = $folder->defaultVariant;
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/'.$defaultVariant->id.'/ice-warning.png';
 
         Storage::disk($disk)->put($storageKey, 'fake-image');
 
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
+            'variant_id' => $defaultVariant->id,
             'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
@@ -189,13 +193,15 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
+        $defaultVariant = $folder->defaultVariant;
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/'.$defaultVariant->id.'/ice-warning.png';
 
         Storage::disk($disk)->put($storageKey, 'fake-image');
 
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
+            'variant_id' => $defaultVariant->id,
             'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
@@ -226,11 +232,13 @@ class SignManagementTest extends TestCase
         ]);
 
         $disk = $this->fakeSignStorage();
-        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/ice-warning.png';
+        $defaultVariant = $folder->defaultVariant;
+        $storageKey = 'signs/'.$user->id.'/'.$folder->id.'/'.$defaultVariant->id.'/ice-warning.png';
 
         $sign = Sign::create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
+            'variant_id' => $defaultVariant->id,
             'name' => 'ice-warning',
             'storage_disk' => $disk,
             'storage_key' => $storageKey,
@@ -298,10 +306,11 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $otherUser->id,
             'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
             'name' => 'ice-warning',
             'storage_disk' => 's3',
-            'storage_key' => 'signs/2/private-folder/ice-warning.png',
-            'public_url' => 'http://example.test/signs/2/private-folder/ice-warning.png',
+            'storage_key' => 'signs/2/private-folder/'.$folder->defaultVariant->id.'/ice-warning.png',
+            'public_url' => 'http://example.test/signs/2/private-folder/'.$folder->defaultVariant->id.'/ice-warning.png',
             'mime_type' => 'image/png',
             'size_bytes' => 10,
             'width' => 1024,
@@ -326,10 +335,11 @@ class SignManagementTest extends TestCase
         $sign = Sign::create([
             'user_id' => $otherUser->id,
             'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
             'name' => 'ice-warning',
             'storage_disk' => 's3',
-            'storage_key' => 'signs/2/private-folder/ice-warning.png',
-            'public_url' => 'http://example.test/signs/2/private-folder/ice-warning.png',
+            'storage_key' => 'signs/2/private-folder/'.$folder->defaultVariant->id.'/ice-warning.png',
+            'public_url' => 'http://example.test/signs/2/private-folder/'.$folder->defaultVariant->id.'/ice-warning.png',
             'mime_type' => 'image/png',
             'size_bytes' => 10,
             'width' => 1024,
@@ -363,6 +373,54 @@ class SignManagementTest extends TestCase
         ])
             ->assertStatus(422)
             ->assertJsonValidationErrors('files.0');
+    }
+
+    public function test_avif_files_are_accepted(): void
+    {
+        Storage::fake('s3');
+
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $file = $this->makeAvifUpload('avif-sign.avif');
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [$file],
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('signs', [
+            'folder_id' => $folder->id,
+            'name' => 'avif-sign',
+            'mime_type' => 'image/avif',
+        ]);
+    }
+
+    private function makeAvifUpload(string $name): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'avif_');
+
+        if ($path === false) {
+            $this->fail('Unable to create a temporary AVIF file.');
+        }
+
+        $image = imagecreatetruecolor(2, 2);
+        $background = imagecolorallocate($image, 32, 64, 96);
+        imagefill($image, 0, 0, $background);
+
+        if (! imageavif($image, $path)) {
+            imagedestroy($image);
+            @unlink($path);
+            $this->fail('Unable to encode a temporary AVIF file.');
+        }
+
+        imagedestroy($image);
+
+        return new UploadedFile($path, $name, 'image/avif', null, true);
     }
 
     public function test_missing_file_is_rejected(): void
@@ -454,7 +512,8 @@ class SignManagementTest extends TestCase
         $firstResponse->assertCreated();
 
         $firstSignId = $firstResponse->json('signs.0.id');
-        $storageKey = "signs/{$user->id}/{$folder->id}/ice-warning.png";
+        $defaultVariant = $folder->defaultVariant;
+        $storageKey = "signs/{$user->id}/{$folder->id}/{$defaultVariant->id}/ice-warning.png";
         $firstSign = Sign::query()->findOrFail($firstSignId);
 
         $this->assertSame($storageKey, $firstSign->storage_key);

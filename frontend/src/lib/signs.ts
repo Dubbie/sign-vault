@@ -36,9 +36,11 @@ export async function getFolderSigns(
   page = 1,
   perPage = 10,
   columnRatio?: number,
+  variantId?: number,
 ): Promise<PaginatedSignResponse> {
   const params: Record<string, number> = { page, per_page: perPage }
   if (columnRatio !== undefined) params.column_ratio = columnRatio
+  if (variantId !== undefined) params.variant_id = variantId
 
   const { data } = await api.get<PaginatedSignResponse>(`/api/folders/${folderId}/signs`, { params })
   return data
@@ -54,6 +56,9 @@ export async function createSigns(folderId: number, payload: CreateSignPayload):
   payload.files.forEach((file) => {
     formData.append('files[]', file)
   })
+  if (payload.variant_id !== undefined) {
+    formData.append('variant_id', String(payload.variant_id))
+  }
 
   const { data } = await api.post<{ signs: Sign[] }>(`/api/folders/${folderId}/signs`, formData)
   return data.signs
@@ -68,4 +73,15 @@ export async function moveSigns(signIds: number[], targetFolderId: number): Prom
     ids: signIds,
     folder_id: targetFolderId,
   })
+}
+
+export async function changeSignVariant(
+  signIds: number[],
+  variantId: number,
+): Promise<{ message: string; changed_count: number }> {
+  const { data } = await api.patch<{ message: string; changed_count: number }>(
+    '/api/signs/variant',
+    { ids: signIds, variant_id: variantId },
+  )
+  return data
 }

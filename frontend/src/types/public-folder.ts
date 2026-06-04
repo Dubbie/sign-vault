@@ -1,5 +1,11 @@
 export type PublicFolderVisibility = 'public' | 'password'
 
+export type PublicFolderVariant = {
+  id: number
+  name: string | null
+  is_default: boolean
+}
+
 export type PublicFolder = {
   id: number
   name: string
@@ -11,6 +17,7 @@ export type PublicFolder = {
     discord_global_name: string | null
     discord_avatar: string | null
   }
+  variants: PublicFolderVariant[]
 }
 
 export type OwnerInfo = {
@@ -22,6 +29,7 @@ export type OwnerInfo = {
 export type PreviewSign = {
   id: number
   name: string
+  variant_id: number | null
   public_url: string
   width: number | null
   height: number | null
@@ -53,6 +61,7 @@ export type PaginatedPublicFolderResponse = {
 export type PublicSign = {
   id: number
   name: string
+  variant_id: number | null
   public_url: string
   mime_type: string
   width: number | null

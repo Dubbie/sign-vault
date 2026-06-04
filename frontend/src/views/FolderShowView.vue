@@ -2,13 +2,21 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
+import {
+  createVariant as createVariantRequest,
+  deleteVariant as deleteVariantRequest,
+  updateVariant as updateVariantRequest,
+} from '@/lib/folders'
 import { useFoldersStore } from '@/stores/folders'
 import { useSignsStore } from '@/stores/signs'
+import type { Variant } from '@/types/folder'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiModal from '@/components/ui/UiModal.vue'
+import UiFormField from '@/components/ui/UiFormField.vue'
+import UiInput from '@/components/ui/UiInput.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 import UploadSignsModal from '@/components/signs/UploadSignsModal.vue'
 import MoveSignsModal from '@/components/signs/MoveSignsModal.vue'
@@ -21,14 +29,59 @@ const route = useRoute()
 const folderId = computed(() => Number(route.params.id))
 const folder = computed(() => foldersStore.currentFolder)
 
+const variants = computed<Variant[]>(() => folder.value?.variants ?? [])
+const showVariantTabs = computed(() => variants.value.length > 1)
+
+function isDefaultVariant(variant: Variant) {
+  return variant.is_default
+}
+
+function variantDisplayLabel(variant: Variant) {
+  if (isDefaultVariant(variant)) return variant.name ?? folder.value?.name ?? 'Default'
+  return variant.name ?? 'Unnamed'
+}
+
+function activeVariant(): Variant | null {
+  if (selectedVariantId.value) {
+    return variants.value.find((v) => v.id === selectedVariantId.value) ?? null
+  }
+  return variants.value.find((v) => v.is_default) ?? null
+}
+
+async function handleVariantSelect(variant: Variant) {
+  selectedVariantId.value = variant.id
+  await signsStore.fetchFolderSigns(folderId.value, variant.id)
+}
+
+async function handleVariantToggle() {
+  if (!showVariantTabs.value) {
+    selectedVariantId.value = null
+    await signsStore.fetchFolderSigns(folderId.value)
+  } else if (!selectedVariantId.value) {
+    const defaultV = variants.value.find((v) => v.is_default)
+    if (defaultV) {
+      selectedVariantId.value = defaultV.id
+      await signsStore.fetchFolderSigns(folderId.value, defaultV.id)
+    }
+  }
+}
+
 const showUploadModal = ref(false)
 const showMoveModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
+const showChangeVariantModal = ref(false)
 const copiedSignId = ref<number | null>(null)
 const copiedPublicUrl = ref(false)
 const selectedSignIds = ref<number[]>([])
 const isDeleting = ref(false)
+const selectedVariantId = ref<number | null>(null)
+const variantError = ref<string | null>(null)
+const newVariantName = ref('')
+const isCreatingVariant = ref(false)
+const renamingVariant = ref<{ id: number; name: string } | null>(null)
+const showDeleteVariantConfirm = ref<number | null>(null)
+const showCreateVariantInput = ref(false)
 
 function visibilityLabel(visibility: string) {
   return visibility.charAt(0).toUpperCase() + visibility.slice(1)
@@ -53,6 +106,18 @@ async function loadFolder() {
   const loadedFolder = await foldersStore.fetchFolder(id)
   if (loadedFolder) {
     document.title = `${loadedFolder.name} — SignVault`
+
+    const variantParam = route.query.variant
+    if (variantParam) {
+      const parsed = Number(variantParam)
+      const found = loadedFolder.variants.find((v) => v.id === parsed)
+      if (found) {
+        selectedVariantId.value = found.id
+        await signsStore.fetchFolderSigns(id, found.id)
+        return
+      }
+    }
+
     await signsStore.fetchFolderSigns(id)
   }
 }
@@ -72,6 +137,7 @@ watch(folderId, () => {
   copiedSignId.value = null
   copiedPublicUrl.value = false
   selectedSignIds.value = []
+  selectedVariantId.value = null
   void loadFolder()
 })
 
@@ -111,6 +177,107 @@ async function handleDeleteSelected() {
     // error is set in the store
   } finally {
     isDeleting.value = false
+  }
+}
+
+async function handleCreateVariant() {
+  if (!folder.value || !newVariantName.value.trim()) return
+  isCreatingVariant.value = true
+  variantError.value = null
+
+  try {
+    const created = await createVariantRequest(folder.value.id, {
+      name: newVariantName.value.trim(),
+    })
+    newVariantName.value = ''
+    showCreateVariantInput.value = false
+    await foldersStore.fetchFolder(folder.value.id)
+    if (created.backfill_performed) {
+      await handleVariantToggle()
+    }
+  } catch (e) {
+    variantError.value = 'Failed to create variant.'
+  } finally {
+    isCreatingVariant.value = false
+  }
+}
+
+function openRenameVariant(variant: Variant) {
+  renamingVariant.value = {
+    id: variant.id,
+    name: variant.name ?? folder.value?.name ?? '',
+  }
+}
+
+function closeRenameVariant() {
+  renamingVariant.value = null
+}
+
+async function handleConfirmRenameVariant() {
+  if (!renamingVariant.value) return
+
+  await handleRenameVariant(renamingVariant.value.id, renamingVariant.value.name)
+}
+
+function openDeleteVariant(variantId: number) {
+  showDeleteVariantConfirm.value = variantId
+}
+
+function closeDeleteVariant() {
+  showDeleteVariantConfirm.value = null
+}
+
+async function handleConfirmDeleteVariant() {
+  if (showDeleteVariantConfirm.value === null) return
+
+  await handleDeleteVariant(showDeleteVariantConfirm.value)
+}
+
+async function handleRenameVariant(variantId: number, newName: string) {
+  if (!folder.value || !newName.trim()) return
+  variantError.value = null
+
+  try {
+    await updateVariantRequest(folder.value.id, variantId, {
+      name: newName.trim(),
+    })
+    renamingVariant.value = null
+    await foldersStore.fetchFolder(folder.value.id)
+  } catch {
+    variantError.value = 'Failed to rename variant.'
+  }
+}
+
+async function handleSetDefault(variantId: number) {
+  if (!folder.value) return
+  variantError.value = null
+
+  try {
+    await updateVariantRequest(folder.value.id, variantId, {
+      is_default: true,
+    })
+    await foldersStore.fetchFolder(folder.value.id)
+    selectedVariantId.value = variantId
+    await signsStore.fetchFolderSigns(folderId.value, variantId)
+  } catch {
+    variantError.value = 'Failed to set default variant.'
+  }
+}
+
+async function handleDeleteVariant(variantId: number) {
+  if (!folder.value) return
+  variantError.value = null
+
+  try {
+    await deleteVariantRequest(folder.value.id, variantId)
+    showDeleteVariantConfirm.value = null
+    if (selectedVariantId.value === variantId) {
+      selectedVariantId.value = null
+    }
+    await foldersStore.fetchFolder(folder.value.id)
+    await signsStore.fetchFolderSigns(folderId.value)
+  } catch {
+    variantError.value = 'Failed to delete variant.'
   }
 }
 
@@ -181,6 +348,103 @@ function clearSelection() {
         </div>
       </header>
 
+      <section class="mt-4 border-t border-white/10 pt-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+            Variants
+          </h2>
+
+          <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
+            Add variant
+          </UiButton>
+        </div>
+
+        <div class="mt-3 grid gap-2">
+          <div
+            v-for="variant in variants"
+            :key="variant.id"
+            class="flex flex-wrap items-center gap-2 border border-white/10 px-3 py-2"
+          >
+            <button
+              type="button"
+              class="rounded px-2 py-1 text-sm font-medium transition"
+              :class="
+                activeVariant()?.id === variant.id
+                  ? 'bg-emerald-400/10 text-emerald-400'
+                  : 'text-zinc-300 hover:text-zinc-100'
+              "
+              @click="handleVariantSelect(variant)"
+            >
+              {{ variantDisplayLabel(variant) }}
+            </button>
+
+            <span
+              v-if="variant.is_default"
+              class="rounded-full border border-emerald-400/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-400"
+            >
+              Default
+            </span>
+
+            <div class="ml-auto flex flex-wrap items-center gap-2">
+              <button
+              type="button"
+              class="text-xs text-zinc-400 hover:text-zinc-100"
+              @click="openRenameVariant(variant)"
+            >
+              Rename
+            </button>
+
+              <button
+                v-if="!variant.is_default"
+                type="button"
+                class="text-xs text-zinc-400 hover:text-zinc-100"
+                @click="handleSetDefault(variant.id)"
+              >
+                Make default
+              </button>
+
+              <button
+                v-if="!variant.is_default"
+                type="button"
+                class="text-xs text-zinc-400 hover:text-zinc-100"
+                @click="openDeleteVariant(variant.id)"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div v-if="showCreateVariantInput" class="mt-2 flex items-center gap-2">
+        <UiInput
+          v-model="newVariantName"
+          placeholder="Variant name..."
+          class="flex-1"
+          @keyup.enter="handleCreateVariant"
+          @keyup.escape="showCreateVariantInput = false; newVariantName = ''"
+        />
+        <UiButton
+          variant="primary"
+          type="button"
+          :disabled="!newVariantName.trim() || isCreatingVariant"
+          @click="handleCreateVariant"
+        >
+          {{ isCreatingVariant ? 'Creating...' : 'Create' }}
+        </UiButton>
+        <UiButton
+          variant="secondary"
+          type="button"
+          @click="showCreateVariantInput = false; newVariantName = ''"
+        >
+          Cancel
+        </UiButton>
+      </div>
+
+      <UiErrorBanner v-if="variantError">
+        {{ variantError }}
+      </UiErrorBanner>
+
       <UiErrorBanner v-if="signsStore.error && folder" class="mt-4">
         {{ signsStore.error }}
       </UiErrorBanner>
@@ -199,7 +463,7 @@ function clearSelection() {
           :is-loading-more="signsStore.isLoadingMore"
           v-model="selectedSignIds"
           @copy="handleCopy"
-          @load-more="signsStore.fetchMoreSigns(folderId)"
+          @load-more="signsStore.fetchMoreSigns(folderId, selectedVariantId ?? undefined)"
         />
       </div>
     </div>
@@ -208,6 +472,8 @@ function clearSelection() {
       v-if="folder"
       v-model="showUploadModal"
       :folder-id="folder.id"
+      :variants="variants"
+      :selected-variant-id="selectedVariantId"
       @saved="signsStore.fetchFolderSigns(folder.id)"
     />
 
@@ -238,6 +504,16 @@ function clearSelection() {
 
             <UiButton class="w-full" variant="primary" type="button" @click="showMoveModal = true">
               Move
+            </UiButton>
+
+            <UiButton
+              v-if="showVariantTabs"
+              class="w-full"
+              variant="secondary"
+              type="button"
+              @click="showChangeVariantModal = true"
+            >
+              Change Variant
             </UiButton>
 
             <UiButton
@@ -273,6 +549,97 @@ function clearSelection() {
         >
           {{ isDeleting ? 'Deleting...' : 'Delete' }}
         </UiButton>
+      </div>
+    </UiModal>
+
+    <UiModal v-model="showChangeVariantModal" title="Change variant">
+      <p class="text-sm text-zinc-300 mb-4">
+        Move
+        <span class="font-semibold text-zinc-100">{{ selectedSignIds.length }}</span>
+        sign{{ selectedSignIds.length === 1 ? '' : 's' }} to a different variant.
+      </p>
+
+      <div class="flex flex-col gap-2">
+        <button
+          v-for="variant in variants"
+          :key="variant.id"
+          type="button"
+          class="w-full rounded px-3 py-2 text-left text-sm transition"
+          :class="
+            activeVariant()?.id === variant.id
+              ? 'bg-emerald-400/10 text-emerald-400 cursor-not-allowed'
+              : 'text-zinc-300 hover:bg-white/5'
+          "
+          :disabled="activeVariant()?.id === variant.id"
+          @click="
+            (async () => {
+              await signsStore.changeSignVariant(selectedSignIds, variant.id)
+              selectedSignIds = []
+              showChangeVariantModal = false
+              await signsStore.fetchFolderSigns(folderId, selectedVariantId ?? undefined)
+            })()
+          "
+        >
+          {{ variantDisplayLabel(variant) }}
+        </button>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <UiButton variant="secondary" type="button" @click="showChangeVariantModal = false">
+          Cancel
+        </UiButton>
+      </div>
+    </UiModal>
+
+    <UiModal
+      :model-value="renamingVariant !== null"
+      title="Rename variant"
+      @update:model-value="closeRenameVariant"
+    >
+      <div v-if="renamingVariant">
+        <UiFormField label="Variant name" name="variant-name">
+          <UiInput
+            v-model="renamingVariant.name"
+            placeholder="Variant name..."
+            @keyup.enter="handleConfirmRenameVariant"
+            @keyup.escape="closeRenameVariant"
+          />
+        </UiFormField>
+
+        <div class="mt-6 flex justify-end gap-3">
+          <UiButton variant="secondary" type="button" @click="closeRenameVariant">
+            Cancel
+          </UiButton>
+          <UiButton
+            variant="primary"
+            type="button"
+            :disabled="!renamingVariant.name.trim()"
+            @click="handleConfirmRenameVariant"
+          >
+            Save
+          </UiButton>
+        </div>
+      </div>
+    </UiModal>
+
+    <UiModal
+      :model-value="showDeleteVariantConfirm !== null"
+      title="Delete variant"
+      @update:model-value="closeDeleteVariant"
+    >
+      <div v-if="showDeleteVariantConfirm !== null">
+        <p class="text-sm text-zinc-300">
+          Delete this variant? Signs in it will remain in the folder, but the variant itself will be removed.
+        </p>
+
+        <div class="mt-6 flex justify-end gap-3">
+          <UiButton variant="secondary" type="button" @click="closeDeleteVariant">
+            Cancel
+          </UiButton>
+          <UiButton variant="danger" type="button" @click="handleConfirmDeleteVariant">
+            Delete
+          </UiButton>
+        </div>
       </div>
     </UiModal>
   </div>

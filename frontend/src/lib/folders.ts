@@ -3,8 +3,11 @@ import type { AxiosError } from 'axios'
 import api from '@/lib/api'
 import type {
   CreateFolderPayload,
+  CreateVariantPayload,
   Folder,
   UpdateFolderPayload,
+  UpdateVariantPayload,
+  Variant,
 } from '@/types/folder'
 
 type FolderApiError = {
@@ -57,4 +60,36 @@ export async function updateFolder(id: number, payload: UpdateFolderPayload): Pr
 
 export async function deleteFolder(id: number): Promise<void> {
   await api.delete(`/api/folders/${id}`)
+}
+
+export async function getVariants(folderId: number): Promise<Variant[]> {
+  const { data } = await api.get<Variant[]>(`/api/folders/${folderId}/variants`)
+  return data
+}
+
+export async function createVariant(
+  folderId: number,
+  payload: CreateVariantPayload,
+): Promise<Variant & { backfill_performed?: boolean }> {
+  const { data } = await api.post<Variant & { backfill_performed?: boolean }>(
+    `/api/folders/${folderId}/variants`,
+    payload,
+  )
+  return data
+}
+
+export async function updateVariant(
+  folderId: number,
+  variantId: number,
+  payload: UpdateVariantPayload,
+): Promise<Variant> {
+  const { data } = await api.patch<Variant>(
+    `/api/folders/${folderId}/variants/${variantId}`,
+    payload,
+  )
+  return data
+}
+
+export async function deleteVariant(folderId: number, variantId: number): Promise<void> {
+  await api.delete(`/api/folders/${folderId}/variants/${variantId}`)
 }

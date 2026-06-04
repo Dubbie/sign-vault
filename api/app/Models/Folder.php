@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -43,6 +44,27 @@ class Folder extends Model
     public function signs(): HasMany
     {
         return $this->hasMany(Sign::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(Variant::class);
+    }
+
+    public function defaultVariant(): HasOne
+    {
+        return $this->hasOne(Variant::class)->where('is_default', true);
+    }
+
+    protected static function booted(): void
+    {
+        static::created(function (Folder $folder): void {
+            $folder->variants()->create([
+                'name' => 'Default',
+                'is_default' => true,
+                'sort_order' => 0,
+            ]);
+        });
     }
 
     public static function generatePublicSlugFor(string $name, ?int $ignoreFolderId = null): string

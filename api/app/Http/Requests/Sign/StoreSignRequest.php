@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Sign;
 
+use App\Models\Folder;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSignRequest extends FormRequest
 {
@@ -25,7 +27,16 @@ class StoreSignRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var Folder $folder */
+        $folder = $this->route('folder');
+
         return [
+            'variant_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('variants', 'id')
+                    ->where('folder_id', $folder->id),
+            ],
             'files' => [
                 'required',
                 'array',
@@ -35,8 +46,7 @@ class StoreSignRequest extends FormRequest
             'files.*' => [
                 'required',
                 'file',
-                'image',
-                'mimetypes:image/png,image/jpeg,image/webp',
+                'mimetypes:image/png,image/jpeg,image/webp,image/avif',
                 'max:10240',
             ],
         ];

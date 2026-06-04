@@ -27,6 +27,7 @@ class PublicFolderAccessTest extends TestCase
         Sign::factory()->create([
             'user_id' => $user->id,
             'folder_id' => $publicWithSigns->id,
+            'variant_id' => $publicWithSigns->defaultVariant->id,
         ]);
 
         Folder::factory()->for(User::factory()->create())->create([
@@ -91,6 +92,7 @@ class PublicFolderAccessTest extends TestCase
         Sign::factory()->create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
 
         $this->getJson('/api/public/folders')
@@ -113,6 +115,7 @@ class PublicFolderAccessTest extends TestCase
         Sign::factory()->count(5)->create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
 
         $this->getJson('/api/public/folders')
@@ -135,30 +138,35 @@ class PublicFolderAccessTest extends TestCase
             'folder_id' => $folder->id,
             'width' => 200,
             'height' => 200,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
         Sign::factory()->create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
             'width' => 200,
             'height' => 100,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
         Sign::factory()->create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
             'width' => 400,
             'height' => 100,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
         Sign::factory()->create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
             'width' => 400,
             'height' => 100,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
         Sign::factory()->create([
             'user_id' => $user->id,
             'folder_id' => $folder->id,
             'width' => 600,
             'height' => 100,
+            'variant_id' => $folder->defaultVariant->id,
         ]);
 
         $response = $this->getJson('/api/public/folders')
@@ -194,7 +202,11 @@ class PublicFolderAccessTest extends TestCase
             'public_slug' => 'club-signs',
             'visibility' => FolderVisibility::Public,
         ]);
-        Sign::factory()->create(['user_id' => $user->id, 'folder_id' => $club->id]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $club->id,
+            'variant_id' => $club->defaultVariant->id,
+        ]);
 
         $racing = Folder::factory()->for($user)->create([
             'name' => 'Racing Signs',
@@ -202,7 +214,11 @@ class PublicFolderAccessTest extends TestCase
             'public_slug' => 'racing-signs',
             'visibility' => FolderVisibility::Public,
         ]);
-        Sign::factory()->create(['user_id' => $user->id, 'folder_id' => $racing->id]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $racing->id,
+            'variant_id' => $racing->defaultVariant->id,
+        ]);
 
         $this->getJson('/api/public/folders?q=club')
             ->assertOk()
@@ -225,7 +241,11 @@ class PublicFolderAccessTest extends TestCase
         Folder::factory()->count(25)->for($user)->create([
             'visibility' => FolderVisibility::Public,
         ])->each(function (Folder $folder) use ($user): void {
-            Sign::factory()->create(['user_id' => $user->id, 'folder_id' => $folder->id]);
+            Sign::factory()->create([
+                'user_id' => $user->id,
+                'folder_id' => $folder->id,
+                'variant_id' => $folder->defaultVariant->id,
+            ]);
         });
 
         $this->getJson('/api/public/folders')
@@ -414,6 +434,7 @@ class PublicFolderAccessTest extends TestCase
         return Sign::create(array_merge([
             'user_id' => $folder->user_id,
             'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
             'name' => 'Ice Warning',
             'storage_disk' => 's3',
             'storage_key' => 'signs/'.$folder->user_id.'/'.$folder->id.'/ice-warning.png',

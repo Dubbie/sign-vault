@@ -1,6 +1,7 @@
 export type Sign = {
   id: number
   folder_id: number
+  variant_id: number | null
   name: string
   public_url: string
   mime_type: string
@@ -24,4 +25,5 @@ export type PaginatedSignResponse = {
 
 export type CreateSignPayload = {
   files: File[]
+  variant_id?: number
 }

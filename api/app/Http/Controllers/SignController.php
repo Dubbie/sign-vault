@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Sign\DeleteSignsRequest;
 use App\Http\Requests\Sign\MoveSignsRequest;
 use App\Http\Requests\Sign\StoreSignRequest;
+use App\Http\Requests\Variant\ChangeSignVariantRequest;
 use App\Http\Resources\SignResource;
 use App\Models\Folder;
 use App\Models\Sign;
+use App\Models\Variant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,8 +27,15 @@ class SignController extends Controller
         $this->authorize('view', $folder);
 
         $perPage = min((int) $request->query('per_page', 10), 100);
+        $defaultVariantId = $folder->defaultVariant?->id;
 
         $query = $folder->signs()->orderBy('sort_key');
+
+        if ($variantId = $request->integer('variant_id')) {
+            $query->where('variant_id', $variantId);
+        } elseif ($defaultVariantId !== null) {
+            $query->where('variant_id', $defaultVariantId);
+        }
 
         if ($columnRatio = $request->integer('column_ratio')) {
             $query->where('column_ratio', $columnRatio);
@@ -42,10 +51,14 @@ class SignController extends Controller
         $validated = $request->validated();
         $files = $validated['files'];
         $disk = config('filesystems.default');
+
+        $variantId = $validated['variant_id'] ?? $folder->defaultVariant?->id;
+
         Log::info('Sign bulk upload started.', [
             'user_id' => $request->user()->id,
             'folder_id' => $folder->id,
             'folder_slug' => $folder->slug,
+            'variant_id' => $variantId,
             'disk' => $disk,
             'file_count' => count($files),
         ]);
@@ -58,15 +71,15 @@ class SignController extends Controller
                 'user_id' => $request->user()->id,
                 'folder_id' => $folder->id,
                 'folder_slug' => $folder->slug,
-                'disk' => $disk,
+                'variant_id' => $variantId,
                 'file_name' => $file->getClientOriginalName(),
                 'derived_name' => $name,
                 'mime_type' => $file->getClientMimeType(),
                 'size_bytes' => $file->getSize(),
             ]);
 
-            $existingSign = $this->existingSignFor($request->user()->id, $folder->id, $name);
-            $storageKey = $this->storageKeyFor($request->user()->id, $folder->id, $name, $file);
+            $existingSign = $this->existingSignFor($request->user()->id, $folder->id, $variantId, $name);
+            $storageKey = $this->storageKeyFor($request->user()->id, $folder->id, $variantId, $name, $file);
             [$width, $height] = $this->imageDimensions($file);
             $publicUrl = Storage::disk($disk)->url($storageKey);
 
@@ -74,6 +87,7 @@ class SignController extends Controller
 
             $sign = $existingSign ?? $request->user()->signs()->make([
                 'folder_id' => $folder->id,
+                'variant_id' => $variantId,
                 'name' => $name,
             ]);
 
@@ -137,14 +151,38 @@ class SignController extends Controller
         $ids = $request->validated('ids');
         $targetFolderId = (int) $request->validated('folder_id');
 
+        $targetFolder = Folder::findOrFail($targetFolderId);
+        $targetDefaultVariantId = $targetFolder->defaultVariant?->id;
+
         $updated = Sign::whereIn('id', $ids)
             ->where('user_id', $request->user()->id)
             ->where('folder_id', '!=', $targetFolderId)
-            ->update(['folder_id' => $targetFolderId]);
+            ->update([
+                'folder_id' => $targetFolderId,
+                'variant_id' => $targetDefaultVariantId,
+            ]);
 
         return response()->json([
             'message' => "{$updated} sign(s) moved successfully.",
             'moved_count' => $updated,
+        ]);
+    }
+
+    public function changeVariant(ChangeSignVariantRequest $request): JsonResponse
+    {
+        $ids = $request->validated('ids');
+        $variantId = (int) $request->validated('variant_id');
+
+        $variant = Variant::findOrFail($variantId);
+
+        $updated = Sign::whereIn('id', $ids)
+            ->where('user_id', $request->user()->id)
+            ->where('folder_id', $variant->folder_id)
+            ->update(['variant_id' => $variantId]);
+
+        return response()->json([
+            'message' => "{$updated} sign(s) variant changed.",
+            'changed_count' => $updated,
         ]);
     }
 
@@ -156,22 +194,31 @@ class SignController extends Controller
         return $derivedName !== '' ? $derivedName : 'sign';
     }
 
-    private function existingSignFor(int $userId, int $folderId, string $name): ?Sign
+    private function existingSignFor(int $userId, int $folderId, ?int $variantId, string $name): ?Sign
     {
-        return Sign::query()
+        $query = Sign::query()
             ->where('user_id', $userId)
             ->where('folder_id', $folderId)
-            ->where('name', $name)
-            ->first();
+            ->where('name', $name);
+
+        if ($variantId !== null) {
+            $query->where('variant_id', $variantId);
+        } else {
+            $query->whereNull('variant_id');
+        }
+
+        return $query->first();
     }
 
     private function storageKeyFor(
         int $userId,
         int $folderId,
+        ?int $variantId,
         string $name,
         UploadedFile $file
     ): string {
-        $directory = sprintf('signs/%d/%d', $userId, $folderId);
+        $variant = $variantId !== null ? "/{$variantId}" : '';
+        $directory = sprintf('signs/%d/%d%s', $userId, $folderId, $variant);
         $filename = sprintf(
             '%s.%s',
             Str::slug($name) ?: 'sign',

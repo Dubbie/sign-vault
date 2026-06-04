@@ -12,8 +12,11 @@ import { useSignsStore } from '@/stores/signs'
 import type { Variant } from '@/types/folder'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
+import UiAlert from '@/components/ui/UiAlert.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
+import UiDropdown from '@/components/ui/UiDropdown.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
@@ -31,14 +34,42 @@ const folder = computed(() => foldersStore.currentFolder)
 
 const variants = computed<Variant[]>(() => folder.value?.variants ?? [])
 const showVariantTabs = computed(() => variants.value.length > 1)
+const activeVariantContentKey = computed(() => activeVariant()?.id ?? 0)
+const variantCreateActionLabel = computed(() =>
+  showVariantTabs.value ? 'Add variant' : 'Make variant',
+)
+const variantOptions = computed(() =>
+  variants.value.map((variant) => ({
+    value: String(variant.id),
+    label: variantSelectLabel(variant),
+  })),
+)
+const selectedVariantSelectValue = computed({
+  get() {
+    return String(activeVariant()?.id ?? '')
+  },
+  set(value: string) {
+    if (!value) return
+    const variant = variants.value.find((candidate) => String(candidate.id) === value)
+    if (!variant) return
+    void handleVariantSelect(variant)
+  },
+})
+const activeVariantRecord = computed(() => activeVariant())
 
 function isDefaultVariant(variant: Variant) {
   return variant.is_default
 }
 
-function variantDisplayLabel(variant: Variant) {
+function variantDisplayLabel(variant: Variant | null) {
+  if (!variant) return 'Default'
   if (isDefaultVariant(variant)) return variant.name ?? folder.value?.name ?? 'Default'
   return variant.name ?? 'Unnamed'
+}
+
+function variantSelectLabel(variant: Variant) {
+  const label = variantDisplayLabel(variant)
+  return variant.is_default ? `${label} (default)` : label
 }
 
 function activeVariant(): Variant | null {
@@ -48,7 +79,12 @@ function activeVariant(): Variant | null {
   return variants.value.find((v) => v.is_default) ?? null
 }
 
-async function handleVariantSelect(variant: Variant) {
+async function handleVariantSelect(variant: Variant, close?: () => void) {
+  if (activeVariant()?.id === variant.id) {
+    close?.()
+    return
+  }
+  close?.()
   selectedVariantId.value = variant.id
   await signsStore.fetchFolderSigns(folderId.value, variant.id)
 }
@@ -71,6 +107,7 @@ const showMoveModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 const showChangeVariantModal = ref(false)
+const showVariantActions = ref(false)
 const copiedSignId = ref<number | null>(null)
 const copiedPublicUrl = ref(false)
 const selectedSignIds = ref<number[]>([])
@@ -192,17 +229,17 @@ async function handleCreateVariant() {
     newVariantName.value = ''
     showCreateVariantInput.value = false
     await foldersStore.fetchFolder(folder.value.id)
-    if (created.backfill_performed) {
-      await handleVariantToggle()
-    }
-  } catch (e) {
+    selectedVariantId.value = created.id
+    await signsStore.fetchFolderSigns(folder.value.id, created.id)
+  } catch {
     variantError.value = 'Failed to create variant.'
   } finally {
     isCreatingVariant.value = false
   }
 }
 
-function openRenameVariant(variant: Variant) {
+function openRenameVariant(variant: Variant, close?: () => void) {
+  close?.()
   renamingVariant.value = {
     id: variant.id,
     name: variant.name ?? folder.value?.name ?? '',
@@ -219,7 +256,8 @@ async function handleConfirmRenameVariant() {
   await handleRenameVariant(renamingVariant.value.id, renamingVariant.value.name)
 }
 
-function openDeleteVariant(variantId: number) {
+function openDeleteVariant(variantId: number, close?: () => void) {
+  close?.()
   showDeleteVariantConfirm.value = variantId
 }
 
@@ -248,7 +286,8 @@ async function handleRenameVariant(variantId: number, newName: string) {
   }
 }
 
-async function handleSetDefault(variantId: number) {
+async function handleSetDefault(variantId: number, close?: () => void) {
+  close?.()
   if (!folder.value) return
   variantError.value = null
 
@@ -349,97 +388,124 @@ function clearSelection() {
       </header>
 
       <section class="mt-4 border-t border-white/10 pt-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
-            Variants
-          </h2>
+        <template v-if="showVariantTabs">
+          <div class="flex flex-wrap items-end justify-between gap-3">
+            <div class="flex items-baseline gap-x-2">
+              <h2 class="text-sm font-semibold text-zinc-400">Variants</h2>
+              <p class="text-xs font-mono text-zinc-500">{{ variants.length }} total</p>
+            </div>
 
-          <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
-            Add variant
-          </UiButton>
-        </div>
+            <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
+              {{ variantCreateActionLabel }}
+            </UiButton>
+          </div>
 
-        <div class="mt-3 grid gap-2">
-          <div
-            v-for="variant in variants"
-            :key="variant.id"
-            class="flex flex-wrap items-center gap-2 border border-white/10 px-3 py-2"
-          >
-            <button
-              type="button"
-              class="rounded px-2 py-1 text-sm font-medium transition"
-              :class="
-                activeVariant()?.id === variant.id
-                  ? 'bg-emerald-400/10 text-emerald-400'
-                  : 'text-zinc-300 hover:text-zinc-100'
-              "
-              @click="handleVariantSelect(variant)"
-            >
-              {{ variantDisplayLabel(variant) }}
-            </button>
+          <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+            <div class="grid gap-[0.4rem]">
+              <UiSelect
+                v-model="selectedVariantSelectValue"
+                name="variant"
+                :options="variantOptions"
+              />
+            </div>
 
-            <span
-              v-if="variant.is_default"
-              class="rounded-full border border-emerald-400/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-400"
-            >
-              Default
-            </span>
-
-            <div class="ml-auto flex flex-wrap items-center gap-2">
-              <button
-              type="button"
-              class="text-xs text-zinc-400 hover:text-zinc-100"
-              @click="openRenameVariant(variant)"
-            >
-              Rename
-            </button>
-
-              <button
-                v-if="!variant.is_default"
-                type="button"
-                class="text-xs text-zinc-400 hover:text-zinc-100"
-                @click="handleSetDefault(variant.id)"
+            <div class="flex items-start justify-end gap-2">
+              <UiDropdown
+                v-if="activeVariantRecord"
+                v-model="showVariantActions"
+                placement="bottom-end"
+                trigger-class="inline-flex"
               >
-                Make default
-              </button>
+                <template #trigger="{ toggle }">
+                  <button
+                    type="button"
+                    class="inline-flex size-9 items-center justify-center rounded border border-white/10 bg-background/60 text-zinc-300 transition hover:border-white/20 hover:bg-surface hover:text-zinc-100 focus:outline-none focus:bg-surface focus:border-emerald-400"
+                    :aria-label="`Variant actions for ${variantDisplayLabel(activeVariantRecord)}`"
+                    @click="toggle"
+                  >
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 12h.01M12 12h.01M19 12h.01"
+                      />
+                    </svg>
+                  </button>
+                </template>
 
-              <button
-                v-if="!variant.is_default"
-                type="button"
-                class="text-xs text-zinc-400 hover:text-zinc-100"
-                @click="openDeleteVariant(variant.id)"
-              >
-                Delete
-              </button>
+                <template #default="{ close }">
+                  <div>
+                    <button
+                      type="button"
+                      class="flex w-full items-center rounded px-3 py-2 text-left text-sm text-zinc-300 transition hover:bg-white/5 hover:text-zinc-100"
+                      @click="openRenameVariant(activeVariantRecord, close)"
+                    >
+                      Rename
+                    </button>
+                    <button
+                      v-if="activeVariantRecord && !activeVariantRecord.is_default"
+                      type="button"
+                      class="flex w-full items-center rounded px-3 py-2 text-left text-sm text-zinc-300 transition hover:bg-white/5 hover:text-zinc-100"
+                      @click="handleSetDefault(activeVariantRecord.id, close)"
+                    >
+                      Make default
+                    </button>
+                    <button
+                      v-if="activeVariantRecord && !activeVariantRecord.is_default"
+                      type="button"
+                      class="flex w-full items-center rounded px-3 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10"
+                      @click="openDeleteVariant(activeVariantRecord.id, close)"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </template>
+              </UiDropdown>
             </div>
           </div>
+        </template>
+
+        <template v-else>
+          <UiAlert tone="info">
+            <p class="font-medium text-zinc-100">Need some variety?</p>
+            <p class="mt-1 text-zinc-400">
+              Variants let you keep separate sign sets inside the same folder. Create one when you
+              want a different version without duplicating the folder.
+            </p>
+            <template #actions>
+              <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
+                Make variant
+              </UiButton>
+            </template>
+          </UiAlert>
+        </template>
+
+        <div v-if="showCreateVariantInput" class="mt-3 flex flex-wrap items-center gap-2">
+          <UiInput
+            v-model="newVariantName"
+            placeholder="Variant name..."
+            class="min-w-[12rem] flex-1"
+            @keyup.enter="handleCreateVariant"
+            @keyup.escape="((showCreateVariantInput = false), (newVariantName = ''))"
+          />
+          <UiButton
+            variant="primary"
+            type="button"
+            :disabled="!newVariantName.trim() || isCreatingVariant"
+            @click="handleCreateVariant"
+          >
+            Create
+          </UiButton>
+          <UiButton
+            variant="secondary"
+            type="button"
+            @click="((showCreateVariantInput = false), (newVariantName = ''))"
+          >
+            Cancel
+          </UiButton>
         </div>
       </section>
-
-      <div v-if="showCreateVariantInput" class="mt-2 flex items-center gap-2">
-        <UiInput
-          v-model="newVariantName"
-          placeholder="Variant name..."
-          class="flex-1"
-          @keyup.enter="handleCreateVariant"
-          @keyup.escape="showCreateVariantInput = false; newVariantName = ''"
-        />
-        <UiButton
-          variant="primary"
-          type="button"
-          :disabled="!newVariantName.trim() || isCreatingVariant"
-          @click="handleCreateVariant"
-        >
-          {{ isCreatingVariant ? 'Creating...' : 'Create' }}
-        </UiButton>
-        <UiButton
-          variant="secondary"
-          type="button"
-          @click="showCreateVariantInput = false; newVariantName = ''"
-        >
-          Cancel
-        </UiButton>
-      </div>
 
       <UiErrorBanner v-if="variantError">
         {{ variantError }}
@@ -450,21 +516,25 @@ function clearSelection() {
       </UiErrorBanner>
 
       <div class="mt-6">
-        <p v-if="signsStore.isLoading" class="text-zinc-400">Loading signs...</p>
-        <p v-else-if="signsStore.signs.length === 0" class="text-zinc-400">
-          No signs uploaded yet.
-        </p>
-        <SignGrid
-          v-else
-          class="mb-13"
-          :signs="signsStore.signs"
-          :copied-sign-id="copiedSignId"
-          :has-more="signsStore.hasMore"
-          :is-loading-more="signsStore.isLoadingMore"
-          v-model="selectedSignIds"
-          @copy="handleCopy"
-          @load-more="signsStore.fetchMoreSigns(folderId, selectedVariantId ?? undefined)"
-        />
+        <Transition name="variant-content" mode="out-in">
+          <div :key="activeVariantContentKey" class="grid gap-2">
+            <p v-if="signsStore.isLoading" class="text-zinc-400">Loading signs...</p>
+            <p v-else-if="signsStore.signs.length === 0" class="text-zinc-400">
+              No signs uploaded yet.
+            </p>
+            <SignGrid
+              v-else
+              class="mb-13"
+              :signs="signsStore.signs"
+              :copied-sign-id="copiedSignId"
+              :has-more="signsStore.hasMore"
+              :is-loading-more="signsStore.isLoadingMore"
+              v-model="selectedSignIds"
+              @copy="handleCopy"
+              @load-more="signsStore.fetchMoreSigns(folderId, selectedVariantId ?? undefined)"
+            />
+          </div>
+        </Transition>
       </div>
     </div>
 
@@ -629,7 +699,8 @@ function clearSelection() {
     >
       <div v-if="showDeleteVariantConfirm !== null">
         <p class="text-sm text-zinc-300">
-          Delete this variant? Signs in it will remain in the folder, but the variant itself will be removed.
+          Delete this variant? Signs in it will remain in the folder, but the variant itself will be
+          removed.
         </p>
 
         <div class="mt-6 flex justify-end gap-3">
@@ -646,6 +717,24 @@ function clearSelection() {
 </template>
 
 <style scoped>
+.variant-content-enter-active {
+  transition:
+    opacity 0.18s ease-out,
+    transform 0.18s ease-out;
+}
+
+.variant-content-leave-active {
+  transition:
+    opacity 0.14s ease-in,
+    transform 0.14s ease-in;
+}
+
+.variant-content-enter-from,
+.variant-content-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
 .toolbar-enter-active {
   transition: transform 0.25s ease-out;
 }

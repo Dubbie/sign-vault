@@ -19,6 +19,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiModal from '@/components/ui/UiModal.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 
 const route = useRoute()
@@ -65,6 +66,21 @@ const selectedVariantId = ref<number | null>(null)
 
 const variants = computed(() => folder.value?.variants ?? [])
 const showVariantSwitcher = computed(() => variants.value.length > 1)
+const variantOptions = computed(() =>
+  variants.value.map((variant) => ({
+    value: String(variant.id),
+    label: variantDisplayLabel(variant),
+  })),
+)
+const selectedVariantOption = computed({
+  get() {
+    return String(activeVariantId() ?? '')
+  },
+  set(value: string) {
+    if (!value) return
+    void handleVariantSwitch(Number(value))
+  },
+})
 
 function activeVariantId(): number | null {
   if (selectedVariantId.value) return selectedVariantId.value
@@ -186,6 +202,8 @@ async function loadMoreSigns() {
 }
 
 async function handleVariantSwitch(variantId: number) {
+  if (selectedVariantId.value === variantId) return
+
   selectedVariantId.value = variantId
   await router.replace({
     query: { ...route.query, variant: variantId },
@@ -391,21 +409,10 @@ watch(folderSlug, () => {
         </div>
       </header>
 
-      <div v-if="showVariantSwitcher" class="flex items-center gap-1 border-b border-white/10 pb-1">
-        <button
-          v-for="variant in variants"
-          :key="variant.id"
-          type="button"
-          class="rounded-t px-3 py-1.5 text-sm font-medium transition"
-          :class="
-            activeVariantId() === variant.id
-              ? 'bg-emerald-400/10 text-emerald-400'
-              : 'text-zinc-400 hover:text-zinc-100'
-          "
-          @click="handleVariantSwitch(variant.id)"
-        >
-          {{ variantDisplayLabel(variant) }}
-        </button>
+      <div v-if="showVariantSwitcher" class="max-w-sm">
+        <UiFormField label="Variant" name="variant">
+          <UiSelect v-model="selectedVariantOption" name="variant" :options="variantOptions" />
+        </UiFormField>
       </div>
 
       <div>

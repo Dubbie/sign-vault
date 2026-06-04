@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class PublicSignResource extends JsonResource
+class VariantResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -15,12 +15,10 @@ class PublicSignResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'variant_id' => $this->variant_id,
-            'public_url' => $this->public_url,
-            'mime_type' => $this->mime_type,
-            'width' => $this->width,
-            'height' => $this->height,
-            'column_ratio' => $this->column_ratio,
+            'is_default' => $this->is_default,
+            'sort_order' => $this->sort_order,
+            'created_at' => $this->created_at?->toIso8601ZuluString(),
+            'updated_at' => $this->updated_at?->toIso8601ZuluString(),
         ];
     }
 }

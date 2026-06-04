@@ -7,6 +7,7 @@ use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PublicFolderController;
 use App\Http\Controllers\SignController;
 use App\Http\Controllers\StatsController;
+use App\Http\Controllers\VariantController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/stats', [StatsController::class, 'index']);
@@ -32,7 +33,13 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/folders/{folder}/signs', [SignController::class, 'store']);
     Route::get('/signs/{sign}', [SignController::class, 'show']);
     Route::patch('/signs/move', [SignController::class, 'move']);
+    Route::patch('/signs/variant', [SignController::class, 'changeVariant']);
     Route::delete('/signs', [SignController::class, 'destroy']);
+
+    Route::get('/folders/{folder}/variants', [VariantController::class, 'index']);
+    Route::post('/folders/{folder}/variants', [VariantController::class, 'store']);
+    Route::patch('/folders/{folder}/variants/{variant}', [VariantController::class, 'update']);
+    Route::delete('/folders/{folder}/variants/{variant}', [VariantController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function (): void {

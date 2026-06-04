@@ -15,6 +15,7 @@ class SignResource extends JsonResource
         return [
             'id' => $this->id,
             'folder_id' => $this->folder_id,
+            'variant_id' => $this->variant_id,
             'name' => $this->name,
             'public_url' => $this->public_url,
             'mime_type' => $this->mime_type,

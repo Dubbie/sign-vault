@@ -68,10 +68,12 @@ export async function getPublicFolderSigns(
   page: number,
   password?: string,
   columnRatio?: number,
+  variantId?: number,
 ): Promise<{ data: PublicSign[]; meta: PaginationMeta }> {
   const payload: Record<string, number | string> = { page }
   if (password) payload.password = password
   if (columnRatio !== undefined) payload.column_ratio = columnRatio
+  if (variantId !== undefined) payload.variant_id = variantId
 
   const { data } = await api.post<{ data: PublicSign[]; meta: PaginationMeta }>(
     `/api/public/folders/${slug}/signs`,

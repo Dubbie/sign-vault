@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import {
   getPublicFolder,
@@ -19,9 +19,11 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiModal from '@/components/ui/UiModal.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 
 const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const foldersStore = useFoldersStore()
 
@@ -60,6 +62,36 @@ const isUnlocking = ref(false)
 const isAuthor = ref(false)
 const error = ref<string | null>(null)
 const copiedSignId = ref<number | null>(null)
+const selectedVariantId = ref<number | null>(null)
+
+const variants = computed(() => folder.value?.variants ?? [])
+const showVariantSwitcher = computed(() => variants.value.length > 1)
+const variantOptions = computed(() =>
+  variants.value.map((variant) => ({
+    value: String(variant.id),
+    label: variantDisplayLabel(variant),
+  })),
+)
+const selectedVariantOption = computed({
+  get() {
+    return String(activeVariantId() ?? '')
+  },
+  set(value: string) {
+    if (!value) return
+    void handleVariantSwitch(Number(value))
+  },
+})
+
+function activeVariantId(): number | null {
+  if (selectedVariantId.value) return selectedVariantId.value
+  const defaultV = variants.value.find((v) => v.is_default)
+  return defaultV?.id ?? null
+}
+
+function variantDisplayLabel(v: { name: string | null; is_default: boolean }) {
+  if (v.is_default) return v.name ?? folder.value?.name ?? 'Default'
+  return v.name ?? 'Unnamed'
+}
 
 const showBanModal = ref(false)
 const banReason = ref('')
@@ -101,7 +133,7 @@ function clearUnlockForm() {
   unlockForm.password = ''
 }
 
-async function loadSignsPerColumn(password: string | null) {
+async function loadSignsPerColumn(password: string | null, variantId?: number) {
   isLoadingSigns.value = true
   columnState.value = initialColumnState()
   signs.value = []
@@ -110,7 +142,7 @@ async function loadSignsPerColumn(password: string | null) {
   try {
     const results = await Promise.all(
       COLUMN_RATIOS.map((ratio) =>
-        getPublicFolderSigns(folderSlug.value, 1, password ?? undefined, ratio),
+        getPublicFolderSigns(folderSlug.value, 1, password ?? undefined, ratio, variantId),
       ),
     )
 
@@ -147,6 +179,7 @@ async function loadMoreSigns() {
           columnState.value[ratio].currentPage + 1,
           unlockedPassword.value ?? undefined,
           ratio,
+          activeVariantId() ?? undefined,
         ),
       ),
     )
@@ -168,9 +201,20 @@ async function loadMoreSigns() {
   }
 }
 
+async function handleVariantSwitch(variantId: number) {
+  if (selectedVariantId.value === variantId) return
+
+  selectedVariantId.value = variantId
+  await router.replace({
+    query: { ...route.query, variant: variantId },
+  })
+  await loadSignsPerColumn(unlockedPassword.value, variantId)
+}
+
 async function loadPublicFolder() {
   isLoading.value = true
   error.value = null
+  selectedVariantId.value = null
 
   try {
     const response = await getPublicFolder(folderSlug.value)
@@ -187,7 +231,15 @@ async function loadPublicFolder() {
       isAuthor.value = result
     })
 
-    void loadSignsPerColumn(null)
+    const variantParam = route.query.variant
+    const initialVariantId = variantParam ? Number(variantParam) : null
+    const validVariant = initialVariantId && response.folder.variants.some((v) => v.id === initialVariantId)
+      ? initialVariantId
+      : null
+
+    selectedVariantId.value = validVariant
+
+    void loadSignsPerColumn(null, validVariant ?? undefined)
   } catch (exception) {
     const axiosError = exception as { response?: { status?: number } }
 
@@ -223,7 +275,7 @@ async function handleUnlock() {
     })
 
     clearUnlockForm()
-    void loadSignsPerColumn(unlockedPassword.value)
+    void loadSignsPerColumn(unlockedPassword.value, selectedVariantId.value ?? undefined)
   } catch (exception) {
     const axiosError = exception as { response?: { status?: number } }
 
@@ -356,6 +408,12 @@ watch(folderSlug, () => {
           </UiButton>
         </div>
       </header>
+
+      <div v-if="showVariantSwitcher" class="max-w-sm">
+        <UiFormField label="Variant" name="variant">
+          <UiSelect v-model="selectedVariantOption" name="variant" :options="variantOptions" />
+        </UiFormField>
+      </div>
 
       <div>
         <p v-if="isLoadingSigns" class="text-zinc-400">Loading signs...</p>

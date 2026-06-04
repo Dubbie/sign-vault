@@ -22,9 +22,10 @@ class PublicFolderController extends Controller
             ->has('signs')
             ->with([
                 'user',
+                'variants',
                 'signs' => function ($query): void {
                     $query->orderBy('id')
-                        ->select(['id', 'name', 'public_url', 'width', 'height', 'column_ratio', 'folder_id']);
+                        ->select(['id', 'name', 'public_url', 'width', 'height', 'column_ratio', 'folder_id', 'variant_id']);
                 },
             ])
             ->withCount('signs');
@@ -52,8 +53,11 @@ class PublicFolderController extends Controller
             ]);
         }
 
+        $folder->load('variants');
+
         return response()->json([
             'folder' => new PublicFolderResource($folder),
+            'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
         ]);
     }
 
@@ -66,8 +70,11 @@ class PublicFolderController extends Controller
         }
 
         if ($folder->visibility === FolderVisibility::Public) {
+            $folder->load('variants');
+
             return response()->json([
                 'folder' => new PublicFolderResource($folder),
+                'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
             ]);
         }
 
@@ -83,6 +90,7 @@ class PublicFolderController extends Controller
 
         return response()->json([
             'folder' => new PublicFolderResource($folder),
+            'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
         ]);
     }
 
@@ -102,8 +110,15 @@ class PublicFolderController extends Controller
         }
 
         $perPage = min((int) $request->input('per_page', 10), 100);
+        $defaultVariantId = $folder->defaultVariant?->id;
 
         $query = $folder->signs()->orderBy('sort_key');
+
+        if ($variantId = $request->integer('variant_id')) {
+            $query->where('variant_id', $variantId);
+        } elseif ($defaultVariantId !== null) {
+            $query->where('variant_id', $defaultVariantId);
+        }
 
         if ($columnRatio = $request->integer('column_ratio')) {
             $query->where('column_ratio', $columnRatio);
@@ -117,5 +132,23 @@ class PublicFolderController extends Controller
         return Folder::query()
             ->where('public_slug', $slug)
             ->first();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, \App\Models\Sign>
+     */
+    private function publicSignsForFolder(Folder $folder)
+    {
+        $defaultVariantId = $folder->defaultVariant?->id;
+
+        $query = $folder->signs()
+            ->latest()
+            ->select(['id', 'name', 'public_url', 'mime_type', 'width', 'height', 'folder_id', 'variant_id', 'column_ratio']);
+
+        if ($defaultVariantId !== null) {
+            $query->where('variant_id', $defaultVariantId);
+        }
+
+        return $query->get();
     }
 }

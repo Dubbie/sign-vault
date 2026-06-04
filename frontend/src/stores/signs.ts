@@ -2,6 +2,7 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
+  changeSignVariant as changeSignVariantRequest,
   createSigns as createSignsRequest,
   deleteSigns as deleteSignsRequest,
   getFolderSigns as getFolderSignsRequest,
@@ -64,14 +65,16 @@ export const useSignsStore = defineStore('signs', () => {
     }
   }
 
-  async function fetchFolderSigns(folderId: number) {
+  async function fetchFolderSigns(folderId: number, variantId?: number) {
     isLoading.value = true
     columnState.value = initialColumnState()
     clearError()
 
     try {
       const results = await Promise.all(
-        COLUMN_RATIOS.map((ratio) => getFolderSignsRequest(folderId, 1, PER_COLUMN, ratio)),
+        COLUMN_RATIOS.map((ratio) =>
+          getFolderSignsRequest(folderId, 1, PER_COLUMN, ratio, variantId),
+        ),
       )
 
       signs.value = results.flatMap((r) => r.data)
@@ -95,7 +98,7 @@ export const useSignsStore = defineStore('signs', () => {
     }
   }
 
-  async function fetchMoreSigns(folderId: number) {
+  async function fetchMoreSigns(folderId: number, variantId?: number) {
     if (!hasMore.value || isLoadingMore.value) return
 
     isLoadingMore.value = true
@@ -105,7 +108,13 @@ export const useSignsStore = defineStore('signs', () => {
 
       const results = await Promise.all(
         ratiosWithMore.map((ratio) =>
-          getFolderSignsRequest(folderId, columnState.value[ratio].currentPage + 1, PER_COLUMN, ratio),
+          getFolderSignsRequest(
+            folderId,
+            columnState.value[ratio].currentPage + 1,
+            PER_COLUMN,
+            ratio,
+            variantId,
+          ),
         ),
       )
 
@@ -187,6 +196,18 @@ export const useSignsStore = defineStore('signs', () => {
     }
   }
 
+  async function changeSignVariant(signIds: number[], variantId: number) {
+    clearError()
+
+    try {
+      await changeSignVariantRequest(signIds, variantId)
+      return true
+    } catch (exception) {
+      setErrorFromUnknown(exception)
+      return false
+    }
+  }
+
   async function copySignUrl(sign: Sign) {
     clearError()
 
@@ -214,6 +235,7 @@ export const useSignsStore = defineStore('signs', () => {
     deleteSigns,
     moveSigns,
     isMoving,
+    changeSignVariant,
     copySignUrl,
     clearCurrentSign,
     clearError,

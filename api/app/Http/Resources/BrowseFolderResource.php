@@ -35,9 +35,20 @@ class BrowseFolderResource extends JsonResource
      */
     private function selectPreviewSigns(): array
     {
+        $defaultVariantId = $this->variants
+            ->firstWhere('is_default', true)?->id;
+
+        $folderSigns = $this->signs->filter(function ($sign) use ($defaultVariantId): bool {
+            if ($defaultVariantId === null) {
+                return $sign->variant_id === null;
+            }
+
+            return $sign->variant_id === $defaultVariantId;
+        });
+
         $groups = ['1:1' => [], '2:1' => [], '4:1' => [], 'wide' => [], 'unknown' => []];
 
-        foreach ($this->signs as $sign) {
+        foreach ($folderSigns as $sign) {
             $category = $this->categorizeAspect($sign->width, $sign->height);
 
             if (isset($groups[$category])) {

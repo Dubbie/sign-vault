@@ -23,6 +23,14 @@ class FolderResource extends JsonResource
             'visibility' => $visibility instanceof FolderVisibility ? $visibility->value : $visibility,
             'created_at' => $this->created_at?->toIso8601ZuluString(),
             'updated_at' => $this->updated_at?->toIso8601ZuluString(),
+            'variants' => $this->whenLoaded('variants', function (): array {
+                return $this->variants->map(fn ($variant): array => [
+                    'id' => $variant->id,
+                    'name' => $variant->name,
+                    'is_default' => $variant->is_default,
+                    'sort_order' => $variant->sort_order,
+                ])->values()->all();
+            }, []),
         ];
     }
 }

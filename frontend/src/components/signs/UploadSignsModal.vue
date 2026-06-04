@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import type { CreateSignPayload } from '@/types/sign'
+import type { Variant } from '@/types/folder'
 import { useAuthStore } from '@/stores/auth'
 import { useSignsStore } from '@/stores/signs'
 
@@ -9,10 +10,13 @@ import UiModal from '@/components/ui/UiModal.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiButton from '@/components/ui/UiButton.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
 
 const props = defineProps<{
   modelValue: boolean
   folderId: number
+  variants?: Variant[]
+  selectedVariantId?: number | null
 }>()
 
 const emit = defineEmits<{
@@ -26,11 +30,37 @@ const maxFiles = computed(() => authStore.signUploadMaxFiles)
 
 const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
+const uploadVariantId = ref<number | null>(null)
+const selectedUploadVariantValue = computed({
+  get() {
+    return String(uploadVariantId.value ?? '')
+  },
+  set(value: string) {
+    uploadVariantId.value = value ? Number(value) : null
+  },
+})
 
-const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp'])
+const showVariantSelector = computed(() => (props.variants?.length ?? 0) > 1)
+const canSubmit = computed(
+  () =>
+    !signsStore.isUploading &&
+    selectedFiles.value.length > 0 &&
+    (!showVariantSelector.value || uploadVariantId.value !== null),
+)
+
+const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/avif'])
+
+const variantOptions = computed(() => {
+  if (!props.variants) return []
+  return props.variants.map((v) => ({
+    value: String(v.id),
+    label: v.is_default ? `${v.name ?? 'Default'} (default)` : v.name ?? 'Unnamed',
+  }))
+})
 
 function resetForm() {
   selectedFiles.value = []
+  uploadVariantId.value = null
   if (fileInput.value) fileInput.value.value = ''
 }
 
@@ -40,7 +70,7 @@ function validateSelectedFiles(files: File[]) {
     return `You may upload at most ${maxFiles.value} files at a time.`
   }
   const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
-  if (invalidFile) return 'Files must be PNG, JPEG, or WebP images.'
+  if (invalidFile) return 'Files must be PNG, JPEG, WebP, or AVIF images.'
   return null
 }
 
@@ -75,7 +105,15 @@ async function handleSubmit() {
     return
   }
 
-  const payload: CreateSignPayload = { files: selectedFiles.value }
+  if (showVariantSelector.value && uploadVariantId.value === null) {
+    signsStore.error = 'Variant is required.'
+    return
+  }
+
+  const payload: CreateSignPayload = {
+    files: selectedFiles.value,
+    variant_id: uploadVariantId.value ?? props.selectedVariantId ?? undefined,
+  }
   const uploadedSigns = await signsStore.uploadSign(props.folderId, payload)
 
   if (uploadedSigns) {
@@ -98,23 +136,34 @@ async function handleSubmit() {
           type="file"
           name="file"
           multiple
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/avif"
           required
           class="w-full rounded bg-surface text-sm p-2 text-zinc-100 file:mr-3 file:cursor-pointer file:rounded-sm file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs file:font-semibold file:text-background"
           @change="handleFileChange"
         />
       </UiFormField>
 
+      <div v-if="showVariantSelector" class="mt-3">
+        <UiFormField label="Upload to variant" name="variant">
+          <UiSelect
+            v-model="selectedUploadVariantValue"
+            name="variant"
+            placeholder="Select a variant"
+            :options="variantOptions"
+          />
+        </UiFormField>
+      </div>
+
       <div v-if="selectedFiles.length" class="mt-2 text-sm text-zinc-400">
         <p class="font-semibold">Selected:</p>
         <p class="ml-3">{{ selectedFiles.map((file) => file.name).join(', ') }}</p>
       </div>
 
-      <p class="mt-1 text-xs text-zinc-400">PNG, JPEG, or WebP</p>
+      <p class="mt-1 text-xs text-zinc-400">PNG, JPEG, WebP, or AVIF</p>
       <p class="mt-1 text-xs text-zinc-400">Up to {{ maxFiles }} files per upload.</p>
 
       <div class="mt-6 flex flex-wrap gap-3">
-        <UiButton variant="primary" type="submit" :disabled="signsStore.isUploading">
+        <UiButton variant="primary" type="submit" :disabled="!canSubmit">
           {{ signsStore.isUploading ? 'Uploading...' : 'Upload' }}
         </UiButton>
         <UiButton variant="secondary" type="button" @click="close"> Cancel </UiButton>

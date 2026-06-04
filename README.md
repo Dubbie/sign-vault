@@ -1,5 +1,13 @@
 # SignVault
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white)](https://www.php.net/)
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)](https://laravel.com/)
+[![Vue](https://img.shields.io/badge/Vue-3-42B883?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Last commit](https://img.shields.io/github/last-commit/Dubbie/sign-vault)](https://github.com/Dubbie/sign-vault/commits/main)
+[![Issues](https://img.shields.io/github/issues/Dubbie/sign-vault)](https://github.com/Dubbie/sign-vault/issues)
+
 SignVault is a community platform for the Trackmania game where players can host, organize, and share custom in-game sign images. Users authenticate with Discord, upload signs into folders, and get stable CDN-backed URLs they can paste directly into Trackmania. Folders can be kept private, shared publicly, or protected with a password.
 
 ---
@@ -141,7 +149,5 @@ Pull requests are welcome. Because all three packages live in this repository, a
 ---
 
 ## License
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 MIT

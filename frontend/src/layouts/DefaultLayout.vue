@@ -10,7 +10,10 @@ const router = useRouter()
 const route = useRoute()
 
 function navClass(active: boolean) {
-  return ['no-underline transition-colors hover:text-zinc-100', active ? 'text-zinc-100' : 'text-zinc-400']
+  return [
+    'no-underline font-medium transition-colors',
+    active ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface',
+  ]
 }
 
 async function handleLogout() {
@@ -26,19 +29,26 @@ async function handleLogin() {
 <template>
   <div class="relative flex min-h-screen flex-col overflow-hidden bg-background">
     <header
-      class="flex justify-center fixed w-full z-20 bg-background/60 h-16 backdrop-blur-md sm:px-8"
+      class="fixed top-0 w-full z-50 flex justify-between items-center px-container-margin h-16 bg-surface-dim/80 backdrop-blur-xl border-b border-outline-variant/20"
     >
-      <nav class="mx-auto grid w-full max-w-7xl grid-cols-3 items-center">
-        <ul class="hidden items-center gap-6 sm:flex">
+      <nav class="flex gap-8 mx-auto w-full max-w-7xl items-center">
+        <div class="flex mb-1.5">
+          <RouterLink to="/" class="flex items-center gap-x-2">
+            <img :src="logoUrl" alt="SignVault logo" class="size-9 mt-1.5" />
+            <p class="text-[32px] font-medium text-zinc-100 no-underline">
+              Sign<span class="text-emerald-400 font-bold">Vault</span>
+            </p>
+          </RouterLink>
+        </div>
+
+        <ul class="hidden items-center gap-4 sm:flex sm:flex-1">
           <li v-if="auth.user">
             <RouterLink to="/dashboard" :class="navClass(route.name === 'dashboard')">
               Dashboard
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/" :class="navClass(route.path === '/')">
-              Explore
-            </RouterLink>
+            <RouterLink to="/" :class="navClass(route.path === '/')"> Explore </RouterLink>
           </li>
           <li v-if="auth.user">
             <RouterLink to="/folders" :class="navClass(route.path.startsWith('/folders'))">
@@ -50,34 +60,49 @@ async function handleLogin() {
               Utilities
             </RouterLink>
           </li>
+
+          <template v-if="auth.isAdmin">
+            <li>
+              <RouterLink to="/admin/users" :class="navClass(route.path === '/admin/users')">
+                Users
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink
+                to="/admin/explore"
+                :class="[...navClass(route.path === '/admin/explore')]"
+              >
+                All folders
+              </RouterLink>
+            </li>
+          </template>
         </ul>
 
-        <div class="flex justify-center">
-          <RouterLink to="/" class="flex items-center gap-x-2">
-            <img :src="logoUrl" alt="SignVault logo" class="size-9 mt-1.5" />
-            <p class="text-[32px] font-medium text-zinc-100 no-underline">
-              Sign<span class="text-emerald-400 font-bold">Vault</span>
-            </p>
-          </RouterLink>
-        </div>
-
         <div class="flex items-center justify-end gap-x-8">
-          <div v-if="auth.isAdmin">
-            <RouterLink to="/admin/users" :class="navClass(route.path === '/admin/users')">
-              Users
-            </RouterLink>
-            <RouterLink
-              to="/admin/explore"
-              :class="['ml-3', ...navClass(route.path === '/admin/explore')]"
-            >
-              Explore All
-            </RouterLink>
-          </div>
-
           <div v-if="auth.user" class="flex items-center gap-3">
-            <span class="hidden text-sm text-zinc-100 sm:inline">
-              {{ auth.user.discord_global_name || auth.user.discord_username }}
-            </span>
+            <div class="relative hidden sm:block">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+
+              <input
+                type="text"
+                class="bg-surface-container-low border border-outline-variant/30 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-primary transition-all w-64"
+                placeholder="Search folders..."
+              />
+            </div>
+
             <div class="h-8 w-8 overflow-hidden rounded-full bg-zinc-600">
               <img
                 v-if="auth.user.discord_avatar"
@@ -86,13 +111,13 @@ async function handleLogin() {
                 class="h-full w-full object-cover"
               />
             </div>
-            <button
+            <!-- <button
               type="button"
               class="cursor-pointer rounded border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-zinc-100"
               @click="handleLogout"
             >
               Logout
-            </button>
+            </button> -->
           </div>
 
           <button
@@ -116,38 +141,46 @@ async function handleLogin() {
     <CookieDisclaimer />
 
     <footer
-      class="relative z-10 border-t border-border px-6 py-4 text-center text-xs text-zinc-400 sm:px-8"
+      class="w-full py-section-gap px-container-margin bg-surface-container-lowest border-t border-outline-variant/10"
     >
-      <div class="flex items-center justify-center gap-4">
-        <span>SignVault &mdash; Trackmania sign library</span>
-        <RouterLink
-          to="/terms"
-          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
-        >
-          Terms
-        </RouterLink>
-        <RouterLink
-          to="/privacy"
-          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
-        >
-          Privacy
-        </RouterLink>
-        <a
-          href="https://github.com/Dubbie/sign-vault"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
-        >
-          Source
-        </a>
-        <a
-          href="https://discord.gg/vkaXfkr4qa"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-zinc-500 no-underline transition-colors hover:text-zinc-100"
-        >
-          Discord
-        </a>
+      <div class="max-w-7xl mx-auto">
+        <div class="w-full flex items-center justify-center gap-4">
+          <div class="flex flex-col flex-1 gap-1">
+            <span class="text-headline-md font-bold text-on-surface">SignVault</span>
+            <span class="text-label-sm text-on-surface-variant/80">Trackmania sign library</span>
+          </div>
+
+          <div class="flex gap-8">
+            <RouterLink
+              to="/terms"
+              class="text-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            >
+              Terms of Service
+            </RouterLink>
+            <RouterLink
+              to="/privacy"
+              class="text-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            >
+              Privacy Policy
+            </RouterLink>
+            <a
+              href="https://github.com/Dubbie/sign-vault"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            >
+              Source Code
+            </a>
+            <a
+              href="https://discord.gg/vkaXfkr4qa"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100"
+            >
+              Discord
+            </a>
+          </div>
+        </div>
       </div>
     </footer>
   </div>

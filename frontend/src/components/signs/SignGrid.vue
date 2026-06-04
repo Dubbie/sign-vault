@@ -138,19 +138,23 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <div class="grid gap-6 sign-grid">
+    <div class="grid gap-3 sign-grid">
       <div v-for="col in columns" :key="col.label" class="flex flex-col gap-3">
         <div
-          class="px-4 py-2 text-center text-sm font-semibold text-zinc-100"
+          class="text-center text-lg font-semibold"
           :class="selectable ? 'cursor-pointer select-none' : ''"
           @click="selectable && toggleColumn(col.signs)"
         >
-          <div class="flex items-center justify-center gap-2">
+          <div class="flex items-center justify-center gap-4">
+            <div class="h-px w-full bg-outline-variant/20"></div>
+
             <div
               v-if="selectable"
               class="-ml-8 flex size-5 items-center justify-center rounded border-2 transition"
               :class="
-                allSelectedInCol(col.signs) ? 'border-emerald-400 bg-emerald-400' : 'border-white/50'
+                allSelectedInCol(col.signs)
+                  ? 'border-emerald-400 bg-emerald-400'
+                  : 'border-white/50'
               "
             >
               <svg
@@ -164,16 +168,16 @@ onUnmounted(() => {
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
-            <p>{{ col.label }}</p>
+            <p class="text-on-surface-variant">{{ col.label }}</p>
+            <div class="h-px w-full bg-outline-variant/20"></div>
           </div>
-          <p class="font-mono text-xs font-normal text-zinc-500">{{ col.signs.length }} signs</p>
         </div>
 
         <article
           v-for="sign in col.signs"
           :key="sign.id"
-          class="group relative cursor-pointer transition duration-150 ease-in-out hover:ring-4"
-          :class="selectable && isSelected(sign.id) ? 'ring-emerald-400 ring-4' : ''"
+          class="group relative cursor-pointer transition duration-150 ease-in-out ring-offset-background ring-offset-2 hover:ring-primary hover:ring-2"
+          :class="selectable && isSelected(sign.id) ? 'ring-emerald-400 ring-2' : ''"
           @click="selectable ? toggleSelect(sign.id) : emit('copy', sign.id)"
         >
           <div class="relative w-full" :style="{ aspectRatio: signAspectRatio(sign) }">
@@ -248,10 +252,7 @@ onUnmounted(() => {
 
     <div ref="sentinel" class="h-px" />
 
-    <p
-      v-if="isLoadingMore"
-      class="py-6 text-center font-mono text-xs text-zinc-500"
-    >
+    <p v-if="isLoadingMore" class="py-6 text-center font-mono text-xs text-zinc-500">
       Loading more...
     </p>
   </div>
@@ -266,7 +267,7 @@ onUnmounted(() => {
 }
 
 .sign-grid {
-  grid-template-columns: 4fr 4fr 2fr 1fr;
+  grid-template-columns: 6fr 4fr 2fr 1fr;
 }
 
 @media (max-width: 1023px) {

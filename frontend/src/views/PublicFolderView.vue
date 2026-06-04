@@ -45,7 +45,12 @@ type ColumnRatio = (typeof COLUMN_RATIOS)[number]
 type ColumnState = { currentPage: number; hasMore: boolean }
 
 function initialColumnState(): Record<ColumnRatio, ColumnState> {
-  return { 6: { currentPage: 0, hasMore: false }, 4: { currentPage: 0, hasMore: false }, 2: { currentPage: 0, hasMore: false }, 1: { currentPage: 0, hasMore: false } }
+  return {
+    6: { currentPage: 0, hasMore: false },
+    4: { currentPage: 0, hasMore: false },
+    2: { currentPage: 0, hasMore: false },
+    1: { currentPage: 0, hasMore: false },
+  }
 }
 
 const folder = ref<PublicFolder | null>(null)
@@ -233,9 +238,10 @@ async function loadPublicFolder() {
 
     const variantParam = route.query.variant
     const initialVariantId = variantParam ? Number(variantParam) : null
-    const validVariant = initialVariantId && response.folder.variants.some((v) => v.id === initialVariantId)
-      ? initialVariantId
-      : null
+    const validVariant =
+      initialVariantId && response.folder.variants.some((v) => v.id === initialVariantId)
+        ? initialVariantId
+        : null
 
     selectedVariantId.value = validVariant
 
@@ -389,25 +395,94 @@ watch(folderSlug, () => {
       <p class="mt-1 text-sm text-muted">All their folders and signs have been removed.</p>
     </div>
 
-    <div v-else-if="folder" class="grid gap-5">
-      <header class="flex items-start justify-between gap-4 max-sm:flex-col">
+    <div v-else-if="folder">
+      <!-- Breadcrumb component here -->
+      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 class="text-[1.35rem] text-zinc-100 font-semibold">{{ folder.name }}</h2>
-          <p class="text-xs text-zinc-400 font-mono">{{ folder.slug }}</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="text-right">
-            <UiBadge :label="visibilityLabel(folder.visibility)" />
-            <p class="text-xs font-mono mt-1 text-zinc-400">{{ signsTotal }} total</p>
+          <nav class="flex items-center gap-2 text-on-surface-variant mb-4">
+            <span>Explore</span>
+            <span
+              ><svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="3"
+                stroke="currentColor"
+                class="size-3"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </span>
+            <span class="text-primary">{{ folder.name }}</span>
+          </nav>
+
+          <div class="flex items-center gap-4">
+            <h1 class="text-headline-xl text-on-surface">{{ folder.name }}</h1>
+            <div>
+              <span
+                class="mr-2 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
+              >
+                {{ visibilityLabel(folder.visibility) }}
+              </span>
+              <span>{{ signsTotal }} signs</span>
+            </div>
           </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button
+            class="glass-card font-semibold px-component-padding-x py-component-padding-y rounded-lg flex items-center gap-2 text-on-surface hover:bg-surface-variant/50 transition-all"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="size-5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+              />
+            </svg>
+
+            Copy URL
+          </button>
+
           <RouterLink v-if="isAuthor" :to="`/folders/${folder.id}`">
-            <UiButton variant="primary" type="button"> Manage folder </UiButton>
+            <button
+              class="bg-primary font-semibold text-on-primary px-component-padding-x py-component-padding-y rounded-lg flex items-center gap-2 font-label-md emerald-glow transition-all"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="1.5"
+                stroke="currentColor"
+                class="size-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z"
+                />
+              </svg>
+
+              Manage folder
+            </button>
           </RouterLink>
+
           <UiButton v-if="canBan()" variant="danger" type="button" @click="showBanModal = true">
             Ban User
           </UiButton>
         </div>
-      </header>
+      </div>
 
       <div v-if="showVariantSwitcher" class="max-w-sm">
         <UiFormField label="Variant" name="variant">
@@ -440,9 +515,7 @@ watch(folderSlug, () => {
       <div v-if="folder">
         <p class="text-sm text-zinc-300">
           Ban
-          <strong>{{
-            folder.owner?.discord_global_name || folder.owner?.discord_username
-          }}</strong
+          <strong>{{ folder.owner?.discord_global_name || folder.owner?.discord_username }}</strong
           >? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">
@@ -462,11 +535,7 @@ watch(folderSlug, () => {
 
         <div class="mt-4 flex justify-end gap-3">
           <UiButton variant="secondary" @click="showBanModal = false"> Cancel </UiButton>
-          <UiButton
-            variant="danger"
-            :disabled="!banReason.trim() || isBanning"
-            @click="handleBan"
-          >
+          <UiButton variant="danger" :disabled="!banReason.trim() || isBanning" @click="handleBan">
             {{ isBanning ? 'Banning...' : 'Ban & Nuke Content' }}
           </UiButton>
         </div>

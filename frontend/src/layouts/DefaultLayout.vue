@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import logoUrl from '@/assets/logo.svg'
 import { useAuthStore } from '@/stores/auth'
@@ -7,6 +7,11 @@ import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+
+function navClass(active: boolean) {
+  return ['no-underline transition-colors hover:text-zinc-100', active ? 'text-zinc-100' : 'text-zinc-400']
+}
 
 async function handleLogout() {
   await auth.logout()
@@ -26,38 +31,22 @@ async function handleLogin() {
       <nav class="mx-auto grid w-full max-w-7xl grid-cols-3 items-center">
         <ul class="hidden items-center gap-6 sm:flex">
           <li v-if="auth.user">
-            <RouterLink
-              to="/dashboard"
-              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
-            >
+            <RouterLink to="/dashboard" :class="navClass(route.name === 'dashboard')">
               Dashboard
             </RouterLink>
           </li>
           <li>
-            <RouterLink
-              to="/"
-              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
-            >
+            <RouterLink to="/" :class="navClass(route.path === '/')">
               Explore
             </RouterLink>
           </li>
           <li v-if="auth.user">
-            <RouterLink
-              to="/folders"
-              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
-            >
+            <RouterLink to="/folders" :class="navClass(route.path.startsWith('/folders'))">
               My folders
             </RouterLink>
           </li>
           <li>
-            <RouterLink
-              to="/utilities"
-              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
-            >
+            <RouterLink to="/utilities" :class="navClass(route.path.startsWith('/utilities'))">
               Utilities
             </RouterLink>
           </li>
@@ -74,17 +63,12 @@ async function handleLogin() {
 
         <div class="flex items-center justify-end gap-x-8">
           <div v-if="auth.isAdmin">
-            <RouterLink
-              to="/admin/users"
-              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
-            >
+            <RouterLink to="/admin/users" :class="navClass(route.path === '/admin/users')">
               Users
             </RouterLink>
             <RouterLink
               to="/admin/explore"
-              class="ml-3 text-zinc-400 no-underline transition-colors hover:text-zinc-100"
-              active-class="text-zinc-100"
+              :class="['ml-3', ...navClass(route.path === '/admin/explore')]"
             >
               Explore All
             </RouterLink>

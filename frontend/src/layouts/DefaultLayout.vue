@@ -52,6 +52,15 @@ async function handleLogin() {
               My folders
             </RouterLink>
           </li>
+          <li>
+            <RouterLink
+              to="/utilities"
+              class="text-zinc-400 no-underline transition-colors hover:text-zinc-100"
+              active-class="text-zinc-100"
+            >
+              Utilities
+            </RouterLink>
+          </li>
         </ul>
 
         <div class="flex justify-center">

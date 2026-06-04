@@ -14,6 +14,8 @@ import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminExploreView from '../views/AdminExploreView.vue'
 import LegalTermsView from '../views/LegalTermsView.vue'
 import LegalPrivacyView from '../views/LegalPrivacyView.vue'
+import UtilitiesView from '../views/utilities/UtilitiesView.vue'
+import SignSizingView from '../views/utilities/SignSizingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -109,6 +111,22 @@ const router = createRouter({
         requiresAdmin: true,
         title: 'Explore — SignVault Admin',
       },
+    },
+    {
+      path: '/utilities',
+      component: UtilitiesView,
+      children: [
+        {
+          path: '',
+          redirect: '/utilities/sign-sizing',
+        },
+        {
+          path: 'sign-sizing',
+          name: 'utilities-sign-sizing',
+          component: SignSizingView,
+          meta: { title: 'Sign Sizing Guide — SignVault' },
+        },
+      ],
     },
     {
       path: '/terms',

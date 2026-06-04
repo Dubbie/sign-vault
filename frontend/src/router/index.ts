@@ -16,6 +16,7 @@ import LegalTermsView from '../views/LegalTermsView.vue'
 import LegalPrivacyView from '../views/LegalPrivacyView.vue'
 import UtilitiesView from '../views/utilities/UtilitiesView.vue'
 import SignSizingView from '../views/utilities/SignSizingView.vue'
+import NameTagFormatterView from '../views/utilities/NameTagFormatterView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -125,6 +126,12 @@ const router = createRouter({
           name: 'utilities-sign-sizing',
           component: SignSizingView,
           meta: { title: 'Sign Sizing Guide — SignVault' },
+        },
+        {
+          path: 'name-tag-formatter',
+          name: 'utilities-name-tag-formatter',
+          component: NameTagFormatterView,
+          meta: { title: 'Name Tag Formatter — SignVault' },
         },
       ],
     },

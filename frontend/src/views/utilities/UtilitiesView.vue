@@ -14,15 +14,13 @@ import { RouterLink, RouterView } from 'vue-router'
         >
           Sign Sizing Guide
         </RouterLink>
-        <span
-          class="cursor-not-allowed rounded-lg px-3 py-2 text-sm text-zinc-600 select-none"
-          title="Coming soon"
+        <RouterLink
+          to="/utilities/name-tag-formatter"
+          class="rounded-lg px-3 py-2 text-sm text-zinc-400 no-underline transition-colors hover:bg-white/5 hover:text-zinc-100"
+          active-class="bg-white/5 text-zinc-100"
         >
           Name Tag Formatter
-          <span class="ml-1.5 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-500"
-            >Soon</span
-          >
-        </span>
+        </RouterLink>
       </nav>
     </aside>
 

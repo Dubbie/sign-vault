@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Folder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -20,18 +19,29 @@ return new class extends Migration
 
         DB::table('folders')->orderBy('id')->chunkById(500, function ($folders): void {
             foreach ($folders as $folder) {
-                $defaultVariantId = DB::table('variants')->insertGetId([
-                    'folder_id' => $folder->id,
-                    'name' => 'Default',
-                    'is_default' => true,
-                    'sort_order' => 0,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                DB::transaction(function () use ($folder): void {
+                    $defaultVariantId = DB::table('variants')
+                        ->where('folder_id', $folder->id)
+                        ->where('is_default', true)
+                        ->orderBy('id')
+                        ->value('id');
 
-                DB::table('signs')
-                    ->where('folder_id', $folder->id)
-                    ->update(['variant_id' => $defaultVariantId]);
+                    if ($defaultVariantId === null) {
+                        $defaultVariantId = DB::table('variants')->insertGetId([
+                            'folder_id' => $folder->id,
+                            'name' => 'Default',
+                            'is_default' => true,
+                            'sort_order' => 0,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+
+                    DB::table('signs')
+                        ->where('folder_id', $folder->id)
+                        ->whereNull('variant_id')
+                        ->update(['variant_id' => $defaultVariantId]);
+                });
             }
         });
 

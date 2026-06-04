@@ -44,6 +44,14 @@ const variantOptions = computed(() =>
     label: variantSelectLabel(variant),
   })),
 )
+const changeVariantOptions = computed(() =>
+  variants.value
+    .filter((variant) => activeVariant()?.id !== variant.id)
+    .map((variant) => ({
+      value: String(variant.id),
+      label: variantDisplayLabel(variant),
+    })),
+)
 const selectedVariantSelectValue = computed({
   get() {
     return String(activeVariant()?.id ?? '')
@@ -107,6 +115,7 @@ const showMoveModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteConfirm = ref(false)
 const showChangeVariantModal = ref(false)
+const changeVariantSelectValue = ref('')
 const showVariantActions = ref(false)
 const copiedSignId = ref<number | null>(null)
 const copiedPublicUrl = ref(false)
@@ -323,6 +332,27 @@ async function handleDeleteVariant(variantId: number) {
 function clearSelection() {
   selectedSignIds.value = []
 }
+
+async function handleChangeVariantSubmit() {
+  if (!folder.value || !changeVariantSelectValue.value) return
+
+  const targetVariantId = Number(changeVariantSelectValue.value)
+  await signsStore.changeSignVariant(selectedSignIds.value, targetVariantId)
+  selectedSignIds.value = []
+  showChangeVariantModal.value = false
+  await signsStore.fetchFolderSigns(folderId.value, selectedVariantId.value ?? undefined)
+}
+
+watch(
+  () => showChangeVariantModal.value,
+  (open) => {
+    if (open) {
+      changeVariantSelectValue.value = changeVariantOptions.value[0]?.value ?? ''
+    } else {
+      changeVariantSelectValue.value = ''
+    }
+  },
+)
 </script>
 
 <template>
@@ -629,34 +659,29 @@ function clearSelection() {
         sign{{ selectedSignIds.length === 1 ? '' : 's' }} to a different variant.
       </p>
 
-      <div class="flex flex-col gap-2">
-        <button
-          v-for="variant in variants"
-          :key="variant.id"
-          type="button"
-          class="w-full rounded px-3 py-2 text-left text-sm transition"
-          :class="
-            activeVariant()?.id === variant.id
-              ? 'bg-emerald-400/10 text-emerald-400 cursor-not-allowed'
-              : 'text-zinc-300 hover:bg-white/5'
-          "
-          :disabled="activeVariant()?.id === variant.id"
-          @click="
-            (async () => {
-              await signsStore.changeSignVariant(selectedSignIds, variant.id)
-              selectedSignIds = []
-              showChangeVariantModal = false
-              await signsStore.fetchFolderSigns(folderId, selectedVariantId ?? undefined)
-            })()
-          "
-        >
-          {{ variantDisplayLabel(variant) }}
-        </button>
+      <div class="grid gap-2">
+        <UiSelect
+          v-model="changeVariantSelectValue"
+          name="change-variant"
+          :options="changeVariantOptions"
+        />
+
+        <p v-if="changeVariantOptions.length === 0" class="text-sm text-zinc-400">
+          No other variants available.
+        </p>
       </div>
 
-      <div class="mt-6 flex justify-end">
+      <div class="mt-6 flex justify-end gap-3">
         <UiButton variant="secondary" type="button" @click="showChangeVariantModal = false">
           Cancel
+        </UiButton>
+        <UiButton
+          variant="primary"
+          type="button"
+          :disabled="!changeVariantSelectValue"
+          @click="handleChangeVariantSubmit"
+        >
+          Change
         </UiButton>
       </div>
     </UiModal>

@@ -5,7 +5,8 @@ const props = withDefaults(
   defineProps<{
     modelValue: string
     name?: string
-    options: { value: string; label: string }[]
+    placeholder?: string
+    options: { value: string; label: string; disabled?: boolean }[]
   }>(),
   {},
 )
@@ -21,7 +22,8 @@ const listboxRef = ref<HTMLUListElement | null>(null)
 
 const selectedLabel = computed(() => {
   const opt = props.options.find((o) => o.value === props.modelValue)
-  return opt ? opt.label : ''
+  if (opt) return opt.label
+  return props.placeholder ?? ''
 })
 
 const listboxId = computed(() => (props.name ? `${props.name}-listbox` : 'listbox'))
@@ -32,17 +34,29 @@ const activeDescendantId = computed(() =>
 
 function selectOption(index: number) {
   const opt = props.options[index]
-  if (opt) {
+  if (opt && !opt.disabled) {
     emit('update:modelValue', opt.value)
     close()
   }
 }
 
+function nextEnabledIndex(startIndex: number, direction: 1 | -1) {
+  if (props.options.length === 0) return -1
+
+  let index = startIndex
+  while (index >= 0 && index < props.options.length) {
+    if (!props.options[index]?.disabled) return index
+    index += direction
+  }
+
+  return -1
+}
+
 function openDropdown() {
   if (props.options.length === 0) return
   open.value = true
-  const idx = props.options.findIndex((o) => o.value === props.modelValue)
-  activeIndex.value = idx >= 0 ? idx : 0
+  const selectedIndex = props.options.findIndex((o) => o.value === props.modelValue && !o.disabled)
+  activeIndex.value = selectedIndex >= 0 ? selectedIndex : nextEnabledIndex(0, 1)
   nextTick(() => {
     listboxRef.value?.focus()
     scrollToActive()
@@ -75,8 +89,6 @@ function onTriggerKeydown(event: KeyboardEvent) {
     case 'ArrowUp':
       event.preventDefault()
       openDropdown()
-      activeIndex.value = props.options.length - 1
-      nextTick(() => scrollToActive())
       break
     case 'Enter':
     case ' ':
@@ -93,12 +105,12 @@ function onListboxKeydown(event: KeyboardEvent) {
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault()
-      activeIndex.value = Math.min(activeIndex.value + 1, props.options.length - 1)
+      activeIndex.value = nextEnabledIndex(Math.min(activeIndex.value + 1, props.options.length - 1), 1)
       nextTick(() => scrollToActive())
       break
     case 'ArrowUp':
       event.preventDefault()
-      activeIndex.value = Math.max(activeIndex.value - 1, 0)
+      activeIndex.value = nextEnabledIndex(Math.max(activeIndex.value - 1, 0), -1)
       nextTick(() => scrollToActive())
       break
     case 'Enter':
@@ -114,12 +126,12 @@ function onListboxKeydown(event: KeyboardEvent) {
       break
     case 'Home':
       event.preventDefault()
-      activeIndex.value = 0
+      activeIndex.value = nextEnabledIndex(0, 1)
       nextTick(() => scrollToActive())
       break
     case 'End':
       event.preventDefault()
-      activeIndex.value = props.options.length - 1
+      activeIndex.value = nextEnabledIndex(props.options.length - 1, -1)
       nextTick(() => scrollToActive())
       break
   }
@@ -202,15 +214,17 @@ onUnmounted(() => {
         :id="`option-${name ?? 'select'}-${idx}`"
         role="option"
         :aria-selected="opt.value === modelValue"
+        :aria-disabled="opt.disabled ? 'true' : 'false'"
         :class="[
-          'cursor-pointer px-3 py-1.5 text-sm transition',
+          'px-3 py-1.5 text-sm transition',
+          opt.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
           opt.value === modelValue
             ? 'text-zinc-100'
             : 'text-zinc-400',
-          idx === activeIndex ? 'bg-white/10' : '',
+          idx === activeIndex && !opt.disabled ? 'bg-white/10' : '',
         ]"
         @mousedown.prevent="selectOption(idx)"
-        @mouseenter="onOptionHover(idx)"
+        @mouseenter="!opt.disabled && onOptionHover(idx)"
       >
         {{ opt.label }}
       </li>

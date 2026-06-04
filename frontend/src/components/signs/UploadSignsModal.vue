@@ -10,6 +10,7 @@ import UiModal from '@/components/ui/UiModal.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiButton from '@/components/ui/UiButton.vue'
+import UiSelect from '@/components/ui/UiSelect.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -30,16 +31,30 @@ const maxFiles = computed(() => authStore.signUploadMaxFiles)
 const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploadVariantId = ref<number | null>(null)
+const selectedUploadVariantValue = computed({
+  get() {
+    return String(uploadVariantId.value ?? '')
+  },
+  set(value: string) {
+    uploadVariantId.value = value ? Number(value) : null
+  },
+})
 
 const showVariantSelector = computed(() => (props.variants?.length ?? 0) > 1)
+const canSubmit = computed(
+  () =>
+    !signsStore.isUploading &&
+    selectedFiles.value.length > 0 &&
+    (!showVariantSelector.value || uploadVariantId.value !== null),
+)
 
 const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/avif'])
 
 const variantOptions = computed(() => {
   if (!props.variants) return []
   return props.variants.map((v) => ({
-    id: v.id,
-    name: v.is_default ? (v.name ?? 'Default') : (v.name ?? 'Unnamed'),
+    value: String(v.id),
+    label: v.is_default ? `${v.name ?? 'Default'} (default)` : v.name ?? 'Unnamed',
   }))
 })
 
@@ -90,6 +105,11 @@ async function handleSubmit() {
     return
   }
 
+  if (showVariantSelector.value && uploadVariantId.value === null) {
+    signsStore.error = 'Variant is required.'
+    return
+  }
+
   const payload: CreateSignPayload = {
     files: selectedFiles.value,
     variant_id: uploadVariantId.value ?? props.selectedVariantId ?? undefined,
@@ -125,22 +145,12 @@ async function handleSubmit() {
 
       <div v-if="showVariantSelector" class="mt-3">
         <UiFormField label="Upload to variant" name="variant">
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="opt in variantOptions"
-              :key="opt.id"
-              type="button"
-              class="rounded px-3 py-1.5 text-xs font-medium transition"
-              :class="
-                (uploadVariantId ?? props.selectedVariantId) === opt.id
-                  ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/30'
-                  : 'bg-white/5 text-zinc-400 hover:text-zinc-100 border border-transparent'
-              "
-              @click="uploadVariantId = opt.id"
-            >
-              {{ opt.name }}
-            </button>
-          </div>
+          <UiSelect
+            v-model="selectedUploadVariantValue"
+            name="variant"
+            placeholder="Select a variant"
+            :options="variantOptions"
+          />
         </UiFormField>
       </div>
 
@@ -153,7 +163,7 @@ async function handleSubmit() {
       <p class="mt-1 text-xs text-zinc-400">Up to {{ maxFiles }} files per upload.</p>
 
       <div class="mt-6 flex flex-wrap gap-3">
-        <UiButton variant="primary" type="submit" :disabled="signsStore.isUploading">
+        <UiButton variant="primary" type="submit" :disabled="!canSubmit">
           {{ signsStore.isUploading ? 'Uploading...' : 'Upload' }}
         </UiButton>
         <UiButton variant="secondary" type="button" @click="close"> Cancel </UiButton>

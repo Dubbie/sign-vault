@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
+import { getAppStats } from '@/lib/stats'
 import { useAuthStore } from '@/stores/auth'
 import { useFoldersStore } from '@/stores/folders'
 
@@ -16,8 +17,22 @@ const foldersStore = useFoldersStore()
 const router = useRouter()
 
 const showCreateModal = ref(false)
+const totalSigns = ref(0)
 
 const recentFolders = computed(() => foldersStore.folders.slice(0, 5))
+const publicFolderCount = computed(
+  () => foldersStore.folders.filter((folder) => folder.visibility === 'public').length,
+)
+const userSignCount = computed(() => auth.user?.signs_count ?? 0)
+
+async function fetchDashboardStats() {
+  try {
+    const stats = await getAppStats()
+    totalSigns.value = stats.total_signs
+  } catch {
+    totalSigns.value = 0
+  }
+}
 
 onMounted(async () => {
   if (!auth.isAuthenticated) {
@@ -25,9 +40,13 @@ onMounted(async () => {
     return
   }
 
+  const requests: Promise<unknown>[] = [fetchDashboardStats()]
+
   if (foldersStore.folders.length === 0) {
-    await foldersStore.fetchFolders()
+    requests.push(foldersStore.fetchFolders())
   }
+
+  await Promise.all(requests)
 })
 
 function handleCreateSaved(folderId: number) {
@@ -52,9 +71,9 @@ function handleCreateSaved(folderId: number) {
     </div>
 
     <div class="grid gap-6 sm:grid-cols-4">
-      <StatCard :icon="Archive" label="Total signs" value="12 842" />
+      <StatCard :icon="Archive" label="Total signs" :value="totalSigns.toLocaleString()" />
 
-      <StatCard :icon="Archive" label="Signs by you" value="100" />
+      <StatCard :icon="Archive" label="Signs by you" :value="userSignCount.toLocaleString()" />
 
       <StatCard
         :icon="Folder"
@@ -62,7 +81,11 @@ function handleCreateSaved(folderId: number) {
         :value="foldersStore.folderCount.toLocaleString()"
       />
 
-      <StatCard :icon="Link" label="Signs copied" value="1 234" />
+      <StatCard
+        :icon="Link"
+        label="Your public folders"
+        :value="publicFolderCount.toLocaleString()"
+      />
     </div>
 
     <div v-if="recentFolders.length" class="space-y-4">

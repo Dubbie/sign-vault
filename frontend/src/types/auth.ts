@@ -6,6 +6,8 @@ export interface AuthUser {
   discord_avatar: string | null
   email: string | null
   is_admin: boolean
+  folders_count: number
+  signs_count: number
 }
 
 export interface DiscordRedirectResponse {

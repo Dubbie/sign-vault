@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Folder;
+use App\Models\Sign;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\RedirectResponse;
@@ -122,6 +124,8 @@ class DiscordAuthTest extends TestCase
             'discord_avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
             'email' => 'user@example.com',
         ]);
+        $folder = Folder::factory()->for($user)->create();
+        Sign::factory()->for($user)->for($folder)->count(2)->create();
 
         Sanctum::actingAs($user);
 
@@ -130,7 +134,9 @@ class DiscordAuthTest extends TestCase
             ->assertJsonPath('limits.sign_upload_max_files', config('signs.max_upload_files'))
             ->assertJsonPath('user.discord_id', '123456789')
             ->assertJsonPath('user.discord_username', 'exampleuser')
-            ->assertJsonPath('user.email', 'user@example.com');
+            ->assertJsonPath('user.email', 'user@example.com')
+            ->assertJsonPath('user.folders_count', 1)
+            ->assertJsonPath('user.signs_count', 2);
     }
 
     public function test_logout_requires_authentication(): void

@@ -77,7 +77,7 @@ class DiscordAuthController extends Controller
 
         return response()->json([
             'token' => $token->plainTextToken,
-            'user' => $this->userResponse($user),
+            'user' => $this->userResponse($user->loadCount(['folders', 'signs'])),
         ]);
     }
 
@@ -93,7 +93,7 @@ class DiscordAuthController extends Controller
         }
 
         return response()->json([
-            'user' => $this->userResponse($user),
+            'user' => $this->userResponse($user->loadCount(['folders', 'signs'])),
             'limits' => [
                 'sign_upload_max_files' => config('signs.max_upload_files'),
             ],
@@ -123,7 +123,7 @@ class DiscordAuthController extends Controller
     }
 
     /**
-     * @return array<string, int|string|null>
+     * @return array<string, bool|int|string|null>
      */
     private function userResponse(User $user): array
     {
@@ -135,6 +135,8 @@ class DiscordAuthController extends Controller
             'discord_avatar',
             'email',
             'is_admin',
+            'folders_count',
+            'signs_count',
         ]);
     }
 

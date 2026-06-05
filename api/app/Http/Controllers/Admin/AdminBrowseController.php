@@ -19,7 +19,17 @@ class AdminBrowseController extends Controller
                 'user',
                 'signs' => function ($query): void {
                     $query->orderBy('id')
-                        ->select(['id', 'name', 'public_url', 'width', 'height', 'folder_id']);
+                        ->select([
+                            'id',
+                            'name',
+                            'public_url',
+                            'mime_type',
+                            'width',
+                            'height',
+                            'column_ratio',
+                            'folder_id',
+                            'variant_id',
+                        ]);
                 },
             ])
             ->withCount('signs');

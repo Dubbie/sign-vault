@@ -25,7 +25,17 @@ class PublicFolderController extends Controller
                 'variants',
                 'signs' => function ($query): void {
                     $query->orderBy('id')
-                        ->select(['id', 'name', 'public_url', 'width', 'height', 'column_ratio', 'folder_id', 'variant_id']);
+                        ->select([
+                            'id',
+                            'name',
+                            'public_url',
+                            'mime_type',
+                            'width',
+                            'height',
+                            'column_ratio',
+                            'folder_id',
+                            'variant_id',
+                        ]);
                 },
             ])
             ->withCount(['signs', 'variants']);

@@ -6,7 +6,7 @@ import logoUrl from '@/assets/logo.svg'
 import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
 import { useAuthStore } from '@/stores/auth'
-import { LogOut } from '@lucide/vue'
+import { LogOut, ShieldAlert } from '@lucide/vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -72,21 +72,20 @@ function isExploreActive() {
             </RouterLink>
           </li>
 
-          <template v-if="auth.isAdmin">
-            <li>
-              <RouterLink to="/admin/users" :class="navClass(route.path === '/admin/users')">
-                Users
-              </RouterLink>
-            </li>
-            <li>
-              <RouterLink
-                to="/admin/explore"
-                :class="[...navClass(route.path === '/admin/explore')]"
-              >
-                All folders
-              </RouterLink>
-            </li>
-          </template>
+          <li v-if="auth.isAdmin">
+            <RouterLink
+              to="/admin/users"
+              class="no-underline font-medium transition-colors border-b-2 py-component-padding-y flex items-center gap-1.5"
+              :class="
+                route.path.startsWith('/admin')
+                  ? 'text-red-400 border-red-400'
+                  : 'border-transparent text-red-400/60 hover:text-red-400'
+              "
+            >
+              <ShieldAlert class="size-3.5" />
+              Admin
+            </RouterLink>
+          </li>
         </ul>
 
         <div class="flex items-center justify-end gap-x-8">

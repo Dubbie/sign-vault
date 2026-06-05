@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBrowseController;
+use App\Http\Controllers\Admin\AdminContentController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\DiscordAuthController;
 use App\Http\Controllers\FolderController;
@@ -48,4 +49,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/users/{user}/unban', [AdminUserController::class, 'unban']);
     Route::get('/folders', [AdminBrowseController::class, 'folders']);
     Route::get('/folders/{folder}/signs', [AdminBrowseController::class, 'folderSigns']);
+    Route::delete('/folders/{folder}', [AdminContentController::class, 'deleteFolder']);
+    Route::delete('/signs/{sign}', [AdminContentController::class, 'deleteSign']);
 });

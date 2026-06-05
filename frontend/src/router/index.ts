@@ -10,6 +10,7 @@ import FolderShowView from '../views/FolderShowView.vue'
 import FolderEditView from '../views/FolderEditView.vue'
 import ExploreView from '../views/ExploreView.vue'
 import PublicFolderView from '../views/PublicFolderView.vue'
+import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminExploreView from '../views/AdminExploreView.vue'
 import LegalTermsView from '../views/LegalTermsView.vue'
@@ -108,25 +109,26 @@ const router = createRouter({
       meta: { title: 'Public Folder — SignVault' },
     },
     {
-      path: '/admin/users',
-      name: 'admin-users',
-      component: AdminUsersView,
-      meta: {
-        requiresAuth: true,
-        requiresAdmin: true,
-        title: 'Users — SignVault Admin',
-      },
+      path: '/admin',
+      component: AdminLayout,
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        { path: '', redirect: '/admin/users' },
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: AdminUsersView,
+          meta: { title: 'Users — SignVault Admin' },
+        },
+        {
+          path: 'folders',
+          name: 'admin-folders',
+          component: AdminExploreView,
+          meta: { title: 'All Folders — SignVault Admin' },
+        },
+      ],
     },
-    {
-      path: '/admin/explore',
-      name: 'admin-explore',
-      component: AdminExploreView,
-      meta: {
-        requiresAuth: true,
-        requiresAdmin: true,
-        title: 'Explore — SignVault Admin',
-      },
-    },
+    { path: '/admin/explore', redirect: '/admin/folders' },
     {
       path: '/utilities',
       component: UtilitiesView,

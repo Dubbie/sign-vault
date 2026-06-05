@@ -2,9 +2,9 @@ import api from '@/lib/api'
 import type { PaginatedAdminUsers } from '@/types/auth'
 import type { PaginatedPublicFolderResponse, PublicSign } from '@/types/public-folder'
 
-export async function getUsers(page = 1): Promise<PaginatedAdminUsers> {
+export async function getUsers(page = 1, q?: string): Promise<PaginatedAdminUsers> {
   const { data } = await api.get<PaginatedAdminUsers>('/api/admin/users', {
-    params: { page },
+    params: { page, ...(q ? { q } : {}) },
   })
   return data
 }
@@ -23,6 +23,14 @@ export async function getAllFolders(params?: {
 }): Promise<PaginatedPublicFolderResponse> {
   const { data } = await api.get<PaginatedPublicFolderResponse>('/api/admin/folders', { params })
   return data
+}
+
+export async function deleteAdminFolder(folderId: number): Promise<void> {
+  await api.delete(`/api/admin/folders/${folderId}`)
+}
+
+export async function deleteAdminSign(signId: number): Promise<void> {
+  await api.delete(`/api/admin/signs/${signId}`)
 }
 
 export async function getAdminFolderSigns(folderId: number): Promise<{

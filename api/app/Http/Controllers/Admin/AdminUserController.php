@@ -13,10 +13,16 @@ class AdminUserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $users = User::query()
-            ->withCount(['folders', 'signs'])
-            ->latest()
-            ->paginate(20);
+        $query = User::query()->withCount(['folders', 'signs']);
+
+        if ($search = $request->string('q', '')) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('discord_username', 'like', '%'.$search.'%')
+                    ->orWhere('discord_global_name', 'like', '%'.$search.'%');
+            });
+        }
+
+        $users = $query->latest()->paginate(20);
 
         $users->through(function (User $user) {
             return [
@@ -33,7 +39,14 @@ class AdminUserController extends Controller
             ];
         });
 
-        return response()->json($users);
+        return response()->json([
+            ...$users->toArray(),
+            'stats' => [
+                'total' => User::count(),
+                'admins' => User::where('is_admin', true)->count(),
+                'banned' => User::whereNotNull('banned_at')->count(),
+            ],
+        ]);
     }
 
     public function ban(Request $request, User $user): JsonResponse
@@ -66,7 +79,7 @@ class AdminUserController extends Controller
         return response()->json(['message' => 'User has been banned and their content removed.']);
     }
 
-    public function unban(Request $request, User $user): JsonResponse
+    public function unban(User $user): JsonResponse
     {
         if (! $user->isBanned()) {
             throw ValidationException::withMessages([

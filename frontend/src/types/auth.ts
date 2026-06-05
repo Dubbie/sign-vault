@@ -45,4 +45,9 @@ export interface PaginatedAdminUsers {
   last_page: number
   per_page: number
   total: number
+  stats: {
+    total: number
+    admins: number
+    banned: number
+  }
 }

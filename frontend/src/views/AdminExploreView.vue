@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
-import { getAllFolders, getAdminFolderSigns, banUser } from '@/lib/admin'
-import type { PaginationMeta, PublicFolderListing, PublicSign } from '@/types/public-folder'
+import { getAllFolders, getAdminFolderSigns, banUser, deleteAdminFolder, deleteAdminSign } from '@/lib/admin'
+import type { PaginationMeta, PublicFolderListing } from '@/types/public-folder'
 import { useAuthStore } from '@/stores/auth'
 
 import UiInput from '@/components/ui/UiInput.vue'
@@ -11,7 +10,8 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiModal from '@/components/ui/UiModal.vue'
-import PreviewSignGrid from '@/components/explore/PreviewSignGrid.vue'
+import AdminSignGrid from '@/components/admin/AdminSignGrid.vue'
+import type { AdminGridSign } from '@/components/admin/AdminSignGrid.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,14 +24,23 @@ const search = ref(String(route.query.q || ''))
 const meta = ref<PaginationMeta | null>(null)
 const selectedFolder = ref<PublicFolderListing | null>(null)
 const selectedFolderUserId = ref<number | null>(null)
-
-const selectedFolderSigns = ref<PublicSign[]>([])
+const selectedFolderSigns = ref<AdminGridSign[]>([])
 const selectedFolderName = ref('')
 const isLoadingSigns = ref(false)
 
+// Sign selection
+const selectedSignIds = ref<number[]>([])
+const showDeleteSignsConfirm = ref(false)
+const isDeletingSign = ref(false)
+
+// Ban modal
 const showBanModal = ref(false)
 const banReason = ref('')
 const isBanning = ref(false)
+
+// Delete folder modal
+const showDeleteFolderModal = ref(false)
+const isDeletingFolder = ref(false)
 
 function canBan() {
   return (
@@ -48,6 +57,7 @@ async function loadFolders(page = 1) {
   selectedFolderUserId.value = null
   selectedFolderSigns.value = []
   selectedFolderName.value = ''
+  selectedSignIds.value = []
 
   try {
     const params: { q?: string; page?: number } = { page }
@@ -67,6 +77,7 @@ async function loadFolderSigns(folder: PublicFolderListing) {
   selectedFolder.value = folder
   isLoadingSigns.value = true
   error.value = null
+  selectedSignIds.value = []
 
   try {
     const result = await getAdminFolderSigns(folder.id)
@@ -94,10 +105,60 @@ async function handleBan() {
     selectedFolderUserId.value = null
     selectedFolderSigns.value = []
     selectedFolderName.value = ''
+    selectedSignIds.value = []
+    await loadFolders(meta.value?.current_page ?? 1)
   } catch {
     error.value = 'Failed to ban user.'
   } finally {
     isBanning.value = false
+  }
+}
+
+async function handleDeleteFolder() {
+  if (!selectedFolder.value) return
+
+  isDeletingFolder.value = true
+  error.value = null
+  const folderId = selectedFolder.value.id
+
+  try {
+    await deleteAdminFolder(folderId)
+    showDeleteFolderModal.value = false
+    folders.value = folders.value.filter((f) => f.id !== folderId)
+    selectedFolder.value = null
+    selectedFolderUserId.value = null
+    selectedFolderSigns.value = []
+    selectedFolderName.value = ''
+    selectedSignIds.value = []
+  } catch {
+    error.value = 'Failed to delete folder.'
+  } finally {
+    isDeletingFolder.value = false
+  }
+}
+
+async function handleDeleteSelectedSigns() {
+  if (selectedSignIds.value.length === 0) return
+
+  isDeletingSign.value = true
+  error.value = null
+  const idsToDelete = [...selectedSignIds.value]
+
+  try {
+    await Promise.all(idsToDelete.map((id) => deleteAdminSign(id)))
+    selectedFolderSigns.value = selectedFolderSigns.value.filter((s) => !idsToDelete.includes(s.id))
+    selectedSignIds.value = []
+    showDeleteSignsConfirm.value = false
+    if (selectedFolder.value) {
+      const newCount = Math.max(0, selectedFolder.value.signs_count - idsToDelete.length)
+      selectedFolder.value = { ...selectedFolder.value, signs_count: newCount }
+      const folderInList = folders.value.find((f) => f.id === selectedFolder.value!.id)
+      if (folderInList) folderInList.signs_count = newCount
+    }
+  } catch {
+    error.value = 'Failed to delete signs.'
+  } finally {
+    isDeletingSign.value = false
   }
 }
 
@@ -144,13 +205,8 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100">
-          Admin Explore
-        </h1>
-        <p class="mt-1 text-sm text-zinc-400">Browse all folders (including private and empty)</p>
-      </div>
+    <div class="flex items-end justify-between gap-4">
+      <h1 class="text-headline-xl text-on-surface">All Folders</h1>
     </div>
 
     <div class="mt-6">
@@ -235,12 +291,15 @@ onMounted(() => {
                   </span>
                 </div>
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <span
                   class="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400"
                 >
                   {{ selectedFolder.signs_count }} signs
                 </span>
+                <UiButton variant="danger" type="button" @click="showDeleteFolderModal = true">
+                  Delete Folder
+                </UiButton>
                 <UiButton v-if="canBan()" variant="danger" type="button" @click="showBanModal = true">
                   Ban User
                 </UiButton>
@@ -248,7 +307,10 @@ onMounted(() => {
             </div>
 
             <div v-if="selectedFolderSigns.length > 0" class="mt-4">
-              <PreviewSignGrid :signs="selectedFolderSigns" :max-per-column="Infinity" />
+              <AdminSignGrid
+                v-model="selectedSignIds"
+                :signs="selectedFolderSigns"
+              />
             </div>
             <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>
           </div>
@@ -319,6 +381,30 @@ onMounted(() => {
       </UiButton>
     </nav>
 
+    <!-- Selection toolbar -->
+    <Transition name="toolbar">
+      <div v-if="selectedSignIds.length > 0" class="fixed flex flex-col bottom-0 top-0 right-2 z-40">
+        <div
+          class="bg-background/60 backdrop-blur border border-outline-variant/30 shadow-2xl p-3 rounded-xl my-auto flex flex-col items-center"
+        >
+          <p class="text-sm text-zinc-300 mb-6">
+            <span class="font-semibold text-on-surface">{{ selectedSignIds.length }}</span>
+            selected
+          </p>
+
+          <div class="flex flex-col items-center gap-3">
+            <UiButton class="w-full" variant="secondary" type="button" @click="selectedSignIds = []">
+              Clear
+            </UiButton>
+            <UiButton class="w-full" variant="danger" type="button" @click="showDeleteSignsConfirm = true">
+              Delete
+            </UiButton>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Ban modal -->
     <UiModal
       :model-value="showBanModal"
       title="Ban User"
@@ -326,8 +412,7 @@ onMounted(() => {
     >
       <div v-if="selectedFolder">
         <p class="text-sm text-zinc-300">
-          Ban <strong>{{ selectedFolder.owner?.discord_global_name || selectedFolder.owner?.discord_username }}</strong
-          >? This will:
+          Ban <strong>{{ selectedFolder.owner?.discord_global_name || selectedFolder.owner?.discord_username }}</strong>? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">
           <li>Delete all their folders and signs</li>
@@ -345,7 +430,7 @@ onMounted(() => {
         </UiFormField>
 
         <div class="mt-4 flex justify-end gap-3">
-          <UiButton variant="secondary" @click="showBanModal = false"> Cancel </UiButton>
+          <UiButton variant="secondary" @click="showBanModal = false">Cancel</UiButton>
           <UiButton
             variant="danger"
             :disabled="!banReason.trim() || isBanning"
@@ -356,5 +441,70 @@ onMounted(() => {
         </div>
       </div>
     </UiModal>
+
+    <!-- Delete folder modal -->
+    <UiModal
+      :model-value="showDeleteFolderModal"
+      title="Delete Folder"
+      @update:model-value="showDeleteFolderModal = false"
+    >
+      <div v-if="selectedFolder">
+        <p class="text-sm text-zinc-300">
+          Permanently delete <strong>{{ selectedFolderName || selectedFolder.name }}</strong>?
+          This removes all {{ selectedFolder.signs_count }} sign(s) and cannot be undone.
+          The user account will not be affected.
+        </p>
+
+        <div class="mt-6 flex justify-end gap-3">
+          <UiButton variant="secondary" @click="showDeleteFolderModal = false">Cancel</UiButton>
+          <UiButton
+            variant="danger"
+            :disabled="isDeletingFolder"
+            @click="handleDeleteFolder"
+          >
+            {{ isDeletingFolder ? 'Deleting...' : 'Delete Folder' }}
+          </UiButton>
+        </div>
+      </div>
+    </UiModal>
+
+    <!-- Delete signs modal -->
+    <UiModal
+      :model-value="showDeleteSignsConfirm"
+      title="Delete Signs"
+      @update:model-value="showDeleteSignsConfirm = false"
+    >
+      <p class="text-sm text-zinc-300">
+        Permanently delete
+        <strong>{{ selectedSignIds.length }} sign{{ selectedSignIds.length === 1 ? '' : 's' }}</strong>?
+        This cannot be undone.
+      </p>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <UiButton variant="secondary" @click="showDeleteSignsConfirm = false">Cancel</UiButton>
+        <UiButton
+          variant="danger"
+          :disabled="isDeletingSign"
+          @click="handleDeleteSelectedSigns"
+        >
+          {{ isDeletingSign ? 'Deleting...' : 'Delete' }}
+        </UiButton>
+      </div>
+    </UiModal>
   </div>
 </template>
+
+<style scoped>
+.toolbar-enter-active {
+  transition: transform 0.25s ease-out;
+}
+
+.toolbar-leave-active {
+  transition: transform 0.2s ease-in;
+}
+
+.toolbar-enter-from,
+.toolbar-leave-to {
+  transform: translateX(100%);
+}
+</style>

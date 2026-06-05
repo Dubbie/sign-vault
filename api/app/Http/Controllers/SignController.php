@@ -79,9 +79,24 @@ class SignController extends Controller
                 'size_bytes' => $file->getSize(),
             ]);
 
-            $existingSign = $this->existingSignFor($request->user()->id, $folder->id, $variantId, $name);
-            $storageKey = $this->storageKeyFor($request->user()->id, $folder->id, $variantId, $name, $file);
             [$width, $height] = $this->mediaDimensions($file);
+            $existingSign = $this->existingSignFor(
+                $request->user()->id,
+                $folder->id,
+                $variantId,
+                $name,
+                $width,
+                $height
+            );
+            $storageKey = $this->storageKeyFor(
+                $request->user()->id,
+                $folder->id,
+                $variantId,
+                $name,
+                $file,
+                $width,
+                $height
+            );
             $publicUrl = Storage::disk($disk)->url($storageKey);
 
             $storedStorageKey = $this->storeFile($disk, $storageKey, $file);
@@ -195,8 +210,14 @@ class SignController extends Controller
         return $derivedName !== '' ? $derivedName : 'sign';
     }
 
-    private function existingSignFor(int $userId, int $folderId, ?int $variantId, string $name): ?Sign
-    {
+    private function existingSignFor(
+        int $userId,
+        int $folderId,
+        ?int $variantId,
+        string $name,
+        ?int $width,
+        ?int $height
+    ): ?Sign {
         $query = Sign::query()
             ->where('user_id', $userId)
             ->where('folder_id', $folderId)
@@ -208,6 +229,12 @@ class SignController extends Controller
             $query->whereNull('variant_id');
         }
 
+        if ($width !== null && $height !== null) {
+            $query->where('width', $width)->where('height', $height);
+        } else {
+            $query->whereNull('width')->whereNull('height');
+        }
+
         return $query->first();
     }
 
@@ -216,13 +243,17 @@ class SignController extends Controller
         int $folderId,
         ?int $variantId,
         string $name,
-        UploadedFile $file
+        UploadedFile $file,
+        ?int $width,
+        ?int $height
     ): string {
         $variant = $variantId !== null ? "/{$variantId}" : '';
         $directory = sprintf('signs/%d/%d%s', $userId, $folderId, $variant);
+        $dimensionSuffix = $width !== null && $height !== null ? "-{$width}x{$height}" : '';
         $filename = sprintf(
-            '%s.%s',
+            '%s%s.%s',
             Str::slug($name) ?: 'sign',
+            $dimensionSuffix,
             $file->extension() ?: 'bin'
         );
 

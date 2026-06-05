@@ -32,8 +32,9 @@ const COLUMNS: { value: number; label: string }[] = [
 ]
 
 function closestColumnRatio(sign: PreviewSign): number {
-  if (sign.column_ratio) return sign.column_ratio
-  if (!sign.width || !sign.height) return 1
+  if (!sign.width || !sign.height) {
+    return sign.column_ratio || 1
+  }
 
   const ratio = sign.width / sign.height
   let closest = COLUMNS[0]!.value

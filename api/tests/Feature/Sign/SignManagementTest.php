@@ -575,7 +575,7 @@ class SignManagementTest extends TestCase
         ]);
     }
 
-    public function test_uploading_the_same_named_image_replaces_the_existing_sign(): void
+    public function test_uploading_the_same_named_image_with_different_dimensions_creates_a_new_sign(): void
     {
         $user = User::factory()->create();
         $folder = Folder::factory()->for($user)->create([
@@ -597,7 +597,7 @@ class SignManagementTest extends TestCase
 
         $firstSignId = $firstResponse->json('signs.0.id');
         $defaultVariant = $folder->defaultVariant;
-        $storageKey = "signs/{$user->id}/{$folder->id}/{$defaultVariant->id}/ice-warning.png";
+        $storageKey = "signs/{$user->id}/{$folder->id}/{$defaultVariant->id}/ice-warning-1024x256.png";
         $firstSign = Sign::query()->findOrFail($firstSignId);
 
         $this->assertSame($storageKey, $firstSign->storage_key);
@@ -613,19 +613,72 @@ class SignManagementTest extends TestCase
         ]);
 
         $secondResponse->assertCreated()
-            ->assertJsonPath('signs.0.id', $firstSignId)
-            ->assertJsonPath('signs.0.public_url', Storage::disk($disk)->url($storageKey))
+            ->assertJsonPath('signs.0.id', fn ($id) => $id !== $firstSignId)
             ->assertJsonPath('signs.0.width', 512)
             ->assertJsonPath('signs.0.height', 128);
+
+        $this->assertDatabaseCount('signs', 2);
+
+        $updatedSign = Sign::query()->findOrFail($firstSignId);
+        $newSign = Sign::query()
+            ->where('name', 'ice-warning')
+            ->where('width', 512)
+            ->where('height', 128)
+            ->firstOrFail();
+
+        $this->assertSame($storageKey, $updatedSign->storage_key);
+        $this->assertSame(Storage::disk($disk)->url($storageKey), $updatedSign->public_url);
+        $this->assertSame(1024, $updatedSign->width);
+        $this->assertSame(256, $updatedSign->height);
+        Storage::disk($disk)->assertExists($storageKey);
+
+        $newStorageKey = "signs/{$user->id}/{$folder->id}/{$defaultVariant->id}/ice-warning-512x128.png";
+        $this->assertSame($newStorageKey, $newSign->storage_key);
+        $this->assertSame(Storage::disk($disk)->url($newStorageKey), $newSign->public_url);
+        Storage::disk($disk)->assertExists($newStorageKey);
+    }
+
+    public function test_uploading_the_same_named_image_with_the_same_dimensions_replaces_the_existing_sign(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $disk = $this->fakeSignStorage();
+
+        Sanctum::actingAs($user);
+
+        $firstResponse = $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+            ],
+        ]);
+
+        $firstResponse->assertCreated();
+
+        $firstSignId = $firstResponse->json('signs.0.id');
+        $defaultVariant = $folder->defaultVariant;
+        $storageKey = "signs/{$user->id}/{$folder->id}/{$defaultVariant->id}/ice-warning-1024x256.png";
+
+        $secondResponse = $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+            ],
+        ]);
+
+        $secondResponse->assertCreated()
+            ->assertJsonPath('signs.0.id', $firstSignId)
+            ->assertJsonPath('signs.0.public_url', Storage::disk($disk)->url($storageKey))
+            ->assertJsonPath('signs.0.width', 1024)
+            ->assertJsonPath('signs.0.height', 256);
 
         $this->assertDatabaseCount('signs', 1);
 
         $updatedSign = Sign::query()->findOrFail($firstSignId);
-
         $this->assertSame($storageKey, $updatedSign->storage_key);
         $this->assertSame(Storage::disk($disk)->url($storageKey), $updatedSign->public_url);
-        $this->assertSame(512, $updatedSign->width);
-        $this->assertSame(128, $updatedSign->height);
         Storage::disk($disk)->assertExists($storageKey);
     }
 

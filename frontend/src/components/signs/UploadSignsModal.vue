@@ -48,7 +48,13 @@ const canSubmit = computed(
     (!showVariantSelector.value || uploadVariantId.value !== null),
 )
 
-const allowedMimeTypes = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/avif'])
+const allowedMimeTypes = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/avif',
+  'video/webm',
+])
 
 const variantOptions = computed(() => {
   if (!props.variants) return []
@@ -70,7 +76,7 @@ function validateSelectedFiles(files: File[]) {
     return `You may upload at most ${maxFiles.value} files at a time.`
   }
   const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
-  if (invalidFile) return 'Files must be PNG, JPEG, WebP, or AVIF images.'
+  if (invalidFile) return 'Files must be PNG, JPEG, WebP, AVIF, or WebM files.'
   return null
 }
 
@@ -136,7 +142,7 @@ async function handleSubmit() {
           type="file"
           name="file"
           multiple
-          accept="image/png,image/jpeg,image/webp,image/avif"
+          accept="image/png,image/jpeg,image/webp,image/avif,video/webm"
           required
           class="w-full rounded bg-surface text-sm p-2 text-on-surface file:mr-3 file:cursor-pointer file:rounded-sm file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs file:font-semibold file:text-background"
           @change="handleFileChange"
@@ -162,7 +168,7 @@ async function handleSubmit() {
         <p class="ml-3">{{ selectedFiles.map((file) => file.name).join(', ') }}</p>
       </div>
 
-      <p class="mt-1 text-xs text-on-surface-variant">PNG, JPEG, WebP, or AVIF</p>
+      <p class="mt-1 text-xs text-on-surface-variant">PNG, JPEG, WebP, AVIF, or WebM</p>
       <p class="mt-1 text-xs text-on-surface-variant">Up to {{ maxFiles }} files per upload.</p>
 
       <div class="mt-6 flex flex-wrap gap-3">

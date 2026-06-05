@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 class SignManagementTest extends TestCase
@@ -400,6 +401,39 @@ class SignManagementTest extends TestCase
         ]);
     }
 
+    public function test_webm_files_are_accepted(): void
+    {
+        $disk = $this->fakeSignStorage();
+
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Animated Signs',
+            'slug' => 'animated-signs',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $file = $this->makeWebmUpload('wave-banner.webm', 320, 160);
+
+        $response = $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [$file],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('signs.0.name', 'wave-banner')
+            ->assertJsonPath('signs.0.mime_type', 'video/webm')
+            ->assertJsonPath('signs.0.width', 320)
+            ->assertJsonPath('signs.0.height', 160);
+
+        $sign = Sign::query()->where('name', 'wave-banner')->firstOrFail();
+
+        $this->assertSame('video/webm', $sign->mime_type);
+        $this->assertSame(320, $sign->width);
+        $this->assertSame(160, $sign->height);
+        $this->assertSame($disk, $sign->storage_disk);
+        Storage::disk($disk)->assertExists($sign->storage_key);
+    }
+
     private function makeAvifUpload(string $name): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'avif_');
@@ -421,6 +455,56 @@ class SignManagementTest extends TestCase
         imagedestroy($image);
 
         return new UploadedFile($path, $name, 'image/avif', null, true);
+    }
+
+    private function makeWebmUpload(string $name, int $width, int $height): UploadedFile
+    {
+        if (! $this->commandExists('ffmpeg')) {
+            $this->markTestSkipped('ffmpeg is required to generate a WebM fixture for this test.');
+        }
+
+        $path = tempnam(sys_get_temp_dir(), 'webm_');
+
+        if ($path === false) {
+            $this->fail('Unable to create a temporary WebM file.');
+        }
+
+        $finalPath = $path.'.webm';
+
+        if (! @rename($path, $finalPath)) {
+            @unlink($path);
+            $this->fail('Unable to prepare a temporary WebM file.');
+        }
+
+        $process = new Process([
+            'ffmpeg',
+            '-f',
+            'lavfi',
+            '-i',
+            sprintf('color=c=black:s=%dx%d:d=1', $width, $height),
+            '-c:v',
+            'libvpx-vp9',
+            '-an',
+            '-y',
+            $finalPath,
+        ]);
+
+        $process->run();
+
+        if (! $process->isSuccessful()) {
+            @unlink($finalPath);
+            $this->fail('Unable to generate a temporary WebM file with ffmpeg.');
+        }
+
+        return new UploadedFile($finalPath, $name, 'video/webm', null, true);
+    }
+
+    private function commandExists(string $command): bool
+    {
+        $process = new Process(['which', $command]);
+        $process->run();
+
+        return $process->isSuccessful();
     }
 
     public function test_missing_file_is_rejected(): void

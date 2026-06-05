@@ -33,6 +33,7 @@ export type PreviewSign = {
   name: string
   variant_id: number | null
   public_url: string
+  mime_type: string
   width: number | null
   height: number | null
   column_ratio: number | null

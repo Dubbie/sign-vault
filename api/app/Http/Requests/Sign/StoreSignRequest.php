@@ -46,7 +46,7 @@ class StoreSignRequest extends FormRequest
             'files.*' => [
                 'required',
                 'file',
-                'mimetypes:image/png,image/jpeg,image/webp,image/avif',
+                'mimetypes:image/png,image/jpeg,image/webp,image/avif,video/webm',
                 'max:10240',
             ],
         ];

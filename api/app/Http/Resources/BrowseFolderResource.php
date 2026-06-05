@@ -68,6 +68,7 @@ class BrowseFolderResource extends JsonResource
                     'id' => $sign->id,
                     'name' => $sign->name,
                     'public_url' => $sign->public_url,
+                    'mime_type' => $sign->mime_type,
                     'width' => $sign->width,
                     'height' => $sign->height,
                     'column_ratio' => $sign->column_ratio,

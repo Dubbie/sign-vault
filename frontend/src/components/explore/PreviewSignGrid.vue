@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import SignMedia from '@/components/signs/SignMedia.vue'
 import UiButton from '../ui/UiButton.vue'
 import { Eye } from '@lucide/vue'
 
@@ -8,6 +9,7 @@ interface PreviewSign {
   id: number
   name: string
   public_url: string
+  mime_type: string
   width: number | null
   height: number | null
   column_ratio: number | null
@@ -72,13 +74,10 @@ const columns = computed(() => {
   <div class="relative overflow-hidden">
     <div class="grid gap-2 preview-sign-grid">
       <div v-for="col in columns" :key="col.label" class="flex flex-col gap-2">
-        <img
+        <SignMedia
           v-for="sign in col.signs"
           :key="sign.id"
-          :src="sign.public_url"
-          :alt="sign.name"
-          loading="lazy"
-          class="block w-full"
+          :sign="sign"
         />
       </div>
     </div>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import SignMedia from '@/components/signs/SignMedia.vue'
 
 interface GridSign {
   id: number
   name: string
   public_url: string
+  mime_type: string
   width: number | null
   height: number | null
   column_ratio: number | null
@@ -104,18 +106,6 @@ function toggleColumn(signs: GridSign[]) {
   }
 }
 
-const imageLoaded = reactive<Record<number, boolean>>({})
-
-function onImageLoad(id: number) {
-  imageLoaded[id] = true
-}
-
-function signAspectRatio(sign: GridSign): string {
-  if (sign.width && sign.height) return `${sign.width} / ${sign.height}`
-  if (sign.column_ratio) return `${sign.column_ratio} / 1`
-  return '1 / 1'
-}
-
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
@@ -181,22 +171,7 @@ onUnmounted(() => {
           :class="selectable && isSelected(sign.id) ? 'ring-emerald-400 ring-2' : ''"
           @click="selectable ? toggleSelect(sign.id) : emit('copy', sign.id)"
         >
-          <div class="relative w-full" :style="{ aspectRatio: signAspectRatio(sign) }">
-            <Transition name="skeleton-fade">
-              <div
-                v-if="!imageLoaded[sign.id]"
-                class="absolute inset-0 animate-pulse rounded bg-zinc-800"
-              />
-            </Transition>
-            <img
-              :src="sign.public_url"
-              :alt="sign.name"
-              loading="lazy"
-              class="absolute inset-0 block h-full w-full object-contain transition-opacity duration-300 ease-in-out"
-              :class="imageLoaded[sign.id] ? 'opacity-100' : 'opacity-0'"
-              @load="onImageLoad(sign.id)"
-            />
-          </div>
+          <SignMedia :sign="sign" />
 
           <div
             v-if="selectable"
@@ -260,13 +235,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.skeleton-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.skeleton-fade-leave-to {
-  opacity: 0;
-}
-
 .sign-grid {
   grid-template-columns: 6fr 4fr 2fr 1fr;
 }

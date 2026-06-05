@@ -88,7 +88,7 @@ function handleCreateSaved(folderId: number) {
 
 <template>
   <div class="mx-auto max-w-7xl space-y-gutter">
-    <div class="flex items-start justify-between gap-4">
+    <div class="flex items-end justify-between gap-4">
       <div>
         <h1 class="text-headline-xl text-on-surface">My folders</h1>
       </div>

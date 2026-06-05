@@ -15,6 +15,8 @@ export type Folder = {
   slug: string
   public_slug: string
   visibility: FolderVisibility
+  attribution_name: string | null
+  attribution_source_url: string | null
   variants: Variant[]
   created_at: string
   updated_at: string
@@ -24,15 +26,21 @@ export type CreateFolderPayload = {
   name: string
   visibility: FolderVisibility
   password?: string
+  attribution_name?: string
+  attribution_source_url?: string
 }
 
 export type UpdateFolderPayload = {
   name: string
   visibility: FolderVisibility
   password?: string
+  attribution_name?: string
+  attribution_source_url?: string
 }
 
-export type FolderValidationErrors = Partial<Record<'name' | 'visibility' | 'password', string>>
+export type FolderValidationErrors = Partial<
+  Record<'name' | 'visibility' | 'password' | 'attribution_name' | 'attribution_source_url', string>
+>
 
 export type CreateVariantPayload = {
   name: string

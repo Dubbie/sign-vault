@@ -28,6 +28,8 @@ const form = reactive({
   name: '',
   visibility: 'private' as FolderVisibility,
   password: '',
+  attributionName: '',
+  attributionSourceUrl: '',
 })
 
 const requiresPassword = computed(() => form.visibility === 'password')
@@ -45,6 +47,8 @@ function fillFormFromFolder() {
   form.name = folder.name
   form.visibility = folder.visibility
   form.password = ''
+  form.attributionName = folder.attribution_name ?? ''
+  form.attributionSourceUrl = folder.attribution_source_url ?? ''
 }
 
 async function loadFolder(folderId: number) {
@@ -100,6 +104,8 @@ async function handleSubmit() {
   const payload: UpdateFolderPayload = {
     name: form.name.trim(),
     visibility: form.visibility,
+    attribution_name: form.attributionName.trim() || undefined,
+    attribution_source_url: form.attributionSourceUrl.trim() || undefined,
   }
 
   if (requiresPassword.value && form.password.trim()) {
@@ -142,6 +148,24 @@ async function handleSubmit() {
           type="password"
           name="password"
           placeholder="Leave blank to keep the current password"
+        />
+      </UiFormField>
+
+      <UiFormField label="Original author" name="attribution_name">
+        <UiInput
+          v-model="form.attributionName"
+          type="text"
+          name="attribution_name"
+          placeholder="e.g. Buried, xXTrackMakerXx"
+        />
+      </UiFormField>
+
+      <UiFormField label="Source URL" name="attribution_source_url">
+        <UiInput
+          v-model="form.attributionSourceUrl"
+          type="url"
+          name="attribution_source_url"
+          placeholder="https://..."
         />
       </UiFormField>
 

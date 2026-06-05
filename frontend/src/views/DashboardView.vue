@@ -56,7 +56,7 @@ function handleCreateSaved(folderId: number) {
 
 <template>
   <div class="mx-auto max-w-7xl space-y-gutter">
-    <div class="flex items-start justify-between gap-4">
+    <div class="flex items-end justify-between gap-4">
       <h1 class="text-headline-xl text-on-surface">
         Welcome back,
         {{ auth.user?.discord_global_name ?? auth.user?.discord_username ?? 'Dude' }}

@@ -22,6 +22,8 @@ class UpdateFolderRequest extends FormRequest
             'name' => ['required', 'string', 'max:100'],
             'visibility' => ['required', Rule::enum(FolderVisibility::class)],
             'password' => ['nullable', 'string', 'max:255', 'required_if:visibility,'.FolderVisibility::Password->value],
+            'attribution_name' => ['nullable', 'string', 'max:255', 'required_with:attribution_source_url'],
+            'attribution_source_url' => ['nullable', 'url', 'max:2048'],
         ];
     }
 }

@@ -139,6 +139,10 @@ function canShareFolder() {
   return folder.value?.visibility !== 'private'
 }
 
+function attributionDisplayName() {
+  return folder.value?.attribution_name?.trim() ?? ''
+}
+
 async function loadFolder() {
   const id = folderId.value
   if (!Number.isFinite(id)) {
@@ -381,6 +385,23 @@ watch(
               <span class="mx-2 text-outline">•</span>
               {{ variants.length }} variant{{ variants.length === 1 ? '' : 's' }}
             </template>
+          </p>
+
+          <p
+            v-if="folder.attribution_name"
+            class="mt-2 text-sm text-on-surface-variant"
+          >
+            Original author:
+            <a
+              v-if="folder.attribution_source_url"
+              :href="folder.attribution_source_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary hover:text-primary/80"
+            >
+              {{ attributionDisplayName() }}
+            </a>
+            <span v-else class="text-on-surface">{{ attributionDisplayName() }}</span>
           </p>
         </div>
 

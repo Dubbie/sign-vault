@@ -20,6 +20,8 @@ const form = reactive({
   name: '',
   visibility: 'private' as FolderVisibility,
   password: '',
+  attributionName: '',
+  attributionSourceUrl: '',
 })
 
 const requiresPassword = computed(() => form.visibility === 'password')
@@ -56,6 +58,8 @@ async function handleSubmit() {
   const payload: CreateFolderPayload = {
     name: form.name.trim(),
     visibility: form.visibility,
+    attribution_name: form.attributionName.trim() || undefined,
+    attribution_source_url: form.attributionSourceUrl.trim() || undefined,
   }
 
   if (requiresPassword.value) {
@@ -90,6 +94,24 @@ async function handleSubmit() {
 
       <UiFormField v-if="requiresPassword" label="Password" name="password">
         <UiInput v-model="form.password" type="password" name="password" />
+      </UiFormField>
+
+      <UiFormField label="Original author" name="attribution_name">
+        <UiInput
+          v-model="form.attributionName"
+          type="text"
+          name="attribution_name"
+          placeholder="e.g. Buried, xXTrackMakerXx"
+        />
+      </UiFormField>
+
+      <UiFormField label="Source URL" name="attribution_source_url">
+        <UiInput
+          v-model="form.attributionSourceUrl"
+          type="url"
+          name="attribution_source_url"
+          placeholder="https://..."
+        />
       </UiFormField>
 
       <div class="flex gap-3">

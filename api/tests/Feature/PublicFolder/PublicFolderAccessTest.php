@@ -440,6 +440,30 @@ class PublicFolderAccessTest extends TestCase
             ->assertJsonPath('signs.1.name', 'Ice Warning');
     }
 
+    public function test_public_folder_includes_attribution_metadata(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Forum Archive',
+            'slug' => 'forum-archive',
+            'public_slug' => 'forum-archive',
+            'visibility' => FolderVisibility::Public,
+            'attribution_name' => 'Buried',
+            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+        ]);
+
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
+        ]);
+
+        $this->getJson('/api/public/folders/'.$folder->public_slug)
+            ->assertOk()
+            ->assertJsonPath('folder.attribution_name', 'Buried')
+            ->assertJsonPath('folder.attribution_source_url', 'https://forum.trackmania.com/viewtopic.php?t=123');
+    }
+
     private function makeFolder(FolderVisibility $visibility, array $attributes = []): Folder
     {
         $user = User::factory()->create();

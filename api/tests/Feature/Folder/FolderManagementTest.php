@@ -32,6 +32,8 @@ class FolderManagementTest extends TestCase
                 'slug',
                 'public_slug',
                 'visibility',
+                'attribution_name',
+                'attribution_source_url',
                 'created_at',
                 'updated_at',
             ])
@@ -39,6 +41,8 @@ class FolderManagementTest extends TestCase
             ->assertJsonPath('slug', 'club-signs')
             ->assertJsonPath('public_slug', 'club-signs')
             ->assertJsonPath('visibility', FolderVisibility::Private->value)
+            ->assertJsonPath('attribution_name', null)
+            ->assertJsonPath('attribution_source_url', null)
             ->assertJsonMissingPath('password_hash');
 
         $this->assertDatabaseHas('folders', [
@@ -130,6 +134,78 @@ class FolderManagementTest extends TestCase
         $this->assertSame('updated-club-signs', $folder->slug);
         $this->assertSame(FolderVisibility::Private->value, $folder->visibility->value);
         $this->assertNull($folder->password_hash);
+    }
+
+    public function test_folder_attribution_can_be_created_and_updated(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $createResponse = $this->postJson('/api/folders', [
+            'name' => 'Forum Archive',
+            'visibility' => FolderVisibility::Public->value,
+            'attribution_name' => 'Buried',
+            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+        ]);
+
+        $createResponse->assertCreated()
+            ->assertJsonPath('attribution_name', 'Buried')
+            ->assertJsonPath('attribution_source_url', 'https://forum.trackmania.com/viewtopic.php?t=123');
+
+        $folderId = $createResponse->json('id');
+
+        $this->assertDatabaseHas('folders', [
+            'id' => $folderId,
+            'attribution_name' => 'Buried',
+            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+        ]);
+
+        $this->patchJson("/api/folders/{$folderId}", [
+            'name' => 'Forum Archive',
+            'visibility' => FolderVisibility::Public->value,
+            'attribution_name' => 'Buried Team',
+        ])
+            ->assertOk()
+            ->assertJsonPath('attribution_name', 'Buried Team')
+            ->assertJsonPath('attribution_source_url', null);
+
+        $this->assertDatabaseHas('folders', [
+            'id' => $folderId,
+            'attribution_name' => 'Buried Team',
+            'attribution_source_url' => null,
+        ]);
+    }
+
+    public function test_folder_attribution_source_requires_author_name(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/folders', [
+            'name' => 'Forum Archive',
+            'visibility' => FolderVisibility::Public->value,
+            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['attribution_name']);
+    }
+
+    public function test_folder_attribution_source_must_be_valid_url(): void
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/folders', [
+            'name' => 'Forum Archive',
+            'visibility' => FolderVisibility::Public->value,
+            'attribution_name' => 'Buried',
+            'attribution_source_url' => 'not-a-url',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['attribution_source_url']);
     }
 
     public function test_private_folder_gets_new_public_slug_when_made_public(): void

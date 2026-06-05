@@ -99,6 +99,9 @@ const selectedVariantOption = computed({
     void handleVariantSwitch(Number(value))
   },
 })
+const ownerDisplayName = computed(
+  () => folder.value?.owner.discord_global_name || folder.value?.owner.discord_username || 'Unknown',
+)
 
 function activeVariantId(): number | null {
   if (selectedVariantId.value) return selectedVariantId.value
@@ -109,6 +112,10 @@ function activeVariantId(): number | null {
 function variantDisplayLabel(v: { name: string | null; is_default: boolean }) {
   if (v.is_default) return v.name ?? folder.value?.name ?? 'Default'
   return v.name ?? 'Unnamed'
+}
+
+function attributionDisplayName() {
+  return folder.value?.attribution_name?.trim() ?? ''
 }
 
 const showBanModal = ref(false)
@@ -440,8 +447,25 @@ watch(folderSlug, () => {
           </div>
 
           <p class="text-on-surface-variant text-body-lg mt-2">
-            Curated by <span class="text-on-surface">{{ folder.owner.discord_global_name }}</span
-            >. {{ signsTotal }} signs in this folder
+            Curated by <span class="text-on-surface">{{ ownerDisplayName }}</span>. {{ signsTotal }}
+            signs in this folder
+          </p>
+
+          <p
+            v-if="folder.attribution_name"
+            class="mt-2 text-sm text-on-surface-variant"
+          >
+            Original author:
+            <a
+              v-if="folder.attribution_source_url"
+              :href="folder.attribution_source_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary hover:text-primary/80"
+            >
+              {{ attributionDisplayName() }}
+            </a>
+            <span v-else class="text-on-surface">{{ attributionDisplayName() }}</span>
           </p>
         </div>
 

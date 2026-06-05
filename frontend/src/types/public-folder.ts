@@ -11,6 +11,8 @@ export type PublicFolder = {
   name: string
   slug: string
   visibility: PublicFolderVisibility
+  attribution_name: string | null
+  attribution_source_url: string | null
   user_id: number
   owner: {
     discord_username: string

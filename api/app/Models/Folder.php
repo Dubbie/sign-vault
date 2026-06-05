@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
     'public_slug',
     'visibility',
     'password_hash',
+    'attribution_name',
+    'attribution_source_url',
 ])]
 class Folder extends Model
 {

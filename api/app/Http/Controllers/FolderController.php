@@ -36,6 +36,8 @@ class FolderController extends Controller
             'public_slug' => Folder::generatePublicSlugFor($validated['name']),
             'visibility' => $validated['visibility'],
             'password_hash' => $this->passwordHashFor($validated),
+            'attribution_name' => $validated['attribution_name'] ?? null,
+            'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
         return (new FolderResource($folder->refresh()))->response()->setStatusCode(201);
@@ -62,6 +64,8 @@ class FolderController extends Controller
             'name' => $validated['name'],
             'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
             'visibility' => $validated['visibility'],
+            'attribution_name' => $validated['attribution_name'] ?? null,
+            'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
         if ($wasPrivate && $isBecomingPublicFacing) {
@@ -93,7 +97,7 @@ class FolderController extends Controller
     }
 
     /**
-     * @param  array{name:string,visibility:string,password?:string|null}  $validated
+     * @param  array{name:string,visibility:string,password?:string|null,attribution_name?:string|null,attribution_source_url?:string|null}  $validated
      */
     private function passwordHashFor(array $validated): ?string
     {

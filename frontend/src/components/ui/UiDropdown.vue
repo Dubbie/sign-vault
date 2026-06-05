@@ -4,7 +4,13 @@ import UiPopover from '@/components/ui/UiPopover.vue'
 const props = withDefaults(
   defineProps<{
     modelValue: boolean
-    placement?: 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end' | 'left-start' | 'right-start'
+    placement?:
+      | 'bottom-start'
+      | 'bottom-end'
+      | 'top-start'
+      | 'top-end'
+      | 'left-start'
+      | 'right-start'
     offset?: number
     matchTriggerWidth?: boolean
     triggerClass?: string
@@ -42,7 +48,7 @@ const emit = defineEmits<{
 
     <template #default="{ close }">
       <div
-        class="min-w-52 rounded-md border border-white/10 bg-background p-1 shadow-2xl ring-1 ring-white/5"
+        class="min-w-52 rounded-md border border-white/10 bg-background p-1 shadow-2xl"
         :class="menuClass"
       >
         <slot :close="close" />

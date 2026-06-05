@@ -1,19 +1,24 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import logoUrl from '@/assets/logo.svg'
-import { useAuthStore } from '@/stores/auth'
 import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
-import { Search } from '@lucide/vue'
+import UiDropdown from '@/components/ui/UiDropdown.vue'
+import { useAuthStore } from '@/stores/auth'
+import { LogOut, Search } from '@lucide/vue'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
+const showUserMenu = ref(false)
 
 function navClass(active: boolean) {
   return [
-    'no-underline font-medium transition-colors',
-    active ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface',
+    'no-underline font-medium transition-colors border-b-2 py-component-padding-y',
+    active
+      ? 'text-primary border-primary'
+      : 'border-transparent text-on-surface-variant hover:text-on-surface ',
   ]
 }
 
@@ -33,10 +38,10 @@ async function handleLogin() {
       class="fixed top-0 w-full z-50 flex justify-between items-center px-container-margin h-16 bg-surface-dim/80 backdrop-blur-xl border-b border-outline-variant/20"
     >
       <nav class="flex gap-8 mx-auto w-full max-w-7xl items-center">
-        <div class="flex mb-1.5">
+        <div class="flex mb-1">
           <RouterLink to="/" class="flex items-center gap-x-2">
-            <img :src="logoUrl" alt="SignVault logo" class="size-9 mt-1.5" />
-            <p class="text-[32px] font-medium text-zinc-100 no-underline">
+            <img :src="logoUrl" alt="SignVault logo" class="size-8 mt-1" />
+            <p class="text-[24px] font-medium text-zinc-100 no-underline">
               Sign<span class="text-emerald-400 font-bold">Vault</span>
             </p>
           </RouterLink>
@@ -81,7 +86,7 @@ async function handleLogin() {
 
         <div class="flex items-center justify-end gap-x-8">
           <div v-if="auth.user" class="flex items-center gap-3">
-            <div class="relative hidden sm:block">
+            <div class="relative hidden sm:block opacity-50">
               <Search
                 stroke-width="3"
                 class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
@@ -91,24 +96,42 @@ async function handleLogin() {
                 type="text"
                 class="bg-surface-container-low border border-outline-variant/30 rounded-lg pl-10 pr-4 py-1.5 focus:outline-none focus:border-primary transition-all w-64"
                 placeholder="Search folders..."
+                disabled
               />
             </div>
 
-            <div class="h-8 w-8 overflow-hidden rounded-full bg-zinc-600">
-              <img
-                v-if="auth.user.discord_avatar"
-                :src="auth.user.discord_avatar"
-                :alt="auth.user.discord_username"
-                class="h-full w-full object-cover"
-              />
-            </div>
-            <!-- <button
-              type="button"
-              class="cursor-pointer rounded border border-white/20 bg-transparent px-3 py-1.5 text-xs text-zinc-400 transition-colors hover:border-emerald-400 hover:text-zinc-100"
-              @click="handleLogout"
-            >
-              Logout
-            </button> -->
+            <UiDropdown v-model="showUserMenu" placement="bottom-end" trigger-class="inline-flex">
+              <template #trigger="{ toggle }">
+                <button
+                  class="cursor-pointer ring-offset-2 ring-transparent rounded-lg transition-all ring-offset-background hover:ring-primary hover:ring-2"
+                  type="button"
+                  aria-label="Open user menu"
+                  @click="toggle"
+                >
+                  <div class="size-9 overflow-hidden rounded-lg bg-zinc-600">
+                    <img
+                      v-if="auth.user.discord_avatar"
+                      :src="auth.user.discord_avatar"
+                      :alt="auth.user.discord_username"
+                      class="h-full w-full object-cover"
+                    />
+                  </div>
+                </button>
+              </template>
+
+              <template #default="{ close }">
+                <div>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10"
+                    @click="(close(), void handleLogout())"
+                  >
+                    <LogOut class="size-4" />
+                    Logout
+                  </button>
+                </div>
+              </template>
+            </UiDropdown>
           </div>
 
           <button

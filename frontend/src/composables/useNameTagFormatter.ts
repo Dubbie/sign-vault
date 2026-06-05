@@ -41,31 +41,6 @@ function interpolateColor(from: string, to: string, t: number): string {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
 }
 
-function parseGradientColors(gradient: string): { fromColor: string; toColor: string } | null {
-  const content = gradient
-    .replace(/^linear-gradient\(to right,\s*/i, '')
-    .replace(/\)\s*$/, '')
-
-  let depth = 0
-  let splitIndex = -1
-  for (let i = 0; i < content.length; i++) {
-    const ch = content[i]
-    if (ch === '(') depth++
-    else if (ch === ')') depth--
-    else if (ch === ',' && depth === 0) {
-      splitIndex = i
-      break
-    }
-  }
-
-  if (splitIndex === -1) return null
-
-  return {
-    fromColor: normalizeColor(content.slice(0, splitIndex)),
-    toColor: normalizeColor(content.slice(splitIndex + 1)),
-  }
-}
-
 export function useNameTagFormatter() {
   const editorRef = ref<HTMLElement | null>(null)
   const showToolbar = ref(false)
@@ -141,7 +116,6 @@ export function useNameTagFormatter() {
     const rect = range.getBoundingClientRect()
     const editorEl = editorRef.value
     if (!editorEl) return
-    const editorRect = editorEl.getBoundingClientRect()
 
     toolbarPosition.value = {
       x: rect.left + rect.width / 2,

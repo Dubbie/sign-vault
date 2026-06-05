@@ -118,7 +118,6 @@ const showChangeVariantModal = ref(false)
 const changeVariantSelectValue = ref('')
 const showVariantActions = ref(false)
 const copiedSignId = ref<number | null>(null)
-const copiedPublicUrl = ref(false)
 const selectedSignIds = ref<number[]>([])
 const isDeleting = ref(false)
 const selectedVariantId = ref<number | null>(null)
@@ -133,11 +132,7 @@ function visibilityLabel(visibility: string) {
   return visibility.charAt(0).toUpperCase() + visibility.slice(1)
 }
 
-const publicFolderPath = computed(() => {
-  const origin = window.location.origin
-  const path = `/public/folders/${folder.value?.public_slug ?? ''}`
-  return `${origin}${path}`
-})
+const publicFolderPath = computed(() => `/public/folders/${folder.value?.public_slug ?? ''}`)
 
 function canShareFolder() {
   return folder.value?.visibility !== 'private'
@@ -185,7 +180,6 @@ watch(folderId, () => {
   signsStore.clearCurrentSign()
   signsStore.signs = []
   copiedSignId.value = null
-  copiedPublicUrl.value = false
   selectedSignIds.value = []
   selectedVariantId.value = null
   void loadFolder()
@@ -202,19 +196,6 @@ async function handleCopy(signId: number) {
   window.setTimeout(() => {
     if (copiedSignId.value === signId) copiedSignId.value = null
   }, 1500)
-}
-
-async function handleCopyPublicUrl() {
-  signsStore.clearError()
-  try {
-    await navigator.clipboard.writeText(publicFolderPath.value)
-    copiedPublicUrl.value = true
-    window.setTimeout(() => {
-      copiedPublicUrl.value = false
-    }, 1500)
-  } catch {
-    signsStore.error = 'Could not copy the public URL. Please copy it manually.'
-  }
 }
 
 async function handleDeleteSelected() {
@@ -410,11 +391,10 @@ watch(
           <UiButton
             v-if="canShareFolder()"
             variant="tertiary"
-            type="button"
-            @click="handleCopyPublicUrl"
+            :to="publicFolderPath"
           >
             <Link class="size-5" />
-            {{ copiedPublicUrl ? 'Copied!' : 'Copy public URL' }}
+            Open public folder
           </UiButton>
 
           <UiButton variant="secondary" type="button" @click="showEditModal = true">

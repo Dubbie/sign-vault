@@ -463,9 +463,11 @@ watch(folderSlug, () => {
             </p>
             <span v-if="folder.attribution_name" class="text-outline/50">•</span>
             <p class="text-on-surface-variant text-body-lg">
-              Curated by <span class="text-on-surface">{{ ownerDisplayName }}</span
-              >. {{ signsTotal }}
-              signs in this folder
+              Curated by <span class="text-on-surface">{{ ownerDisplayName }}</span>
+            </p>
+            <span class="text-outline/50">•</span>
+            <p class="text-on-surface-variant text-body-lg">
+              {{ signsTotal }} signs in this folder
             </p>
           </div>
         </div>

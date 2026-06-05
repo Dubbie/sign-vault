@@ -100,7 +100,8 @@ const selectedVariantOption = computed({
   },
 })
 const ownerDisplayName = computed(
-  () => folder.value?.owner.discord_global_name || folder.value?.owner.discord_username || 'Unknown',
+  () =>
+    folder.value?.owner.discord_global_name || folder.value?.owner.discord_username || 'Unknown',
 )
 
 function activeVariantId(): number | null {
@@ -431,7 +432,7 @@ watch(folderSlug, () => {
     </div>
 
     <div v-else-if="folder">
-      <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div class="mb-4 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <UiBreadcrumbs :items="breadcrumbs" class="mb-4" />
 
@@ -446,27 +447,27 @@ watch(folderSlug, () => {
             </div>
           </div>
 
-          <p class="text-on-surface-variant text-body-lg mt-2">
-            Curated by <span class="text-on-surface">{{ ownerDisplayName }}</span>. {{ signsTotal }}
-            signs in this folder
-          </p>
-
-          <p
-            v-if="folder.attribution_name"
-            class="mt-2 text-sm text-on-surface-variant"
-          >
-            Original author:
-            <a
-              v-if="folder.attribution_source_url"
-              :href="folder.attribution_source_url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-primary hover:text-primary/80"
-            >
-              {{ attributionDisplayName() }}
-            </a>
-            <span v-else class="text-on-surface">{{ attributionDisplayName() }}</span>
-          </p>
+          <div class="flex gap-x-3">
+            <p v-if="folder.attribution_name" class="text-body-lg text-on-surface-variant">
+              Original author:
+              <a
+                v-if="folder.attribution_source_url"
+                :href="folder.attribution_source_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary hover:text-primary/80"
+              >
+                {{ attributionDisplayName() }}
+              </a>
+              <span v-else class="text-on-surface">{{ attributionDisplayName() }}</span>
+            </p>
+            <span v-if="folder.attribution_name" class="text-outline/50">•</span>
+            <p class="text-on-surface-variant text-body-lg">
+              Curated by <span class="text-on-surface">{{ ownerDisplayName }}</span
+              >. {{ signsTotal }}
+              signs in this folder
+            </p>
+          </div>
         </div>
 
         <div class="flex items-center gap-3">
@@ -489,7 +490,7 @@ watch(folderSlug, () => {
         </div>
       </div>
 
-      <div v-if="showVariantSwitcher" class="max-w-sm">
+      <div v-if="showVariantSwitcher" class="max-w-sm mb-4">
         <UiFormField label="Variant" name="variant">
           <UiSelect v-model="selectedVariantOption" name="variant" :options="variantOptions" />
         </UiFormField>

@@ -391,10 +391,7 @@ watch(
             </template>
           </p>
 
-          <p
-            v-if="folder.attribution_name"
-            class="mt-2 text-sm text-on-surface-variant"
-          >
+          <p v-if="folder.attribution_name" class="mt-2 text-sm text-on-surface-variant">
             Original author:
             <a
               v-if="folder.attribution_source_url"
@@ -432,7 +429,7 @@ watch(
         </div>
       </header>
 
-      <section class="mt-4 border-t border-white/10 pt-4">
+      <section>
         <template v-if="showVariantTabs">
           <div class="flex flex-wrap items-end justify-between gap-3">
             <div class="flex items-baseline gap-x-2">

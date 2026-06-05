@@ -212,22 +212,15 @@ onMounted(() => {
 
 <style scoped>
 .preview-panel-enter-active {
-  transition:
-    opacity 0.22s ease-out,
-    transform 0.22s ease-out,
-    filter 0.22s ease-out;
+  transition: opacity 0.22s ease-out;
 }
 
 .preview-panel-leave-active {
-  transition:
-    opacity 0.16s ease-in,
-    transform 0.16s ease-in,
-    filter 0.16s ease-in;
+  transition: opacity 0.16s ease-in;
 }
 
 .preview-panel-enter-from,
 .preview-panel-leave-to {
   opacity: 0;
-  transform: translateY(10px);
 }
 </style>

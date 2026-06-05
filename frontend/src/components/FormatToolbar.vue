@@ -33,28 +33,28 @@ function reclamp() {
   }
   const editorRect = editorEl.getBoundingClientRect()
   const wantLeft = props.position.x - w / 2
-  clampedX.value = Math.round(Math.min(
-    Math.max(wantLeft, editorRect.left),
-    editorRect.right - w,
-  ))
+  clampedX.value = Math.round(Math.min(Math.max(wantLeft, editorRect.left), editorRect.right - w))
 }
 
-watch(() => props.visible, (visible) => {
-  if (visible) {
-    clampedX.value = props.position.x
-    nextTick(() => {
-      if (toolbarRef.value) {
-        resizeObserver?.disconnect()
-        resizeObserver = new ResizeObserver(reclamp)
-        resizeObserver.observe(toolbarRef.value)
-        reclamp()
-      }
-    })
-  } else {
-    resizeObserver?.disconnect()
-    resizeObserver = null
-  }
-})
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      clampedX.value = props.position.x
+      nextTick(() => {
+        if (toolbarRef.value) {
+          resizeObserver?.disconnect()
+          resizeObserver = new ResizeObserver(reclamp)
+          resizeObserver.observe(toolbarRef.value)
+          reclamp()
+        }
+      })
+    } else {
+      resizeObserver?.disconnect()
+      resizeObserver = null
+    }
+  },
+)
 
 onUnmounted(() => {
   resizeObserver?.disconnect()
@@ -119,9 +119,9 @@ function onApplyGradient() {
           top: `${position.y}px`,
         }"
         data-format-toolbar
-        class="fixed -translate-y-full rounded-md border border-white/20 bg-surface px-2 py-1.5 shadow-elevated flex items-center gap-1.5 z-50"
+        class="fixed -translate-y-full rounded-md border border-outline-variant bg-surface px-2 py-1.5 shadow-elevated flex items-center gap-1.5 z-50"
       >
-        <div class="flex rounded border border-border p-0.5">
+        <div class="flex rounded border border-outline-variant p-0.5">
           <button
             class="cursor-pointer rounded-xs px-2 py-0.5 text-xs font-medium transition-colors"
             :class="
@@ -148,7 +148,7 @@ function onApplyGradient() {
 
         <template v-if="mode === 'solid'">
           <button
-            class="relative size-8 cursor-pointer overflow-hidden rounded-md border border-border transition-transform hover:scale-110"
+            class="relative size-8 cursor-pointer overflow-hidden rounded-md border border-outline-variant transition-transform hover:scale-110"
             title="Solid color"
             @click="($refs.solidInput as HTMLInputElement)?.click()"
           >
@@ -166,7 +166,7 @@ function onApplyGradient() {
         <template v-if="mode === 'gradient'">
           <div class="flex items-center gap-1">
             <button
-              class="relative size-7 cursor-pointer overflow-hidden rounded border border-border transition-transform hover:scale-110"
+              class="relative size-7 cursor-pointer overflow-hidden rounded-lg border border-outline-variant transition-transform hover:scale-110"
               title="Gradient start color"
               @click="($refs.gradientFromInput as HTMLInputElement)?.click()"
             >
@@ -183,13 +183,13 @@ function onApplyGradient() {
             </button>
 
             <div
-              class="h-4 w-8 rounded border border-border"
+              class="h-4 w-8 rounded border border-outline-variant"
               :style="gradientPreviewStyle"
               title="Gradient preview"
             />
 
             <button
-              class="relative size-7 cursor-pointer overflow-hidden rounded border border-border transition-transform hover:scale-110"
+              class="relative size-7 cursor-pointer overflow-hidden rounded-lg border border-outline-variant transition-transform hover:scale-110"
               title="Gradient end color"
               @click="($refs.gradientToInput as HTMLInputElement)?.click()"
             >
@@ -206,7 +206,7 @@ function onApplyGradient() {
             </button>
 
             <button
-              class="flex h-7 cursor-pointer items-center rounded border border-border px-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
+              class="flex h-7 cursor-pointer items-center rounded border border-outline-variant px-2 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5 hover:text-zinc-100"
               title="Apply gradient"
               @click="onApplyGradient"
             >

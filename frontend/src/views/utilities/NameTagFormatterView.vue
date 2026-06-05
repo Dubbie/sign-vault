@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Check, Copy } from '@lucide/vue'
+
 import { useNameTagFormatter } from '@/composables/useNameTagFormatter'
 import FormatToolbar from '@/components/FormatToolbar.vue'
+import UtilityPageShell from '@/components/utilities/UtilityPageShell.vue'
+import UtilitySection from '@/components/utilities/UtilitySection.vue'
 
 const {
   editorRef,
@@ -34,66 +38,63 @@ function copyFormattedContent() {
 </script>
 
 <template>
-  <div class="max-w-3xl">
-    <h1 class="text-[clamp(1.75rem,3vw,2.25rem)] leading-tight text-zinc-100">
-      Name Tag Formatter
-    </h1>
-    <p class="mt-1 text-sm text-zinc-500">
-      Style text with Trackmania&ndash;inspired formatting. Select any portion to apply solid
-      colors, gradients, or remove formatting.
-    </p>
+  <UtilityPageShell
+    title="Name Tag Formatter"
+    description="Write, style, and copy Trackmania-ready name tag text with live formatting controls."
+  >
+    <UtilitySection
+      title="Formatter"
+      description="Type into the editor, select any portion of text, then use the floating toolbar to apply styling."
+    >
+      <div class="relative overflow-visible">
+        <div
+          ref="editorRef"
+          contenteditable="true"
+          class="min-h-10 w-full rounded-lg border border-outline-variant bg-surface px-4 py-4 pr-14 leading-tight transition-colors focus:border-primary/40 focus:outline-hidden overflow-hidden whitespace-nowrap"
+          :class="{ 'text-on-surface-variant/50': !editorRef?.textContent?.trim() }"
+          data-placeholder="Type your name tag text here..."
+          @keydown="onKeydown"
+          @keyup="onKeyup"
+        />
 
-    <div class="relative mt-8">
-      <div
-        ref="editorRef"
-        contenteditable="true"
-        class="min-h-[52px] w-full rounded border border-white/20 bg-surface py-3 pl-4 pr-11 text-lg leading-snug text-zinc-100 transition-colors focus:border-white/30 focus:outline-hidden overflow-hidden whitespace-nowrap"
-        :class="{ 'text-zinc-600': !editorRef?.textContent?.trim() }"
-        data-placeholder="Type your name tag text here..."
-        @keydown="onKeydown"
-        @keyup="onKeyup"
-      />
-
-      <button
-        class="absolute top-2.5 right-3 flex size-8 cursor-pointer items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300"
-        :title="copied ? 'Copied!' : 'Copy formatted text'"
-        @click="copyFormattedContent"
-      >
-        <svg
-          v-if="!copied"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="size-6"
+        <button
+          class="absolute top-1/2 -translate-y-1/2 right-2 flex size-10 cursor-pointer items-center justify-center rounded bg-surface text-on-surface-variant transition hover:border-primary/20 hover:bg-surface-container hover:text-on-surface"
+          :title="copied ? 'Copied!' : 'Copy formatted text'"
+          @click="copyFormattedContent"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
-          />
-        </svg>
+          <Copy v-if="!copied" class="size-5" />
+          <Check v-else class="size-5 text-primary" />
+        </button>
+      </div>
+    </UtilitySection>
 
-        <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          class="h-4 w-4 text-emerald-400"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </button>
+    <UtilitySection
+      title="How To Use It"
+      description="The tool is optimized for quick iteration, not a full text editor workflow."
+    >
+      <div class="grid gap-4 lg:grid-cols-3">
+        <article class="rounded-lg border border-outline-variant bg-surface-container-low p-5">
+          <p class="text-label-md text-primary">1. Write</p>
+          <p class="mt-3 text-body-md text-on-surface-variant">
+            Enter the full tag text first so spacing and emphasis are already in place.
+          </p>
+        </article>
 
-      <p class="mt-3 text-xs text-zinc-600">
-        Select text to format &mdash; colors and gradients render live.
-      </p>
-    </div>
+        <article class="rounded-lg border border-outline-variant bg-surface-container-low p-5">
+          <p class="text-label-md text-primary">2. Select</p>
+          <p class="mt-3 text-body-md text-on-surface-variant">
+            Highlight the exact characters you want to recolor or gradient.
+          </p>
+        </article>
+
+        <article class="rounded-lg border border-outline-variant bg-surface-container-low p-5">
+          <p class="text-label-md text-primary">3. Copy</p>
+          <p class="mt-3 text-body-md text-on-surface-variant">
+            Once the tag looks right, copy it directly and paste it into Trackmania.
+          </p>
+        </article>
+      </div>
+    </UtilitySection>
 
     <FormatToolbar
       :visible="showToolbar"
@@ -104,7 +105,7 @@ function copyFormattedContent() {
       @apply-gradient="applyGradient"
       @reset="resetFormatting"
     />
-  </div>
+  </UtilityPageShell>
 </template>
 
 <style scoped>
@@ -115,6 +116,6 @@ function copyFormattedContent() {
 }
 
 [contenteditable]:focus {
-  caret-color: #38bdf8;
+  caret-color: var(--color-primary);
 }
 </style>

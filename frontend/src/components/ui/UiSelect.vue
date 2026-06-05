@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ChevronDown } from '@lucide/vue'
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
 const props = withDefaults(
@@ -105,7 +106,10 @@ function onListboxKeydown(event: KeyboardEvent) {
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault()
-      activeIndex.value = nextEnabledIndex(Math.min(activeIndex.value + 1, props.options.length - 1), 1)
+      activeIndex.value = nextEnabledIndex(
+        Math.min(activeIndex.value + 1, props.options.length - 1),
+        1,
+      )
       nextTick(() => scrollToActive())
       break
     case 'ArrowUp':
@@ -180,20 +184,16 @@ onUnmounted(() => {
       :aria-controls="listboxId"
       :aria-activedescendant="activeDescendantId"
       :aria-label="name"
-      class="flex w-full h-9 items-center justify-between rounded-md bg-surface px-3 text-sm text-zinc-100 transition hover:bg-surface-hover focus:bg-surface-focus focus:outline-hidden"
+      class="flex w-full items-center justify-between bg-surface-container-low border border-outline-variant/30 rounded-lg px-component-padding-x h-10 focus:outline-none focus:border-primary transition-all"
       @click="toggle"
       @keydown="onTriggerKeydown"
     >
       <span>{{ selectedLabel }}</span>
-      <svg
-        class="size-4 text-zinc-400 transition duration-200"
+
+      <ChevronDown
+        class="size-4 text-on-surface-variant transition duration-200"
         :class="open ? 'rotate-180' : ''"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
+      />
     </button>
 
     <ul
@@ -203,7 +203,7 @@ onUnmounted(() => {
       :id="listboxId"
       :aria-label="name"
       :class="[
-        'absolute z-50 mt-1 w-full rounded-md bg-surface py-1 shadow-lg ring-1 ring-white/10 focus:outline-hidden',
+        'absolute z-50 mt-1 w-full rounded-md bg-surface-container py-1 shadow-lg ring-1 ring-outline-variant/30 focus:outline-hidden',
         open ? 'visible opacity-100' : 'invisible opacity-0 pointer-events-none',
       ]"
       @keydown="onListboxKeydown"
@@ -218,9 +218,7 @@ onUnmounted(() => {
         :class="[
           'px-3 py-1.5 text-sm transition',
           opt.disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-          opt.value === modelValue
-            ? 'text-zinc-100'
-            : 'text-zinc-400',
+          opt.value === modelValue ? 'text-primary' : 'text-on-surface-variant',
           idx === activeIndex && !opt.disabled ? 'bg-white/10' : '',
         ]"
         @mousedown.prevent="selectOption(idx)"

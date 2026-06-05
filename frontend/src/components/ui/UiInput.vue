@@ -28,7 +28,7 @@ function onInput(event: Event) {
     :required="required"
     :placeholder="placeholder"
     :autocomplete="autocomplete"
-    class="w-full rounded-md bg-surface px-3 h-9 text-zinc-100 placeholder:text-zinc-400/50 hover:bg-surface-hover focus:bg-surface-focus focus:border-white focus:outline-hidden"
+    class="bg-surface-container-low border border-outline-variant/30 rounded-lg px-component-padding-x h-10 focus:outline-none focus:border-primary transition-all"
     @input="onInput"
   />
 </template>

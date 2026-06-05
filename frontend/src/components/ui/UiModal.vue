@@ -26,14 +26,12 @@ function handleAfterLeave() {
         class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur px-4"
         @click.self="close"
       >
-        <div
-          class="modal-box ring-2 ring-white/20 w-full max-w-lg rounded-md bg-background p-6 shadow-2xl"
-        >
+        <div class="modal-box glass-card w-full max-w-lg rounded-md p-6 shadow-2xl">
           <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-zinc-100">{{ title }}</h2>
+            <h2 class="text-headline-md">{{ title }}</h2>
             <button
               type="button"
-              class="cursor-pointer text-zinc-400 transition hover:text-zinc-100"
+              class="cursor-pointer text-on-surface-variant hover:text-primary transition-all"
               @click="close"
             >
               <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -5,6 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { getPublicFolders } from '@/lib/public-folders'
 import type { PaginationMeta, PublicFolderListing } from '@/types/public-folder'
 
+type SortOption = 'latest' | 'votes'
+
 import UiInput from '@/components/ui/UiInput.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
@@ -18,6 +20,7 @@ const folders = ref<PublicFolderListing[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const search = ref(String(route.query.q || ''))
+const sort = ref<SortOption>((route.query.sort as SortOption) || 'latest')
 const meta = ref<PaginationMeta | null>(null)
 const hoveredFolder = ref<PublicFolderListing | null>(null)
 
@@ -26,8 +29,9 @@ async function loadFolders(page = 1) {
   error.value = null
 
   try {
-    const params: { q?: string; page?: number } = { page }
+    const params: { q?: string; page?: number; sort?: SortOption } = { page }
     if (search.value) params.q = search.value
+    if (sort.value !== 'latest') params.sort = sort.value
 
     const response = await getPublicFolders(params)
     folders.value = response.data
@@ -43,9 +47,15 @@ function goToPage(page: number) {
   if (!meta.value) return
   const query: Record<string, string> = {}
   if (search.value) query.q = search.value
+  if (sort.value !== 'latest') query.sort = sort.value
   if (page > 1) query.page = String(page)
   router.replace({ query }).catch(() => {})
   void loadFolders(page)
+}
+
+function handleSortChange(value: SortOption) {
+  sort.value = value
+  goToPage(1)
 }
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
@@ -88,12 +98,31 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="mt-6">
+    <div class="mt-6 flex gap-3">
       <UiInput
+        class="flex-1"
         :model-value="search"
         placeholder="Search folders by name..."
         @update:model-value="handleSearchInput"
       />
+      <div class="flex rounded-lg border border-outline/30 overflow-hidden text-sm font-medium shrink-0">
+        <button
+          type="button"
+          class="px-3 py-2 transition-colors"
+          :class="sort === 'latest' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:text-on-surface'"
+          @click="handleSortChange('latest')"
+        >
+          Latest
+        </button>
+        <button
+          type="button"
+          class="px-3 py-2 transition-colors border-l border-outline/30"
+          :class="sort === 'votes' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:text-on-surface'"
+          @click="handleSortChange('votes')"
+        >
+          Top
+        </button>
+      </div>
     </div>
 
     <UiErrorBanner v-if="error">

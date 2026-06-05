@@ -1,46 +1,87 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import { voteFolder } from '@/lib/public-folders'
+import { useAuthStore } from '@/stores/auth'
 import type { PublicFolderListing } from '@/types/public-folder'
+import { Plus } from '@lucide/vue'
 
-defineProps<{
+const props = defineProps<{
   folder: PublicFolderListing
   active?: boolean
 }>()
+
+const auth = useAuthStore()
+
+const votesCount = ref(props.folder.votes_count)
+const userHasVoted = ref(props.folder.user_has_voted)
+const isVoting = ref(false)
+
+async function handleVote(e: MouseEvent) {
+  e.preventDefault()
+  e.stopPropagation()
+
+  if (!auth.user || isVoting.value) return
+
+  isVoting.value = true
+  try {
+    const result = await voteFolder(props.folder.slug)
+    votesCount.value = result.votes_count
+    userHasVoted.value = result.user_has_voted
+  } finally {
+    isVoting.value = false
+  }
+}
 </script>
 
 <template>
   <RouterLink
     :to="{ name: 'public-folder', params: { slug: folder.slug } }"
-    class="flex items-center justify-between gap-3 rounded-lg border bg-surface p-3 no-underline transition hover:bg-surface-hover/50"
+    class="flex flex-col gap-2 rounded-lg border bg-surface px-3 py-2.5 no-underline transition hover:bg-surface-hover/50"
     :class="{ 'border-primary': active, 'border-outline/30': !active }"
   >
-    <div class="min-w-0 flex-1">
-      <p class="text-label-md mb-2 truncate">{{ folder.name }}</p>
-      <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
+    <p class="text-label-md truncate">{{ folder.name }}</p>
+
+    <div class="flex items-center gap-2 min-w-0">
+      <div v-if="folder.owner" class="flex items-center gap-1.5 min-w-0 flex-1">
         <img
           v-if="folder.owner.avatar_url"
           :src="folder.owner.avatar_url"
           :alt="folder.owner.display_name"
-          class="size-4 rounded"
+          class="size-4 shrink-0 rounded"
         />
         <span class="truncate text-xs text-secondary">
           {{ folder.owner.display_name }}
         </span>
       </div>
-    </div>
-    <div class="flex flex-col h-full justify-between items-end">
-      <span
-        class="shrink-0 text-xs px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
-      >
-        {{ folder.signs_count }} signs
-      </span>
-      <span
-        v-if="folder.variants_count > 1"
-        class="shrink-0 px-1.5 text-xs text-on-surface-variant"
-      >
+
+      <span class="shrink-0 text-xs text-on-surface-variant"> {{ folder.signs_count }} signs </span>
+
+      <span v-if="folder.variants_count > 1">·</span>
+
+      <span v-if="folder.variants_count > 1" class="shrink-0 text-xs text-on-surface-variant">
         {{ folder.variants_count }} variants
       </span>
+
+      <button
+        type="button"
+        class="shrink-0 ml-auto flex items-center gap-1.5 px-2 h-5 rounded font-bold text-xs transition-colors"
+        :class="
+          userHasVoted
+            ? 'bg-emerald-500 text-background'
+            : 'bg-zinc-700 text-zinc-300 hover:bg-emerald-500 hover:text-white'
+        "
+        :disabled="!auth.user || isVoting"
+        :title="auth.user ? (userHasVoted ? 'Remove vote' : 'Vote ++') : 'Login to vote'"
+        @click="handleVote"
+      >
+        <div class="flex -space-x-0.5">
+          <Plus class="size-3" stroke-width="4" />
+          <Plus class="size-3" stroke-width="4" />
+        </div>
+        <span v-if="votesCount > 0">{{ votesCount }}</span>
+      </button>
     </div>
   </RouterLink>
 </template>

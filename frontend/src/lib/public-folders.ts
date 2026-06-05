@@ -58,8 +58,18 @@ export async function unlockPublicFolder(
 export async function getPublicFolders(params?: {
   q?: string
   page?: number
+  sort?: 'latest' | 'votes'
 }): Promise<PaginatedPublicFolderResponse> {
   const { data } = await api.get<PaginatedPublicFolderResponse>('/api/public/folders', { params })
+  return data
+}
+
+export async function voteFolder(
+  slug: string,
+): Promise<{ votes_count: number; user_has_voted: boolean }> {
+  const { data } = await api.post<{ votes_count: number; user_has_voted: boolean }>(
+    `/api/public/folders/${slug}/vote`,
+  )
   return data
 }
 

@@ -27,6 +27,10 @@ class BrowseFolderResource extends JsonResource
                 'avatar_url'   => $this->user->avatar_url,
             ],
             'preview_signs' => $this->selectPreviewSigns(),
+            'votes_count' => (int) ($this->votes_count ?? 0),
+            'user_has_voted' => ($user = auth('sanctum')->user())
+                ? $this->votes->contains('user_id', $user->id)
+                : false,
         ];
     }
 

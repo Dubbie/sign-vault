@@ -25,6 +25,7 @@ Route::get('/public/folders/{slug}', [PublicFolderController::class, 'show']);
 Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'unlock'])
     ->middleware('throttle:folder-unlock');
 Route::post('/public/folders/{slug}/signs', [PublicFolderController::class, 'signs']);
+Route::middleware('auth:sanctum')->post('/public/folders/{slug}/vote', [PublicFolderController::class, 'vote']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/auth/logout', [OauthAuthController::class, 'logout']);

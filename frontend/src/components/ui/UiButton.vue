@@ -25,7 +25,7 @@ const emit = defineEmits<{
 }>()
 
 const baseClasses =
-  'inline-flex cursor-pointer items-center justify-center font-semibold no-underline transition duration-150 ease-in-out disabled:cursor-default disabled:opacity-75'
+  'inline-flex cursor-pointer items-center justify-center font-semibold no-underline transition duration-150 ease-in-out disabled:opacity-50 disabled:pointer-events-none'
 
 const sizeClasses = {
   sm: 'rounded h-8 px-3 text-sm gap-1.5',

@@ -106,6 +106,10 @@ async function handleVariantSelect(variant: Variant, close?: () => void) {
   await signsStore.fetchFolderSigns(folderId.value, variant.id)
 }
 
+async function refreshActiveVariantSigns(currentFolderId: number) {
+  await signsStore.fetchFolderSigns(currentFolderId, selectedVariantId.value ?? undefined)
+}
+
 const showUploadModal = ref(false)
 const showMoveModal = ref(false)
 const showEditModal = ref(false)
@@ -306,7 +310,7 @@ async function handleSetDefault(variantId: number, close?: () => void) {
     })
     await foldersStore.fetchFolder(folder.value.id)
     selectedVariantId.value = variantId
-    await signsStore.fetchFolderSigns(folderId.value, variantId)
+    await refreshActiveVariantSigns(folderId.value)
   } catch {
     variantError.value = 'Failed to set default variant.'
   }
@@ -323,7 +327,7 @@ async function handleDeleteVariant(variantId: number) {
       selectedVariantId.value = null
     }
     await foldersStore.fetchFolder(folder.value.id)
-    await signsStore.fetchFolderSigns(folderId.value)
+    await refreshActiveVariantSigns(folderId.value)
   } catch {
     variantError.value = 'Failed to delete variant.'
   }
@@ -340,7 +344,7 @@ async function handleChangeVariantSubmit() {
   await signsStore.changeSignVariant(selectedSignIds.value, targetVariantId)
   selectedSignIds.value = []
   showChangeVariantModal.value = false
-  await signsStore.fetchFolderSigns(folderId.value, selectedVariantId.value ?? undefined)
+  await refreshActiveVariantSigns(folderId.value)
 }
 
 watch(
@@ -578,7 +582,7 @@ watch(
       :folder-id="folder.id"
       :variants="variants"
       :selected-variant-id="selectedVariantId"
-      @saved="signsStore.fetchFolderSigns(folder.id)"
+      @saved="refreshActiveVariantSigns(folder.id)"
     />
 
     <MoveSignsModal
@@ -586,7 +590,7 @@ watch(
       v-model="showMoveModal"
       :folder-id="folder.id"
       :sign-ids="selectedSignIds"
-      @saved="(signsStore.fetchFolderSigns(folder.id), (selectedSignIds = []))"
+      @saved="(refreshActiveVariantSigns(folder.id), (selectedSignIds = []))"
     />
 
     <EditFolderModal v-if="folder" v-model="showEditModal" :folder-id="folder.id" />

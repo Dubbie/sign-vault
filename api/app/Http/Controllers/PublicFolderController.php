@@ -28,7 +28,7 @@ class PublicFolderController extends Controller
                         ->select(['id', 'name', 'public_url', 'width', 'height', 'column_ratio', 'folder_id', 'variant_id']);
                 },
             ])
-            ->withCount('signs');
+            ->withCount(['signs', 'variants']);
 
         if ($search = $request->string('q', '')) {
             $query->where('name', 'like', '%'.$search.'%');

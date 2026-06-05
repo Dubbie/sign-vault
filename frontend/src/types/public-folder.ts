@@ -42,6 +42,7 @@ export type PublicFolderListing = {
   slug: string
   visibility: 'public'
   signs_count: number
+  variants_count: number
   owner: OwnerInfo
   preview_signs: PreviewSign[]
 }

@@ -6,6 +6,7 @@ use App\Enums\FolderVisibility;
 use App\Models\Folder;
 use App\Models\Sign;
 use App\Models\User;
+use App\Models\Variant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -121,6 +122,29 @@ class PublicFolderAccessTest extends TestCase
         $this->getJson('/api/public/folders')
             ->assertOk()
             ->assertJsonPath('data.0.signs_count', 5);
+    }
+
+    public function test_includes_variant_count(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Folder With Variants',
+            'slug' => 'folder-with-variants',
+            'public_slug' => 'folder-with-variants',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        Variant::factory()->for($folder)->named('Alt')->create();
+        Variant::factory()->for($folder)->named('Compact')->create();
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'variant_id' => $folder->defaultVariant->id,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonPath('data.0.variants_count', 3);
     }
 
     public function test_includes_preview_signs(): void

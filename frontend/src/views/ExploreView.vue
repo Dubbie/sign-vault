@@ -84,8 +84,7 @@ onMounted(() => {
   <div class="mx-auto max-w-7xl">
     <div class="flex items-start justify-between gap-4">
       <div>
-        <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100">Explore</h1>
-        <p class="mt-1 text-sm text-zinc-400">Discover public sign folders from the community</p>
+        <h1 class="text-headline-xl text-on-surface">Explore</h1>
       </div>
     </div>
 
@@ -101,9 +100,9 @@ onMounted(() => {
       {{ error }}
     </UiErrorBanner>
 
-    <p v-if="isLoading" class="mt-8 text-zinc-400">Loading folders...</p>
+    <p v-if="isLoading" class="mt-8 text-on-surface">Loading folders...</p>
 
-    <p v-else-if="!isLoading && folders.length === 0" class="mt-8 text-zinc-400">
+    <p v-else-if="!isLoading && folders.length === 0" class="mt-8 text-on-surface-variant">
       {{ search ? 'No folders match your search.' : 'No public folders yet.' }}
     </p>
 
@@ -121,47 +120,52 @@ onMounted(() => {
         </div>
 
         <div>
-          <div
-            v-if="!hoveredFolder"
-            class="flex min-h-[288px] items-center justify-center rounded-xl border border-dashed border-white/10"
-          >
-            <p class="text-sm text-zinc-500">Hover over a folder to preview its signs</p>
-          </div>
+          <Transition name="preview-panel" mode="out-in">
+            <div
+              v-if="!hoveredFolder"
+              key="empty"
+              class="flex min-h-72 items-center justify-center rounded-xl border border-dashed border-white/10"
+            >
+              <p class="text-sm text-on-surface-variant">
+                Hover over a folder to preview its signs
+              </p>
+            </div>
 
-          <div v-else>
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0 flex-1">
-                <h2 class="text-lg font-semibold text-zinc-100">{{ hoveredFolder.name }}</h2>
-                <div v-if="hoveredFolder.owner" class="mt-1 flex items-center gap-2">
-                  <img
-                    v-if="hoveredFolder.owner.discord_avatar"
-                    :src="hoveredFolder.owner.discord_avatar"
-                    :alt="hoveredFolder.owner.discord_username"
-                    class="size-5 rounded-full"
-                  />
-                  <span class="truncate text-sm text-zinc-400">
-                    {{
-                      hoveredFolder.owner.discord_global_name ||
-                      hoveredFolder.owner.discord_username
-                    }}
-                  </span>
+            <div v-else :key="hoveredFolder.id" class="min-h-72">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <h2 class="text-lg font-semibold text-on-surface">{{ hoveredFolder.name }}</h2>
+                  <div v-if="hoveredFolder.owner" class="mt-1 flex items-center gap-2">
+                    <img
+                      v-if="hoveredFolder.owner.discord_avatar"
+                      :src="hoveredFolder.owner.discord_avatar"
+                      :alt="hoveredFolder.owner.discord_username"
+                      class="size-5 rounded"
+                    />
+                    <span class="truncate text-sm text-secondary">
+                      {{
+                        hoveredFolder.owner.discord_global_name ||
+                        hoveredFolder.owner.discord_username
+                      }}
+                    </span>
+                  </div>
                 </div>
+                <span
+                  class="shrink-0 text-xs px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
+                >
+                  {{ hoveredFolder.signs_count }} signs
+                </span>
               </div>
-              <span
-                class="shrink-0 rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-semibold text-emerald-400"
-              >
-                {{ hoveredFolder.signs_count }} signs
-              </span>
-            </div>
 
-            <div v-if="hoveredFolder.preview_signs.length > 0" class="mt-4">
-              <PreviewSignGrid
-                :signs="hoveredFolder.preview_signs"
-                :folder-slug="hoveredFolder.slug"
-              />
+              <div v-if="hoveredFolder.preview_signs.length > 0" class="mt-4">
+                <PreviewSignGrid
+                  :signs="hoveredFolder.preview_signs"
+                  :folder-slug="hoveredFolder.slug"
+                />
+              </div>
+              <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>
             </div>
-            <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>
-          </div>
+          </Transition>
         </div>
       </div>
 
@@ -205,3 +209,25 @@ onMounted(() => {
     </nav>
   </div>
 </template>
+
+<style scoped>
+.preview-panel-enter-active {
+  transition:
+    opacity 0.22s ease-out,
+    transform 0.22s ease-out,
+    filter 0.22s ease-out;
+}
+
+.preview-panel-leave-active {
+  transition:
+    opacity 0.16s ease-in,
+    transform 0.16s ease-in,
+    filter 0.16s ease-in;
+}
+
+.preview-panel-enter-from,
+.preview-panel-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+</style>

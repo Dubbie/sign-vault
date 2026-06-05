@@ -21,6 +21,7 @@ class BrowseFolderResource extends JsonResource
                 ? $this->visibility->value
                 : $this->visibility,
             'signs_count' => $this->signs_count,
+            'variants_count' => $this->variants_count,
             'owner' => [
                 'discord_username' => $this->user->discord_username,
                 'discord_global_name' => $this->user->discord_global_name,

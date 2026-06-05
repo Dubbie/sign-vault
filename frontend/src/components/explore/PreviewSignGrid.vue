@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import UiButton from '../ui/UiButton.vue'
+import { Eye } from '@lucide/vue'
 
 interface PreviewSign {
   id: number
@@ -81,13 +83,19 @@ const columns = computed(() => {
       </div>
     </div>
 
-    <div v-if="folderSlug" class="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-background">
+    <div
+      v-if="folderSlug"
+      class="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-background"
+    >
       <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
         <RouterLink
+          class="pointer-events-auto"
           :to="{ name: 'public-folder', params: { slug: folderSlug } }"
-          class="pointer-events-auto rounded-md border-2 bg-zinc-100 border-background h-9 flex items-center px-3 font-semibold text-background shadow-lg shadow-background backdrop-blur-sm transition hover:bg-zinc-300"
         >
-          Show all signs
+          <UiButton>
+            <Eye class="size-5" />
+            Show all signs
+          </UiButton>
         </RouterLink>
       </div>
     </div>

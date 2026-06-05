@@ -12,27 +12,35 @@ defineProps<{
 <template>
   <RouterLink
     :to="{ name: 'public-folder', params: { slug: folder.slug } }"
-    class="flex items-center justify-between gap-3 rounded-xl border border-white/20 bg-surface p-3 no-underline transition hover:border-emerald-400/50 hover:bg-surface-hover/50"
-    :class="{ 'ring-1 ring-emerald-400 border-emerald-400/50': active }"
+    class="flex items-center justify-between gap-3 rounded-lg border bg-surface p-3 no-underline transition hover:bg-surface-hover/50"
+    :class="{ 'border-primary': active, 'border-outline/30': !active }"
   >
     <div class="min-w-0 flex-1">
-      <p class="truncate text-sm font-semibold text-zinc-100">{{ folder.name }}</p>
+      <p class="text-label-md mb-2 truncate">{{ folder.name }}</p>
       <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
         <img
           v-if="folder.owner.discord_avatar"
           :src="folder.owner.discord_avatar"
           :alt="folder.owner.discord_username"
-          class="size-4 rounded-full"
+          class="size-4 rounded"
         />
-        <span class="truncate text-xs text-zinc-500">
+        <span class="truncate text-xs text-secondary">
           {{ folder.owner.discord_global_name || folder.owner.discord_username }}
         </span>
       </div>
     </div>
-    <span
-      class="shrink-0 rounded-full bg-emerald-400/10 px-2 py-0.5 text-xs font-semibold text-emerald-400"
-    >
-      {{ folder.signs_count }}
-    </span>
+    <div class="flex flex-col h-full justify-between items-end">
+      <span
+        class="shrink-0 text-xs px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
+      >
+        {{ folder.signs_count }} signs
+      </span>
+      <span
+        v-if="folder.variants_count > 1"
+        class="shrink-0 px-1.5 text-xs text-on-surface-variant"
+      >
+        {{ folder.variants_count }} variants
+      </span>
+    </div>
   </RouterLink>
 </template>

@@ -2,63 +2,112 @@
 
 @theme {
   --font-sans: 'Barlow', sans-serif;
-  --color-error-container: #93000a;
+
+  /* ==========================================================================
+   PRIMARY
+   ========================================================================== */
+
+  --color-primary: #00d492;
   --color-on-primary: #003825;
-  --color-surface-container-high: #262b2b;
-  --color-inverse-surface: #dfe3e3;
-  --color-error: #ffb4ab;
-  --color-surface-dim: #0f1414;
-  --color-tertiary-fixed-dim: #4edea3;
-  --color-on-tertiary: #003824;
-  --color-surface-tint: #45dfa4;
-  --color-on-error: #690005;
-  --color-inverse-primary: #006c4b;
-  --color-surface-variant: #313636;
-  --color-on-secondary-container: #bcbbc5;
+
+  --color-primary-container: #34d399;
+  --color-on-primary-container: #00563b;
+
+  --color-primary-fixed: #68fcbf;
+  --color-primary-fixed-dim: #45dfa4;
+
   --color-on-primary-fixed: #002114;
-  --color-on-background: #dfe3e3;
-  --color-on-tertiary-fixed: #002113;
-  --color-on-tertiary-container: #005639;
+  --color-on-primary-fixed-variant: #005137;
+
+  /* ==========================================================================
+   SECONDARY
+   ========================================================================== */
+
   --color-secondary: #c6c5cf;
+  --color-on-secondary: #2f3038;
+
+  --color-secondary-container: #4a4b53;
+  --color-on-secondary-container: #bcbbc5;
+
+  --color-secondary-fixed: #e3e1ec;
+  --color-secondary-fixed-dim: #c6c5cf;
+
+  --color-on-secondary-fixed: #1a1b22;
+  --color-on-secondary-fixed-variant: #46464e;
+
+  /* ==========================================================================
+   TERTIARY
+   ========================================================================== */
+
+  --color-tertiary: #61efb2;
+  --color-on-tertiary: #003824;
+
+  --color-tertiary-container: #3fd298;
+  --color-on-tertiary-container: #005639;
+
+  --color-tertiary-fixed: #6ffbbe;
+  --color-tertiary-fixed-dim: #4edea3;
+
+  --color-on-tertiary-fixed: #002113;
+  --color-on-tertiary-fixed-variant: #005236;
+
+  /* ==========================================================================
+   ERROR
+   ========================================================================== */
+
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* ==========================================================================
+   SURFACE & BACKGROUND
+   ========================================================================== */
+
+  --color-background: #0f1414;
+  --color-on-background: #dfe3e3;
+
+  --color-surface: #0f1414;
+  --color-on-surface: #dfe3e3;
+
+  --color-surface-dim: #0f1414;
+  --color-surface-bright: #353a3a;
+
   --color-surface-container-lowest: #0a0f0f;
   --color-surface-container-low: #171c1c;
-  --color-primary-container: #34d399;
-  --color-outline: #85948b;
-  --color-tertiary-container: #3fd298;
-  --color-outline-variant: #3c4a42;
-  --color-inverse-on-surface: #2c3131;
-  --color-on-primary-container: #00563b;
-  --color-secondary-container: #4a4b53;
-  --color-tertiary-fixed: #6ffbbe;
-  --color-on-surface: #dfe3e3;
-  --color-on-secondary-fixed-variant: #46464e;
-  --color-secondary-fixed: #e3e1ec;
-  --color-on-tertiary-fixed-variant: #005236;
-  --color-surface-container-highest: #313636;
   --color-surface-container: #1b2120;
-  --color-surface-bright: #353a3a;
+  --color-surface-container-high: #262b2b;
+  --color-surface-container-highest: #313636;
+
+  --color-surface-variant: #313636;
   --color-on-surface-variant: #bbcac0;
-  --color-primary-fixed: #68fcbf;
-  --color-background: #0f1414;
-  --color-on-secondary: #2f3038;
-  --color-on-primary-fixed-variant: #005137;
-  --color-on-secondary-fixed: #1a1b22;
-  --color-primary-fixed-dim: #45dfa4;
-  --color-on-error-container: #ffdad6;
-  --color-secondary-fixed-dim: #c6c5cf;
-  --color-surface: #0f1414;
-  --color-primary: #5af0b3;
-  --color-tertiary: #61efb2;
 
-  --text-label-md: 14px;
-  --text-label-md--line-height: 1;
-  --text-label-md--letter-spacing: 0.05em;
-  --text-label-md--font-weight: 600;
+  --color-surface-tint: #45dfa4;
 
-  --text-headline-lg-mobile: 28px;
-  --text-headline-lg-mobile--line-height: 1.2;
-  --text-headline-lg-mobile--letter-spacing: -0.02em;
-  --text-headline-lg-mobile--font-weight: 700;
+  /* ==========================================================================
+   OUTLINES
+   ========================================================================== */
+
+  --color-outline: #85948b;
+  --color-outline-variant: #3c4a42;
+
+  /* ==========================================================================
+   INVERSE
+   ========================================================================== */
+
+  --color-inverse-surface: #dfe3e3;
+  --color-inverse-on-surface: #2c3131;
+  --color-inverse-primary: #006c4b;
+
+  /* ==========================================================================
+   TEXT FORMATTING
+   ========================================================================== */
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 1.5;
+  --text-body-md--letter-spacing: 0em;
+  --text-body-md--font-weight: 400;
 
   --text-body-lg: 18px;
   --text-body-lg--line-height: 1.6;
@@ -75,27 +124,36 @@
   --text-headline-lg--letter-spacing: -0.02em;
   --text-headline-lg--font-weight: 700;
 
-  --spacing-section-gap: 4rem;
-  --spacing-stack-compact: 0.5rem;
-  --spacing-container-margin: 2rem;
-  --spacing-component-padding-y: 0.5rem;
-  --spacing-component-padding-x: 0.75rem;
-  --spacing-gutter: 1.5rem;
+  --text-headline-lg-mobile: 28px;
+  --text-headline-lg-mobile--line-height: 1.2;
+  --text-headline-lg-mobile--letter-spacing: -0.02em;
+  --text-headline-lg-mobile--font-weight: 700;
 
   --text-label-sm: 12px;
   --text-label-sm--line-height: 1;
   --text-label-sm--letter-spacing: 0.02em;
   --text-label-sm--font-weight: 500;
 
-  --text-body-md: 16px;
-  --text-body-md--line-height: 1.5;
-  --text-body-md--letter-spacing: 0em;
-  --text-body-md--font-weight: 400;
+  --text-label-md: 14px;
+  --text-label-md--line-height: 1;
+  --text-label-md--letter-spacing: 0.05em;
+  --text-label-md--font-weight: 600;
 
   --text-headline-xl: 48px;
   --text-headline-xl--line-height: 1.1;
   --text-headline-xl--letter-spacing: -0.04em;
   --text-headline-xl--font-weight: 700;
+
+  /* ==========================================================================
+   SPACING, PADDING, MARGINS
+   ========================================================================== */
+
+  --spacing-section-gap: 4rem;
+  --spacing-stack-compact: 0.5rem;
+  --spacing-container-margin: 2rem;
+  --spacing-component-padding-y: 0.5rem;
+  --spacing-component-padding-x: 0.75rem;
+  --spacing-gutter: 1.5rem;
 }
 
 @layer base {

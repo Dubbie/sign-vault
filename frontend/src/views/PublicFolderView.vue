@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import {
   getPublicFolder,
@@ -14,13 +14,14 @@ import { useFoldersStore } from '@/stores/folders'
 import { banUser } from '@/lib/admin'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
-import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
+import UiBreadcrumbs from '@/components/ui/UiBreadcrumbs.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
+import { Ban, Link, Wrench } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -67,10 +68,22 @@ const isUnlocking = ref(false)
 const isAuthor = ref(false)
 const error = ref<string | null>(null)
 const copiedSignId = ref<number | null>(null)
+const copiedPublicUrl = ref(false)
 const selectedVariantId = ref<number | null>(null)
 
 const variants = computed(() => folder.value?.variants ?? [])
 const showVariantSwitcher = computed(() => variants.value.length > 1)
+const breadcrumbs = computed(() =>
+  folder.value
+    ? [
+        { label: 'Explore', to: { name: 'explore' } },
+        {
+          label: folder.value.name,
+          to: { name: 'public-folder', params: { slug: folder.value.slug } },
+        },
+      ]
+    : [{ label: 'Explore', to: { name: 'explore' } }],
+)
 const variantOptions = computed(() =>
   variants.value.map((variant) => ({
     value: String(variant.id),
@@ -136,6 +149,20 @@ function visibilityLabel(visibility: string) {
 
 function clearUnlockForm() {
   unlockForm.password = ''
+}
+
+async function handleCopyPublicUrl() {
+  error.value = null
+
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    copiedPublicUrl.value = true
+    window.setTimeout(() => {
+      copiedPublicUrl.value = false
+    }, 1500)
+  } catch {
+    error.value = 'Could not copy the public URL. Please copy it manually.'
+  }
 }
 
 async function loadSignsPerColumn(password: string | null, variantId?: number) {
@@ -328,6 +355,7 @@ watch(folderSlug, () => {
   requiresPassword.value = false
   isAuthor.value = false
   copiedSignId.value = null
+  copiedPublicUrl.value = false
   void loadPublicFolder()
 })
 </script>
@@ -396,89 +424,42 @@ watch(folderSlug, () => {
     </div>
 
     <div v-else-if="folder">
-      <!-- Breadcrumb component here -->
       <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <nav class="flex items-center gap-2 text-on-surface-variant mb-4">
-            <span>Explore</span>
-            <span
-              ><svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="3"
-                stroke="currentColor"
-                class="size-3"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                />
-              </svg>
-            </span>
-            <span class="text-primary">{{ folder.name }}</span>
-          </nav>
+          <UiBreadcrumbs :items="breadcrumbs" class="mb-4" />
 
           <div class="flex items-center gap-4">
             <h1 class="text-headline-xl text-on-surface">{{ folder.name }}</h1>
             <div>
               <span
-                class="mr-2 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
+                class="block mr-2 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
               >
                 {{ visibilityLabel(folder.visibility) }}
               </span>
-              <span>{{ signsTotal }} signs</span>
             </div>
           </div>
+
+          <p class="text-on-surface-variant text-body-lg mt-2">
+            Curated by <span class="text-on-surface">{{ folder.owner.discord_global_name }}</span
+            >. {{ signsTotal }} signs in this folder
+          </p>
         </div>
 
         <div class="flex items-center gap-3">
-          <button
-            class="glass-card font-semibold px-component-padding-x py-component-padding-y rounded-lg flex items-center gap-2 text-on-surface hover:bg-surface-variant/50 transition-all"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-              class="size-5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-              />
-            </svg>
+          <UiButton variant="secondary" type="button" @click="handleCopyPublicUrl">
+            <Link class="size-5" />
 
-            Copy URL
-          </button>
+            {{ copiedPublicUrl ? 'Copied!' : 'Copy URL' }}
+          </UiButton>
 
-          <RouterLink v-if="isAuthor" :to="`/folders/${folder.id}`">
-            <button
-              class="bg-primary font-semibold text-on-primary px-component-padding-x py-component-padding-y rounded-lg flex items-center gap-2 font-label-md emerald-glow transition-all"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-                class="size-5"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z"
-                />
-              </svg>
+          <UiButton v-if="isAuthor" :to="`/folders/${folder.id}`">
+            <Wrench class="size-5" />
 
-              Manage folder
-            </button>
-          </RouterLink>
+            Manage folder
+          </UiButton>
 
           <UiButton v-if="canBan()" variant="danger" type="button" @click="showBanModal = true">
+            <Ban class="size-5" />
             Ban User
           </UiButton>
         </div>
@@ -534,8 +515,13 @@ watch(folderSlug, () => {
         </UiFormField>
 
         <div class="mt-4 flex justify-end gap-3">
-          <UiButton variant="secondary" @click="showBanModal = false"> Cancel </UiButton>
-          <UiButton variant="danger" :disabled="!banReason.trim() || isBanning" @click="handleBan">
+          <UiButton variant="secondary" size="md" @click="showBanModal = false"> Cancel </UiButton>
+          <UiButton
+            variant="danger"
+            :disabled="!banReason.trim() || isBanning"
+            size="md"
+            @click="handleBan"
+          >
             {{ isBanning ? 'Banning...' : 'Ban & Nuke Content' }}
           </UiButton>
         </div>

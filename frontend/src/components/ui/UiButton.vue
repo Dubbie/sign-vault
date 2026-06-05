@@ -1,40 +1,66 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
+import { RouterLink } from 'vue-router'
+
 withDefaults(
   defineProps<{
-    variant?: 'primary' | 'danger' | 'secondary' | 'ghost'
+    variant?: 'primary' | 'secondary' | 'tertiary' | 'danger'
+    size?: 'sm' | 'md' | 'lg'
     disabled?: boolean
     type?: 'button' | 'submit'
     fullWidth?: boolean
+    to?: RouteLocationRaw
   }>(),
-  { variant: 'primary', disabled: false, type: 'button', fullWidth: false },
+  {
+    variant: 'primary',
+    size: 'md',
+    disabled: false,
+    type: 'button',
+    fullWidth: false,
+  },
 )
 
 const emit = defineEmits<{
-  click: []
+  click: [MouseEvent]
 }>()
+
+const baseClasses =
+  'inline-flex cursor-pointer items-center justify-center font-semibold no-underline transition duration-150 ease-in-out disabled:cursor-default disabled:opacity-75'
+
+const sizeClasses = {
+  sm: 'rounded h-8 px-3 text-sm gap-1.5',
+  md: 'rounded-lg px-component-padding-x h-10 text-label-md gap-2',
+  lg: 'h-11 px-4 py-3 text-body-md gap-2.5',
+} as const
+
+const variantClasses = {
+  primary: 'bg-primary text-on-primary emerald-glow hover:bg-primary/90',
+  secondary: 'glass-card text-on-surface hover:bg-surface-variant/50',
+  tertiary: 'bg-outline-variant/20 text-on-surface hover:bg-outline-variant/40',
+  danger: 'bg-error/20 text-error hover:bg-error/30',
+} as const
+
+function handleClick(event: MouseEvent) {
+  emit('click', event)
+}
 </script>
 
 <template>
+  <RouterLink
+    v-if="to"
+    :to="to"
+    :class="[baseClasses, sizeClasses[size], variantClasses[variant], fullWidth ? 'w-full' : '']"
+    @click="handleClick"
+  >
+    <slot />
+  </RouterLink>
+
   <button
+    v-else
     :type="type"
     :disabled="disabled"
-    :class="[
-      'inline-flex cursor-pointer items-center justify-center rounded px-3.5 h-9 text-sm font-semibold no-underline transition duration-150 ease-in-out',
-      fullWidth ? 'w-full' : '',
-      variant === 'primary'
-        ? 'border-0 bg-emerald-400 text-background disabled:cursor-default disabled:opacity-75 hover:bg-emerald-200'
-        : '',
-      variant === 'danger'
-        ? 'cursor-pointer border border-border-danger bg-transparent text-danger-text hover:bg-white/5'
-        : '',
-      variant === 'secondary'
-        ? 'cursor-pointer border border-border bg-transparent text-zinc-100 hover:bg-white/5'
-        : '',
-      variant === 'ghost'
-        ? 'cursor-pointer border-0 bg-transparent text-primary underline-offset-2 hover:underline'
-        : '',
-    ]"
-    @click="emit('click')"
+    :class="[baseClasses, sizeClasses[size], variantClasses[variant], fullWidth ? 'w-full' : '']"
+    @click="handleClick"
   >
     <slot />
   </button>

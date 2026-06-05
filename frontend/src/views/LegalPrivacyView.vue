@@ -1,107 +1,257 @@
 <template>
-  <div class="mx-auto max-w-3xl">
-    <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-tight text-zinc-100">Privacy Policy</h1>
-    <p class="mt-1 text-sm text-zinc-500">Last updated: June 3, 2026</p>
+  <div class="mx-auto max-w-5xl space-y-gutter">
+    <div class="grid gap-gutter lg:grid-cols-[220px_minmax(0,1fr)]">
+      <aside class="glass-card h-fit rounded-2xl p-4">
+        <p class="text-label-md text-primary">On this page</p>
+        <nav class="mt-4 space-y-2">
+          <a
+            href="#collect"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            1. Information We Collect
+          </a>
+          <a
+            href="#use"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            2. How We Use Your Information
+          </a>
+          <a
+            href="#retention"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            3. Data Storage and Retention
+          </a>
+          <a
+            href="#third-party"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            4. Third-Party Services
+          </a>
+          <a
+            href="#storage"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            5. Cookies and Local Storage
+          </a>
+          <a
+            href="#sharing"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            6. Data Sharing
+          </a>
+          <a
+            href="#rights"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            7. Your Rights
+          </a>
+          <a
+            href="#security"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            8. Security
+          </a>
+          <a
+            href="#changes"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            9. Changes to This Policy
+          </a>
+          <a
+            href="#contact"
+            class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
+          >
+            10. Contact
+          </a>
+        </nav>
+      </aside>
 
-    <div class="mt-8 space-y-6 text-sm text-zinc-300 leading-relaxed">
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">1. Information We Collect</h2>
-        <p class="mt-2">When you authenticate via Discord, we collect the following information:</p>
-        <ul class="mt-1 list-disc list-inside space-y-1">
-          <li>Discord user ID</li>
-          <li>Discord username and global display name</li>
-          <li>Discord avatar URL</li>
-        </ul>
-        <p class="mt-2">
-          We also store content you upload (signs and folder metadata) and your folder
-          visibility preferences.
-        </p>
-      </section>
+      <div class="space-y-8">
+        <header class="space-y-3">
+          <div class="space-y-3">
+            <p class="text-text-sm text-on-surface-variant">Last updated: June 3, 2026</p>
+            <div class="space-y-2">
+              <h1 class="text-headline-xl text-on-surface">Privacy Policy</h1>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">2. How We Use Your Information</h2>
-        <p class="mt-2">Your information is used to:</p>
-        <ul class="mt-1 list-disc list-inside space-y-1">
-          <li>Authenticate you and manage your account</li>
-          <li>Display your name and avatar alongside your public folders</li>
-          <li>Provide and improve the Service</li>
-          <li>Enforce our Terms of Service</li>
-        </ul>
-      </section>
+              <p class="max-w-3xl text-body-lg text-on-surface-variant">
+                How SignVault collects, uses, stores, and protects account information and uploaded
+                content.
+              </p>
+            </div>
+          </div>
+        </header>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">3. Data Storage and Retention</h2>
-        <p class="mt-2">
-          Your data is stored securely on our servers. We retain your data for as long as your
-          account is active. If you delete your account or request deletion, your data will be
-          removed within a reasonable timeframe. Backups may retain data for up to 30 days.
-        </p>
-      </section>
+        <section id="collect" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">1. Information We Collect</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            When you authenticate via Discord, we collect the following information:
+          </p>
+          <ul class="mt-4 space-y-3">
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Discord user ID</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Discord username and global display name</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Discord avatar URL</span
+              >
+            </li>
+          </ul>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We also store content you upload (signs and folder metadata) and your folder visibility
+            preferences.
+          </p>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">4. Third-Party Services</h2>
-        <p class="mt-2">
-          We use <strong>Discord</strong> for authentication. When you log in with Discord,
-          Discord shares your basic profile information with us as described above. Discord's own
-          privacy policy applies to their handling of your data during the authentication process.
-        </p>
-      </section>
+        <section id="use" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">2. How We Use Your Information</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            Your information is used to:
+          </p>
+          <ul class="mt-4 space-y-3">
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Authenticate you and manage your account</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Display your name and avatar alongside your public folders</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Provide and improve the Service</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Enforce our Terms of Service</span
+              >
+            </li>
+          </ul>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">5. Cookies and Local Storage</h2>
-        <p class="mt-2">
-          We use <strong>localStorage</strong> to store your authentication token. We do not use
-          third-party cookies or tracking scripts. The Service does not serve advertisements.
-        </p>
-      </section>
+        <section id="retention" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">3. Data Storage and Retention</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            Your data is stored securely on our servers. We retain your data for as long as your
+            account is active. If you delete your account or request deletion, your data will be
+            removed within a reasonable timeframe. Backups may retain data for up to 30 days.
+          </p>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">6. Data Sharing</h2>
-        <p class="mt-2">
-          We do not sell, trade, or share your personal information with third parties except as
-          required by law or as necessary to provide the Service (e.g., Discord for
-          authentication).
-        </p>
-      </section>
+        <section id="third-party" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">4. Third-Party Services</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We use <strong class="text-on-surface">Discord</strong> for authentication. When you log
+            in with Discord, Discord shares your basic profile information with us as described
+            above. Discord's own privacy policy applies to their handling of your data during the
+            authentication process.
+          </p>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">7. Your Rights</h2>
-        <p class="mt-2">Depending on your jurisdiction, you may have the right to:</p>
-        <ul class="mt-1 list-disc list-inside space-y-1">
-          <li>Access the personal data we hold about you</li>
-          <li>Request deletion of your data</li>
-          <li>Correct inaccurate data</li>
-          <li>Withdraw consent for data processing</li>
-        </ul>
-        <p class="mt-2">
-          To exercise these rights, contact us through the SignVault Discord server.
-        </p>
-      </section>
+        <section id="storage" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">5. Cookies and Local Storage</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We use <strong class="text-on-surface">localStorage</strong> to store your
+            authentication token. We do not use third-party cookies or tracking scripts. The Service
+            does not serve advertisements.
+          </p>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">8. Security</h2>
-        <p class="mt-2">
-          We take reasonable measures to protect your data, including HTTPS encryption in transit
-          and secure storage practices. However, no method of transmission or storage is
-          completely secure.
-        </p>
-      </section>
+        <section id="sharing" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">6. Data Sharing</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We do not sell, trade, or share your personal information with third parties except as
+            required by law or as necessary to provide the Service (e.g., Discord for
+            authentication).
+          </p>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">9. Changes to This Policy</h2>
-        <p class="mt-2">
-          We may update this Privacy Policy from time to time. We will notify users of material
-          changes through the Service or via Discord.
-        </p>
-      </section>
+        <section id="rights" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">7. Your Rights</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            Depending on your jurisdiction, you may have the right to:
+          </p>
+          <ul class="mt-4 space-y-3">
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Access the personal data we hold about you</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Request deletion of your data</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Correct inaccurate data</span
+              >
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-2 size-2 shrink-0 rounded-full bg-primary" />
+              <span class="text-body-md leading-relaxed text-on-surface-variant"
+                >Withdraw consent for data processing</span
+              >
+            </li>
+          </ul>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            To exercise these rights, contact us through the SignVault Discord server.
+          </p>
+        </section>
 
-      <section>
-        <h2 class="text-lg font-semibold text-zinc-100">10. Contact</h2>
-        <p class="mt-2">
-          If you have questions about this Privacy Policy, please reach out through the SignVault
-          Discord server or <a href="https://github.com/Dubbie/sign-vault-frontend/issues" target="_blank" rel="noopener noreferrer" class="text-emerald-400 underline-offset-2 hover:underline">open an issue on GitHub</a>.
-        </p>
-      </section>
+        <section id="security" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">8. Security</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We take reasonable measures to protect your data, including HTTPS encryption in transit
+            and secure storage practices. However, no method of transmission or storage is
+            completely secure.
+          </p>
+        </section>
+
+        <section id="changes" class="border-b border-outline-variant/60 pb-8">
+          <h2 class="text-headline-md text-on-surface">9. Changes to This Policy</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We may update this Privacy Policy from time to time. We will notify users of material
+            changes through the Service or via Discord.
+          </p>
+        </section>
+
+        <section id="contact">
+          <h2 class="text-headline-md text-on-surface">10. Contact</h2>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            If you have questions about this Privacy Policy, please reach out through the SignVault
+            Discord server or
+            <a
+              href="https://github.com/Dubbie/sign-vault-frontend/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary underline-offset-2 hover:underline"
+            >
+              open an issue on GitHub </a
+            >.
+          </p>
+        </section>
+      </div>
     </div>
   </div>
 </template>

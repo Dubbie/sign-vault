@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 import {
   createVariant as createVariantRequest,
@@ -13,17 +13,18 @@ import type { Variant } from '@/types/folder'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiAlert from '@/components/ui/UiAlert.vue'
-import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
+import UiBreadcrumbs from '@/components/ui/UiBreadcrumbs.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
 import UploadSignsModal from '@/components/signs/UploadSignsModal.vue'
 import MoveSignsModal from '@/components/signs/MoveSignsModal.vue'
 import EditFolderModal from '@/components/folders/EditFolderModal.vue'
+import { EllipsisVertical, Link, Plus, Wrench } from '@lucide/vue'
 
 const foldersStore = useFoldersStore()
 const signsStore = useSignsStore()
@@ -35,6 +36,14 @@ const folder = computed(() => foldersStore.currentFolder)
 const variants = computed<Variant[]>(() => folder.value?.variants ?? [])
 const showVariantTabs = computed(() => variants.value.length > 1)
 const activeVariantContentKey = computed(() => activeVariant()?.id ?? 0)
+const breadcrumbs = computed(() =>
+  folder.value
+    ? [
+        { label: 'My folders', to: { name: 'folders' } },
+        { label: folder.value.name, to: { name: 'folders-show', params: { id: folder.value.id } } },
+      ]
+    : [{ label: 'My folders', to: { name: 'folders' } }],
+)
 const variantCreateActionLabel = computed(() =>
   showVariantTabs.value ? 'Add variant' : 'Make variant',
 )
@@ -95,19 +104,6 @@ async function handleVariantSelect(variant: Variant, close?: () => void) {
   close?.()
   selectedVariantId.value = variant.id
   await signsStore.fetchFolderSigns(folderId.value, variant.id)
-}
-
-async function handleVariantToggle() {
-  if (!showVariantTabs.value) {
-    selectedVariantId.value = null
-    await signsStore.fetchFolderSigns(folderId.value)
-  } else if (!selectedVariantId.value) {
-    const defaultV = variants.value.find((v) => v.is_default)
-    if (defaultV) {
-      selectedVariantId.value = defaultV.id
-      await signsStore.fetchFolderSigns(folderId.value, defaultV.id)
-    }
-  }
 }
 
 const showUploadModal = ref(false)
@@ -357,28 +353,6 @@ watch(
 
 <template>
   <div>
-    <RouterLink
-      to="/folders"
-      class="text-sm flex items-center gap-x-2 text-emerald-400 underline-offset-2 hover:text-emerald-200"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="3"
-        stroke="currentColor"
-        class="size-4"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-        />
-      </svg>
-
-      <span>Back to folders</span>
-    </RouterLink>
-
     <div v-if="foldersStore.error && !folder" class="mt-3">
       <UiErrorBanner>{{ foldersStore.error }}</UiErrorBanner>
     </div>
@@ -386,32 +360,48 @@ watch(
     <p v-if="foldersStore.isLoading && !folder" class="mt-3 text-zinc-400">Loading folder...</p>
 
     <div v-else-if="folder" class="mt-3">
-      <header class="flex flex-wrap items-start justify-between gap-4">
+      <header class="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
+          <UiBreadcrumbs :items="breadcrumbs" class="mb-4" />
+
           <div class="flex items-center gap-4">
-            <h1 class="text-[clamp(2rem,4vw,2.5rem)] leading-none text-zinc-100">
-              {{ folder.name }}
-            </h1>
-            <UiBadge class="mt-1.5" :label="visibilityLabel(folder.visibility)" />
+            <h1 class="text-headline-xl text-on-surface">{{ folder.name }}</h1>
+            <span
+              class="block rounded bg-primary/10 border border-primary/20 px-2 py-0.5 text-primary"
+            >
+              {{ visibilityLabel(folder.visibility) }}
+            </span>
           </div>
-          <p class="font-mono text-xs text-zinc-400 mt-2">{{ folder.slug }}</p>
+
+          <p class="mt-2 text-body-lg text-on-surface-variant">
+            <span class="font-mono text-sm text-on-surface">{{ folder.slug }}</span>
+            <span class="mx-2 text-outline">•</span>
+            {{ signsStore.signs.length }} loaded sign{{ signsStore.signs.length === 1 ? '' : 's' }}
+            <template v-if="variants.length">
+              <span class="mx-2 text-outline">•</span>
+              {{ variants.length }} variant{{ variants.length === 1 ? '' : 's' }}
+            </template>
+          </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <UiButton variant="secondary" type="button" @click="showEditModal = true">
-            Edit
-          </UiButton>
-
           <UiButton
             v-if="canShareFolder()"
-            variant="secondary"
+            variant="tertiary"
             type="button"
             @click="handleCopyPublicUrl"
           >
+            <Link class="size-5" />
             {{ copiedPublicUrl ? 'Copied!' : 'Copy public URL' }}
           </UiButton>
 
+          <UiButton variant="secondary" type="button" @click="showEditModal = true">
+            <Wrench class="size-5" />
+            Edit folder
+          </UiButton>
+
           <UiButton variant="primary" type="button" @click="showUploadModal = true">
+            <Plus class="size-5" />
             Upload signs
           </UiButton>
         </div>
@@ -421,8 +411,8 @@ watch(
         <template v-if="showVariantTabs">
           <div class="flex flex-wrap items-end justify-between gap-3">
             <div class="flex items-baseline gap-x-2">
-              <h2 class="text-sm font-semibold text-zinc-400">Variants</h2>
-              <p class="text-xs font-mono text-zinc-500">{{ variants.length }} total</p>
+              <h2 class="text-sm font-semibold text-on-surface">Variants</h2>
+              <p class="text-xs font-mono text-on-surface-variant">{{ variants.length }} total</p>
             </div>
 
             <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
@@ -449,18 +439,11 @@ watch(
                 <template #trigger="{ toggle }">
                   <button
                     type="button"
-                    class="inline-flex size-9 items-center justify-center rounded border border-white/10 bg-background/60 text-zinc-300 transition hover:border-white/20 hover:bg-surface hover:text-zinc-100 focus:outline-none focus:bg-surface focus:border-emerald-400"
+                    class="inline-flex size-10 items-center justify-center rounded-lg border border-white/10 bg-background/60 text-zinc-300 transition hover:border-white/20 hover:bg-surface hover:text-zinc-100 focus:outline-none focus:bg-surface focus:border-emerald-400"
                     :aria-label="`Variant actions for ${variantDisplayLabel(activeVariantRecord)}`"
                     @click="toggle"
                   >
-                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 12h.01M12 12h.01M19 12h.01"
-                      />
-                    </svg>
+                    <EllipsisVertical class="size-5" />
                   </button>
                 </template>
 
@@ -498,13 +481,13 @@ watch(
 
         <template v-else>
           <UiAlert tone="info">
-            <p class="font-medium text-zinc-100">Need some variety?</p>
-            <p class="mt-1 text-zinc-400">
+            <p class="text-headline-md text-on-surface">Need some variety?</p>
+            <p class="text-on-surface-variant">
               Variants let you keep separate sign sets inside the same folder. Create one when you
               want a different version without duplicating the folder.
             </p>
             <template #actions>
-              <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
+              <UiButton variant="link" type="button" @click="showCreateVariantInput = true">
                 Make variant
               </UiButton>
             </template>
@@ -515,7 +498,7 @@ watch(
           <UiInput
             v-model="newVariantName"
             placeholder="Variant name..."
-            class="min-w-[12rem] flex-1"
+            class="min-w-48 flex-1"
             @keyup.enter="handleCreateVariant"
             @keyup.escape="((showCreateVariantInput = false), (newVariantName = ''))"
           />
@@ -590,10 +573,10 @@ watch(
     <Transition name="toolbar">
       <div v-if="selectedSignIds.length > 0" class="fixed flex flex-col bottom-0 top-0 left-2 z-40">
         <div
-          class="bg-background/60 backdrop-blur border border-white/20 shadow-2xl p-3 rounded-md my-auto flex flex-col max-w-3xl items-center justify-between"
+          class="bg-background/60 backdrop-blur border border-outline-variant/30 shadow-2xl p-3 rounded-xl my-auto flex flex-col max-w-3xl items-center justify-between"
         >
           <p class="text-sm text-zinc-300 mb-6">
-            <span class="font-semibold text-zinc-100">{{ selectedSignIds.length }}</span>
+            <span class="font-semibold text-on-surface">{{ selectedSignIds.length }}</span>
             selected
           </p>
 
@@ -653,9 +636,9 @@ watch(
     </UiModal>
 
     <UiModal v-model="showChangeVariantModal" title="Change variant">
-      <p class="text-sm text-zinc-300 mb-4">
+      <p class="text-sm text-on-surface-variant mb-4">
         Move
-        <span class="font-semibold text-zinc-100">{{ selectedSignIds.length }}</span>
+        <span class="font-semibold text-on-surface">{{ selectedSignIds.length }}</span>
         sign{{ selectedSignIds.length === 1 ? '' : 's' }} to a different variant.
       </p>
 
@@ -666,7 +649,7 @@ watch(
           :options="changeVariantOptions"
         />
 
-        <p v-if="changeVariantOptions.length === 0" class="text-sm text-zinc-400">
+        <p v-if="changeVariantOptions.length === 0" class="text-sm text-on-surface-variant">
           No other variants available.
         </p>
       </div>
@@ -723,7 +706,7 @@ watch(
       @update:model-value="closeDeleteVariant"
     >
       <div v-if="showDeleteVariantConfirm !== null">
-        <p class="text-sm text-zinc-300">
+        <p class="text-sm text-on-surface-variant">
           Delete this variant? Signs in it will remain in the folder, but the variant itself will be
           removed.
         </p>

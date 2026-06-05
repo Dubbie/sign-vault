@@ -6,7 +6,7 @@ import logoUrl from '@/assets/logo.svg'
 import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
 import { useAuthStore } from '@/stores/auth'
-import { LogOut, Search } from '@lucide/vue'
+import { LogOut } from '@lucide/vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -86,7 +86,7 @@ async function handleLogin() {
 
         <div class="flex items-center justify-end gap-x-8">
           <div v-if="auth.user" class="flex items-center gap-3">
-            <div class="relative hidden sm:block opacity-50">
+            <!-- TODO: Add global search <div class="relative hidden sm:block opacity-50">
               <Search
                 stroke-width="3"
                 class="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
@@ -98,7 +98,7 @@ async function handleLogin() {
                 placeholder="Search folders..."
                 disabled
               />
-            </div>
+            </div> -->
 
             <UiDropdown v-model="showUserMenu" placement="bottom-end" trigger-class="inline-flex">
               <template #trigger="{ toggle }">

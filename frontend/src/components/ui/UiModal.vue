@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { X } from '@lucide/vue'
+
 defineProps<{
   modelValue: boolean
   title: string
@@ -26,7 +28,7 @@ function handleAfterLeave() {
         class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur px-4"
         @click.self="close"
       >
-        <div class="modal-box glass-card w-full max-w-lg rounded-md p-6 shadow-2xl">
+        <div class="modal-box glass-card w-full max-w-lg rounded-xl p-6 shadow-2xl">
           <div class="mb-6 flex items-center justify-between">
             <h2 class="text-headline-md">{{ title }}</h2>
             <button
@@ -34,14 +36,7 @@ function handleAfterLeave() {
               class="cursor-pointer text-on-surface-variant hover:text-primary transition-all"
               @click="close"
             >
-              <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X class="size-5" />
             </button>
           </div>
           <slot />

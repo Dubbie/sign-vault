@@ -54,7 +54,7 @@ const variantOptions = computed(() => {
   if (!props.variants) return []
   return props.variants.map((v) => ({
     value: String(v.id),
-    label: v.is_default ? `${v.name ?? 'Default'} (default)` : v.name ?? 'Unnamed',
+    label: v.is_default ? `${v.name ?? 'Default'} (default)` : (v.name ?? 'Unnamed'),
   }))
 })
 
@@ -138,7 +138,7 @@ async function handleSubmit() {
           multiple
           accept="image/png,image/jpeg,image/webp,image/avif"
           required
-          class="w-full rounded bg-surface text-sm p-2 text-zinc-100 file:mr-3 file:cursor-pointer file:rounded-sm file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs file:font-semibold file:text-background"
+          class="w-full rounded bg-surface text-sm p-2 text-on-surface file:mr-3 file:cursor-pointer file:rounded-sm file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs file:font-semibold file:text-background"
           @change="handleFileChange"
         />
       </UiFormField>
@@ -154,13 +154,16 @@ async function handleSubmit() {
         </UiFormField>
       </div>
 
-      <div v-if="selectedFiles.length" class="mt-2 text-sm text-zinc-400">
+      <div
+        v-if="selectedFiles.length"
+        class="mt-2 text-sm text-on-surface-variant max-h-60 overflow-y-auto"
+      >
         <p class="font-semibold">Selected:</p>
         <p class="ml-3">{{ selectedFiles.map((file) => file.name).join(', ') }}</p>
       </div>
 
-      <p class="mt-1 text-xs text-zinc-400">PNG, JPEG, WebP, or AVIF</p>
-      <p class="mt-1 text-xs text-zinc-400">Up to {{ maxFiles }} files per upload.</p>
+      <p class="mt-1 text-xs text-on-surface-variant">PNG, JPEG, WebP, or AVIF</p>
+      <p class="mt-1 text-xs text-on-surface-variant">Up to {{ maxFiles }} files per upload.</p>
 
       <div class="mt-6 flex flex-wrap gap-3">
         <UiButton variant="primary" type="submit" :disabled="!canSubmit">

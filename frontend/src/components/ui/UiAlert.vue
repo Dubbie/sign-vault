@@ -26,13 +26,13 @@ const toneClasses = computed(() => {
 const iconClasses = computed(() => {
   switch (props.tone) {
     case 'success':
-      return 'text-emerald-400'
+      return 'text-primary'
     case 'warning':
       return 'text-amber-300'
     case 'danger':
-      return 'text-red-400'
+      return 'text-error'
     default:
-      return 'text-zinc-400'
+      return 'text-primary'
   }
 })
 
@@ -53,22 +53,25 @@ const iconStrokeWidth = computed(() => (props.tone === 'warning' || props.tone =
 </script>
 
 <template>
-  <div class="rounded-lg border px-4 py-3" :class="toneClasses">
-    <div class="flex items-center gap-3">
-      <svg
-        class="mt-0.5 size-5 shrink-0 self-start"
-        :class="iconClasses"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          :stroke-width="iconStrokeWidth"
-          :d="iconPath"
-        />
-      </svg>
+  <div class="glass-card rounded-lg p-6 relative overflow-hidden group" :class="toneClasses">
+    <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 transition-opacity pointer-events-none group-hover:opacity-100"></div>
+    <div class="flex flex-col md:flex-row items-center gap-6">
+      <div class="size-12 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant/30">
+        <svg
+          class="size-6"
+          :class="iconClasses"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            :stroke-width="iconStrokeWidth"
+            :d="iconPath"
+          />
+        </svg>
+      </div>
       <div class="min-w-0 flex-1 text-sm leading-6">
         <slot />
       </div>

@@ -141,20 +141,20 @@ onUnmounted(() => {
     <div class="grid gap-3 sign-grid">
       <div v-for="col in columns" :key="col.label" class="flex flex-col gap-3">
         <div
-          class="text-center text-lg font-semibold"
+          class="text-center text-lg font-semibold group"
           :class="selectable ? 'cursor-pointer select-none' : ''"
           @click="selectable && toggleColumn(col.signs)"
         >
           <div class="flex items-center justify-center gap-4">
-            <div class="h-px w-full bg-outline-variant/20"></div>
+            <div v-if="!selectable" class="h-px w-full bg-outline-variant/20"></div>
 
             <div
               v-if="selectable"
-              class="-ml-8 flex size-5 items-center justify-center rounded border-2 transition"
+              class="-ml-8 flex size-5 shrink-0 items-center justify-center rounded ring-1 border-0 transition-all"
               :class="
                 allSelectedInCol(col.signs)
-                  ? 'border-emerald-400 bg-emerald-400'
-                  : 'border-white/50'
+                  ? 'ring-primary bg-primary'
+                  : 'bg-surface-container-low ring-outline-variant group-hover:ring-primary group-hover:bg-surface-container-high'
               "
             >
               <svg
@@ -169,7 +169,8 @@ onUnmounted(() => {
               </svg>
             </div>
             <p class="text-on-surface-variant">{{ col.label }}</p>
-            <div class="h-px w-full bg-outline-variant/20"></div>
+
+            <div v-if="!selectable" class="h-px w-full bg-outline-variant/20"></div>
           </div>
         </div>
 
@@ -199,11 +200,11 @@ onUnmounted(() => {
 
           <div
             v-if="selectable"
-            class="absolute top-2 left-2 z-10 flex size-6 items-center justify-center rounded border-2 transition"
+            class="absolute top-2 left-2 z-10 flex size-5 items-center justify-center rounded border-0 ring transition-all"
             :class="
               isSelected(sign.id)
-                ? 'border-emerald-400 bg-emerald-400'
-                : 'border-white/70 bg-background/30 group-hover:border-white'
+                ? 'ring-primary bg-primary'
+                : 'ring-outline-variant bg-surface-container-low group-hover:bg-surface-container-high group-hover:ring-primary'
             "
           >
             <svg

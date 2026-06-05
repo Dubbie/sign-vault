@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 
 withDefaults(
   defineProps<{
-    variant?: 'primary' | 'secondary' | 'tertiary' | 'danger'
+    variant?: 'primary' | 'secondary' | 'tertiary' | 'danger' | 'link'
     size?: 'sm' | 'md' | 'lg'
     disabled?: boolean
     type?: 'button' | 'submit'
@@ -37,6 +37,7 @@ const variantClasses = {
   primary: 'bg-primary text-on-primary emerald-glow hover:bg-primary/90',
   secondary: 'glass-card text-on-surface hover:bg-surface-variant/50',
   tertiary: 'bg-outline-variant/20 text-on-surface hover:bg-outline-variant/40',
+  link: 'text-primary hover:underline',
   danger: 'bg-error/20 text-error hover:bg-error/30',
 } as const
 

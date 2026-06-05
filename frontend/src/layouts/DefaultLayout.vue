@@ -12,6 +12,7 @@ const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const showUserMenu = ref(false)
+const exploreRouteNames = new Set(['explore', 'public-folder'])
 
 function navClass(active: boolean) {
   return [
@@ -29,6 +30,10 @@ async function handleLogout() {
 
 async function handleLogin() {
   await auth.loginWithDiscord()
+}
+
+function isExploreActive() {
+  return exploreRouteNames.has(String(route.name ?? ''))
 }
 </script>
 
@@ -54,7 +59,7 @@ async function handleLogin() {
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/" :class="navClass(route.path === '/')"> Explore </RouterLink>
+            <RouterLink to="/" :class="navClass(isExploreActive())"> Explore </RouterLink>
           </li>
           <li v-if="auth.user">
             <RouterLink to="/folders" :class="navClass(route.path.startsWith('/folders'))">

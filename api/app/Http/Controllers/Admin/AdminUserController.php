@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\BanUserAction;
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class AdminUserController extends Controller
 {
-    public function __construct(private BanUserAction $banUser) {}
+    public function __construct(
+        private BanUserAction $banUser,
+        private ActivityLogService $activityLog,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -62,12 +67,20 @@ class AdminUserController extends Controller
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
+        $targetName = $user->display_name;
+
         $this->banUser->handle($user, $validated['reason']);
+
+        $this->activityLog->log(ActivityLog::ADMIN_USER_BANNED, $request->user()->id, [
+            'subject_user_id' => $user->id,
+            'metadata'        => ['reason' => $validated['reason'], 'target_name' => $targetName],
+            'ip'              => $request->ip(),
+        ]);
 
         return response()->json(['message' => 'User has been banned and their content removed.']);
     }
 
-    public function unban(User $user): JsonResponse
+    public function unban(Request $request, User $user): JsonResponse
     {
         if (! $user->isBanned()) {
             throw ValidationException::withMessages([
@@ -78,6 +91,12 @@ class AdminUserController extends Controller
         $user->banned_at  = null;
         $user->ban_reason = null;
         $user->save();
+
+        $this->activityLog->log(ActivityLog::ADMIN_USER_UNBANNED, $request->user()->id, [
+            'subject_user_id' => $user->id,
+            'metadata'        => ['target_name' => $user->display_name],
+            'ip'              => $request->ip(),
+        ]);
 
         return response()->json(['message' => 'User has been unbanned.']);
     }

@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Folder\StoreFolderRequest;
 use App\Http\Requests\Folder\UpdateFolderRequest;
 use App\Http\Resources\FolderResource;
+use App\Models\ActivityLog;
 use App\Models\Folder;
+use App\Services\ActivityLogService;
 use App\Services\FolderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FolderController extends Controller
 {
-    public function __construct(private FolderService $folderService) {}
+    public function __construct(
+        private FolderService $folderService,
+        private ActivityLogService $activityLog,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -41,6 +46,12 @@ class FolderController extends Controller
             'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
+        $this->activityLog->log(ActivityLog::FOLDER_CREATED, $request->user()->id, [
+            'subject_folder_id' => $folder->id,
+            'metadata'          => ['folder_name' => $folder->name, 'visibility' => $folder->visibility],
+            'ip'                => $request->ip(),
+        ]);
+
         return (new FolderResource($folder->refresh()))->response()->setStatusCode(201);
     }
 
@@ -58,6 +69,8 @@ class FolderController extends Controller
         $this->authorize('update', $folder);
 
         $validated = $request->validated();
+
+        $oldVisibility = $folder->visibility;
 
         // Resolve public slug BEFORE fill() changes the current visibility on the model.
         $publicSlug = $this->folderService->resolvePublicSlug($folder, $validated);
@@ -77,10 +90,18 @@ class FolderController extends Controller
         $folder->password_hash = $this->folderService->hashPassword($validated);
         $folder->save();
 
+        if ($oldVisibility !== $folder->visibility) {
+            $this->activityLog->log(ActivityLog::FOLDER_VISIBILITY, $request->user()->id, [
+                'subject_folder_id' => $folder->id,
+                'metadata'          => ['folder_name' => $folder->name, 'from' => $oldVisibility, 'to' => $folder->visibility],
+                'ip'                => $request->ip(),
+            ]);
+        }
+
         return (new FolderResource($folder->refresh()))->response();
     }
 
-    public function destroy(Folder $folder): JsonResponse
+    public function destroy(Request $request, Folder $folder): JsonResponse
     {
         $this->authorize('delete', $folder);
 
@@ -90,7 +111,15 @@ class FolderController extends Controller
             ], 409);
         }
 
+        $folderName = $folder->name;
+        $folderId   = $folder->id;
         $folder->delete();
+
+        $this->activityLog->log(ActivityLog::FOLDER_DELETED, $request->user()->id, [
+            'subject_folder_id' => $folderId,
+            'metadata'          => ['folder_name' => $folderName],
+            'ip'                => $request->ip(),
+        ]);
 
         return response()->json(['message' => 'Folder deleted.']);
     }

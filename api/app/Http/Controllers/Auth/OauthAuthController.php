@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\OauthCallbackRequest;
+use App\Models\ActivityLog;
 use App\Models\OauthProvider;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use App\Services\OauthIdentityService;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\JsonResponse;
@@ -22,7 +24,10 @@ class OauthAuthController extends Controller
 
     private const VALID_PROVIDERS = [OauthProvider::DISCORD, OauthProvider::TRACKMANIA];
 
-    public function __construct(private OauthIdentityService $oauthIdentity) {}
+    public function __construct(
+        private OauthIdentityService $oauthIdentity,
+        private ActivityLogService $activityLog,
+    ) {}
 
     public function redirect(string $provider, SocialiteFactory $socialite, CacheRepository $cache): JsonResponse
     {
@@ -54,6 +59,11 @@ class OauthAuthController extends Controller
             $currentUser = User::findOrFail($cached['link_user_id']);
             $user        = $this->oauthIdentity->link($currentUser, $provider, $externalUser);
 
+            $this->activityLog->log(ActivityLog::PROVIDER_LINKED, $currentUser->id, [
+                'metadata' => ['provider' => $provider],
+                'ip'       => $request->ip(),
+            ]);
+
             return response()->json([
                 'message' => ucfirst($provider).' account linked successfully.',
                 'user'    => $this->userResponse($user->loadCount(['folders', 'signs'])),
@@ -68,6 +78,12 @@ class OauthAuthController extends Controller
                 'ban_reason' => $user->ban_reason,
             ], Response::HTTP_FORBIDDEN);
         }
+
+        $event = $user->wasRecentlyCreated ? ActivityLog::REGISTERED : ActivityLog::LOGIN;
+        $this->activityLog->log($event, $user->id, [
+            'metadata' => ['provider' => $provider],
+            'ip'       => $request->ip(),
+        ]);
 
         $token = $user->createToken($provider);
 
@@ -114,6 +130,11 @@ class OauthAuthController extends Controller
             ]);
         }
 
+        $this->activityLog->log(ActivityLog::PROVIDER_UNLINKED, $user->id, [
+            'metadata' => ['provider' => $provider],
+            'ip'       => $request->ip(),
+        ]);
+
         return response()->json(['message' => ucfirst($provider).' has been unlinked.']);
     }
 
@@ -138,7 +159,12 @@ class OauthAuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
+        $actorId = $request->user()?->id;
         $request->user()?->currentAccessToken()?->delete();
+
+        if ($actorId !== null) {
+            $this->activityLog->log(ActivityLog::LOGOUT, $actorId, ['ip' => $request->ip()]);
+        }
 
         return response()->json(['message' => 'Logged out.']);
     }

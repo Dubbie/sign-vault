@@ -8,9 +8,11 @@ use App\Http\Requests\Sign\MoveSignsRequest;
 use App\Http\Requests\Sign\StoreSignRequest;
 use App\Http\Requests\Variant\ChangeSignVariantRequest;
 use App\Http\Resources\SignResource;
+use App\Models\ActivityLog;
 use App\Models\Folder;
 use App\Models\Sign;
 use App\Models\Variant;
+use App\Services\ActivityLogService;
 use App\Services\SignDeletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,7 @@ class SignController extends Controller
     public function __construct(
         private UploadSignsAction $uploadSigns,
         private SignDeletionService $signDeletion,
+        private ActivityLogService $activityLog,
     ) {}
 
     public function index(Request $request, Folder $folder): JsonResponse
@@ -59,6 +62,12 @@ class SignController extends Controller
             $variantId,
         );
 
+        $this->activityLog->log(ActivityLog::SIGNS_UPLOADED, $request->user()->id, [
+            'subject_folder_id' => $folder->id,
+            'metadata'          => ['folder_id' => $folder->id, 'folder_name' => $folder->name, 'count' => count($signs)],
+            'ip'                => $request->ip(),
+        ]);
+
         return response()->json([
             'signs' => SignResource::collection(collect($signs)),
         ], 201);
@@ -74,15 +83,24 @@ class SignController extends Controller
     public function destroy(DeleteSignsRequest $request): JsonResponse|Response
     {
         $ids   = $request->validated('ids');
-        $signs = Sign::whereIn('id', $ids)->where('user_id', $request->user()->id)->get();
+        $signs = Sign::whereIn('id', $ids)->where('user_id', $request->user()->id)->with('folder:id,name')->get();
 
         if ($signs->isEmpty()) {
             return response()->json(['message' => 'No signs found.'], 404);
         }
 
+        $folderId   = $signs->first()->folder_id;
+        $folderName = $signs->first()->folder?->name;
+
         foreach ($signs as $sign) {
             $this->signDeletion->deleteSign($sign);
         }
+
+        $this->activityLog->log(ActivityLog::SIGNS_DELETED, $request->user()->id, [
+            'subject_folder_id' => $folderId,
+            'metadata'          => ['folder_id' => $folderId, 'folder_name' => $folderName, 'count' => $signs->count()],
+            'ip'                => $request->ip(),
+        ]);
 
         return response()->noContent();
     }

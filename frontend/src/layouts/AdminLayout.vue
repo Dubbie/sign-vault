@@ -16,6 +16,7 @@ import AdminNavLink from '@/components/admin/AdminNavLink.vue'
       <nav class="mt-5 flex flex-col gap-1">
         <AdminNavLink to="/admin/users">Users</AdminNavLink>
         <AdminNavLink to="/admin/folders">All Folders</AdminNavLink>
+        <AdminNavLink to="/admin/logs">Activity Log</AdminNavLink>
       </nav>
     </aside>
 

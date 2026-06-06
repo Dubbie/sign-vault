@@ -14,6 +14,7 @@ import PublicFolderView from '../views/PublicFolderView.vue'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminExploreView from '../views/AdminExploreView.vue'
+import AdminLogsView from '../views/AdminLogsView.vue'
 import LegalTermsView from '../views/LegalTermsView.vue'
 import LegalPrivacyView from '../views/LegalPrivacyView.vue'
 import UtilitiesView from '../views/utilities/UtilitiesView.vue'
@@ -146,6 +147,12 @@ const router = createRouter({
           name: 'admin-folders',
           component: AdminExploreView,
           meta: { title: 'All Folders — SignVault Admin' },
+        },
+        {
+          path: 'logs',
+          name: 'admin-logs',
+          component: AdminLogsView,
+          meta: { title: 'Activity Log — SignVault Admin' },
         },
       ],
     },

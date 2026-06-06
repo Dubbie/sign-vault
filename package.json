@@ -2,6 +2,27 @@
   "name": "sign-vault",
   "private": true,
   "version": "1.0.0",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "3.8.3"
+  },
+  "lint-staged": {
+    "*.{md,json,yml,yaml,webmanifest}": [
+      "prettier --write --ignore-unknown"
+    ],
+    "frontend/**/*.{js,ts,vue,css}": [
+      "prettier --write --ignore-unknown",
+      "eslint --fix --cache --no-warn-ignored",
+      "oxlint --fix"
+    ],
+    "landing/**/*.{js,ts,vue,css}": [
+      "prettier --write --ignore-unknown"
+    ]
+  },
   "workspaces": [
     "frontend",
     "landing"

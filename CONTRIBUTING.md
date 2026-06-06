@@ -87,15 +87,19 @@ npm run format      # Prettier
 
 ---
 
-## Discord OAuth in development
+## OAuth in development
 
-You'll need a Discord application with a redirect URI pointing at your local API callback. Create one at [discord.com/developers/applications](https://discord.com/developers/applications) and add the credentials to `api/.env`:
+SignVault supports Discord and Trackmania / Ubisoft sign-in. For local development, the minimum setup is a Discord application with a redirect URI pointing at your local API callback.
+
+Create one at [discord.com/developers/applications](https://discord.com/developers/applications) and add the credentials to `api/.env`:
 
 ```env
 DISCORD_CLIENT_ID=your_client_id
 DISCORD_CLIENT_SECRET=your_client_secret
 DISCORD_REDIRECT_URI=https://api.sign-vault.ddev.site/api/auth/discord/callback
 ```
+
+Trackmania / Ubisoft support uses the provider-specific credentials configured in the API environment as well. Match those values to the current `api/.env.example` or deployment secrets you are using.
 
 ---
 
@@ -105,6 +109,7 @@ DISCORD_REDIRECT_URI=https://api.sign-vault.ddev.site/api/auth/discord/callback
 2. Make your changes. Add or update tests where relevant.
 3. Run the test and lint commands above and make sure everything passes.
 4. Open a pull request against `main` with a clear description of what changed and why.
+5. Review the preview deployments for frontend and landing when the PR changes user-facing behavior.
 
 For larger changes, open an issue first so we can discuss the approach before you invest the time.
 
@@ -112,5 +117,7 @@ For larger changes, open an issue first so we can discuss the approach before yo
 
 - `main` is the only long-lived integration branch and all deployables auto-deploy from it.
 - Do not push directly to `main`; use pull requests and branch protection.
+- Frontend and landing PRs receive preview deployments through Cloudflare Pages before merge.
 - Use conventional commit-style PR titles or squash commit messages so `release-please` can infer the next version correctly.
+- Prefer squash merge so `main` stays linear and commit titles remain release-friendly.
 - `release-please` opens a separate Release PR for root version and changelog updates. Merging that PR creates the next tagged release.

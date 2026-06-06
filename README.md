@@ -8,153 +8,150 @@
 [![Last commit](https://img.shields.io/github/last-commit/Dubbie/sign-vault)](https://github.com/Dubbie/sign-vault/commits/main)
 [![Issues](https://img.shields.io/github/issues/Dubbie/sign-vault)](https://github.com/Dubbie/sign-vault/issues)
 
-SignVault is a community platform for the Trackmania game where players can host, organize, and share custom in-game sign images. Users authenticate with Discord, upload signs into folders, and get stable CDN-backed URLs they can paste directly into Trackmania. Folders can be kept private, shared publicly, or protected with a password.
+SignVault is a Trackmania sign hosting and sharing platform. It lets players upload sign assets, organize them into folders, share public collections, browse community folders with previews, and manage stable URLs for in-game use.
 
----
+The project is a monorepo with a Laravel API, a Vue application for the main product, and a Vue landing page. All three deploy independently but share the same domain model and release version.
+
+## Highlights
+
+- Multi-provider OAuth login with Discord and Trackmania / Ubisoft
+- Personal folders with `private`, `public`, and password-protected visibility
+- Public explore flow with preview grids, attribution, sorting, and folder voting
+- Folder variants for alternate sign sets without duplicating the folder
+- Admin moderation tools for users, folders, signs, and activity logs
+- Utility pages for sign sizing and Trackmania name tag formatting
+- Repo-wide changelog and release tags managed through `release-please`
 
 ## Monorepo Structure
 
-```
+```text
 sign-vault/
-├── api/         # Laravel 13 REST API — authentication, storage, business logic
-├── frontend/    # Vue 3 app — the main authenticated user-facing application
-└── landing/     # Vue 3 app — public marketing and live stats page
+├── api/         # Laravel 13 REST API
+├── frontend/    # Vue 3 authenticated app
+└── landing/     # Vue 3 marketing and live stats site
 ```
-
-All three packages are independently deployable but share the same domain model and communicate over HTTP.
-
----
 
 ## Packages
 
-### `api` — Laravel REST API
+### `api`
 
-The backend for the entire platform. Handles Discord OAuth2, file uploads to object storage, folder and sign management, and admin moderation tooling.
+The backend owns authentication, folder/sign/variant management, public browsing, moderation, and release-adjacent metadata like live platform stats.
 
-**Key responsibilities:**
-- Discord OAuth2 login via Laravel Socialite — no email/password accounts
-- Token-based session management via Laravel Sanctum
-- Folder management with three visibility tiers: `private`, `public`, and `password`
-- Sign uploads (PNG, JPEG, WebP) stored on Cloudflare R2 in production and MinIO locally
-- Public sign browsing and password-protected folder unlocking
-- Admin endpoints for user banning and content moderation
-- Public stats endpoint (users, signs, uptime, CDN latency) consumed by the landing page
+Current responsibilities include:
 
-**Tech stack:**
+- OAuth redirect/callback flows for `discord` and `trackmania`
+- Linked-provider account management
+- Sign uploads to S3-compatible object storage
+- Public folder browsing, password unlock flow, and voting
+- Variant management for folder-specific sign sets
+- Admin browse/moderation endpoints and activity log retrieval
 
-| | |
-|---|---|
-| Framework | Laravel 13 |
-| Language | PHP 8.4 |
-| Authentication | Discord OAuth2 + Laravel Sanctum tokens |
-| Object storage | Cloudflare R2 (prod) · MinIO (dev) |
-| Local dev environment | DDEV |
+See [`api/README.md`](api/README.md) for API setup details.
 
-→ See [`api/README.md`](api/README.md) for setup instructions.
+### `frontend`
 
----
+The main Vue app handles the full authenticated product experience plus the public explore flow.
 
-### `frontend` — Vue 3 Application
+Current product areas include:
 
-The main application, accessible to authenticated users. Provides the full sign management experience: uploading, organizing, previewing, and sharing collections.
+- Login and OAuth callback handling for both providers
+- Public explore and public folder views
+- Personal folder creation, editing, and sharing
+- Upload, move, delete, and variant assignment flows for signs
+- Settings, linked-provider management, and avatar/profile editing
+- Admin dashboards for users, content moderation, and activity logs
+- Utility tools for sign sizing and name tag formatting
+- Footer version badge with modal release notes sourced from `CHANGELOG.md`
 
-**Key features:**
-- Browse public sign folder collections with image grid previews
-- Create and manage personal folders with configurable visibility
-- Upload signs via drag-and-drop or file picker
-- Move signs between folders in bulk
-- Copy stable CDN URLs for direct use in Trackmania
-- View and unlock password-protected public folders
-- Admin dashboard for user management (ban/unban) and content moderation
-- Route guards enforce authentication; Discord OAuth callback is handled in-app
+See [`frontend/README.md`](frontend/README.md) for frontend setup details.
 
-**Tech stack:**
+### `landing`
 
-| | |
-|---|---|
-| Framework | Vue 3 (Composition API) |
-| Language | TypeScript |
-| State management | Pinia |
-| Routing | Vue Router |
-| Styling | Tailwind CSS 4 |
-| Build tool | Vite |
-| Testing | Vitest |
+The landing app is the public-facing marketing site. It introduces the product, surfaces live stats from the API, and funnels users into login or browsing.
 
-→ See [`frontend/README.md`](frontend/README.md) for setup instructions.
+Current landing content includes:
 
----
+- Hero and product overview
+- Live stats for users, signs, uptime, and latency
+- Feature callouts for browsing, sharing, and authentication
+- Links to the main app, source code, Discord, and legal pages
 
-### `landing` — Marketing & Stats Page
+See [`landing/README.md`](landing/README.md) for landing setup details.
 
-A lightweight public-facing site that introduces SignVault to new visitors, shows live platform statistics pulled from the API, and directs users to log in or browse signs.
+## Authentication
 
-**Key sections:**
-- Hero with headline and call-to-action buttons (login / browse)
-- Live animated stats: total users, total signs, uptime, CDN latency
-- Feature highlights: sign previews, visibility controls, Discord login
-- Links to the app, Discord community, and legal pages
+SignVault does not use local email/password accounts. Authentication is handled through external OAuth providers.
 
-**Tech stack:**
+Supported providers today:
 
-| | |
-|---|---|
-| Framework | Vue 3 |
-| Styling | Tailwind CSS 4 |
-| Build tool | Vite |
+- Discord
+- Trackmania / Ubisoft
 
-→ See [`landing/README.md`](landing/README.md) for setup instructions.
+High-level flow:
 
----
+1. The frontend requests `GET /api/auth/{provider}/redirect`
+2. The API returns a provider authorization URL and state token
+3. The user authenticates with the selected provider
+4. The frontend posts the callback `code` and `state` to `POST /api/auth/{provider}/callback`
+5. The API issues a Sanctum bearer token for subsequent authenticated requests
 
-## Authentication Flow
-
-SignVault uses Discord OAuth2 exclusively — there is no email/password registration.
-
-1. The frontend calls `GET /api/auth/discord/redirect` → receives a Discord authorization URL and a `state` value
-2. The user is redirected to Discord and authorizes the application
-3. Discord redirects back to the frontend callback route with a `code` and `state`
-4. The frontend POSTs both to `POST /api/auth/discord/callback` → receives a bearer token
-5. The token is stored client-side and sent as `Authorization: Bearer {token}` on all subsequent API requests
-
----
+Linked providers can also be added or removed from the authenticated settings flow, with guardrails to prevent removing the last login method.
 
 ## Local Development
 
-Each package has its own setup guide. The recommended order is:
+Recommended startup order:
 
-1. **API** — start DDEV, run migrations, configure MinIO for local object storage
-2. **Frontend** — configure `VITE_API_URL` to point at the local API, run `npm run dev`
-3. **Landing** — configure `VITE_API_URL` and `VITE_APP_URL`, run `npm run dev`
+1. Start the API with DDEV
+2. Start the frontend on `https://localhost:5173`
+3. Start the landing page on `https://localhost:5174`
 
-Both Vue apps use an HTTPS dev server; see the respective READMEs for certificate setup.
+Each package has its own setup guide:
 
----
+- [`api/README.md`](api/README.md)
+- [`frontend/README.md`](frontend/README.md)
+- [`landing/README.md`](landing/README.md)
+
+Both Vue apps use HTTPS locally so they can talk to the API cleanly during development.
 
 ## Deployment
 
+Production deployments are driven from `main`.
+
 | Package | Platform | Notes |
 |---|---|---|
-| `api` | Any PHP 8.4 host | Requires a MySQL/PostgreSQL database and an S3-compatible object store |
-| `frontend` | Cloudflare Pages | Root directory: `frontend`, build command: `npm run build`, output: `dist` |
-| `landing` | Cloudflare Pages | Root directory: `landing`, build command: `npm run build`, output: `dist` |
+| `api` | PHP host / container platform | Requires database + S3-compatible object storage |
+| `frontend` | Cloudflare Pages | Auto-deploys on merges to `main`; PR branches get preview deployments |
+| `landing` | Cloudflare Pages | Auto-deploys on merges to `main`; PR branches get preview deployments |
 
-When deploying from this monorepo on Cloudflare Pages, configure **include paths** per project (`frontend/**` and `landing/**` respectively) so that changes to unrelated packages do not trigger unnecessary builds.
+For Cloudflare Pages projects in this monorepo:
+
+- `frontend` root directory: `frontend`
+- `landing` root directory: `landing`
+- build command: `npm run build`
+- output directory: `dist`
+
+Configure include paths per Pages project so unrelated monorepo changes do not trigger unnecessary builds.
 
 ## Releases
 
 SignVault uses a single repo-wide version across `api`, `frontend`, and `landing`.
 
-- All product changes land on `main` through pull requests and deploy continuously from `main`.
-- `release-please` watches `main` and maintains a dedicated Release PR that bumps the root version and updates [`CHANGELOG.md`](CHANGELOG.md).
-- Merging the Release PR creates the next tagged release and updates the frontend version badge + release notes modal automatically.
+- Product code ships continuously from pull requests merged into `main`
+- `release-please` watches `main` and opens a dedicated Release PR when releasable commits accumulate
+- Merging the Release PR updates the root version, `CHANGELOG.md`, and GitHub release tag
+- The frontend version badge and release notes modal are driven from the latest generated changelog entry
 
----
+Release hygiene:
+
+- Use pull requests for all changes to `main`
+- Prefer squash merge
+- Keep squash commit titles in conventional-commit format such as `feat(...)`, `fix(...)`, or `chore(...)`
 
 ## Contributing
 
-Pull requests are welcome. Because all three packages live in this repository, a single PR can cover a full feature end-to-end — from API route to frontend UI. Please open an issue first for larger changes so the approach can be discussed before implementation.
+Pull requests are welcome. Because this is a monorepo, a single change can span API, frontend, and landing in one branch.
 
----
+For larger product or architecture changes, open an issue first so the direction can be discussed before implementation.
 
 ## License
 

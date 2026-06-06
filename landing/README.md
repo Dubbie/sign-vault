@@ -13,12 +13,12 @@ SignVault is a platform for Trackmania players to upload, organise, and share in
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
+| Layer     | Technology                                       |
+| --------- | ------------------------------------------------ |
 | Framework | [Vue 3](https://vuejs.org/) with Composition API |
-| Language | [TypeScript](https://www.typescriptlang.org/) |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com/) |
-| Build | [Vite](https://vitejs.dev/) |
+| Language  | [TypeScript](https://www.typescriptlang.org/)    |
+| Styling   | [Tailwind CSS 4](https://tailwindcss.com/)       |
+| Build     | [Vite](https://vitejs.dev/)                      |
 
 ## Requirements
 
@@ -59,8 +59,8 @@ Open [https://localhost:5174](https://localhost:5174). If your browser warns abo
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the HTTPS Vite dev server |
-| `npm run build` | Type-check and build for production |
+| Command           | Description                          |
+| ----------------- | ------------------------------------ |
+| `npm run dev`     | Start the HTTPS Vite dev server      |
+| `npm run build`   | Type-check and build for production  |
 | `npm run preview` | Preview the production build locally |

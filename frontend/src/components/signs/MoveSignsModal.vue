@@ -35,9 +35,7 @@ const availableFolders = computed(() =>
     })),
 )
 
-const canSubmit = computed(
-  () => selectedFolderId.value !== '' && !signsStore.isMoving,
-)
+const canSubmit = computed(() => selectedFolderId.value !== '' && !signsStore.isMoving)
 
 function close() {
   emit('update:modelValue', false)
@@ -80,14 +78,13 @@ watch(
 
     <form @submit.prevent="handleSubmit">
       <UiFormField label="Target folder" name="target_folder">
-        <UiSelect
-          v-model="selectedFolderId"
-          name="target_folder"
-          :options="availableFolders"
-        />
+        <UiSelect v-model="selectedFolderId" name="target_folder" :options="availableFolders" />
       </UiFormField>
 
-      <p v-if="availableFolders.length === 0 && !foldersStore.isLoading" class="mt-2 text-xs text-zinc-400">
+      <p
+        v-if="availableFolders.length === 0 && !foldersStore.isLoading"
+        class="mt-2 text-xs text-zinc-400"
+      >
         No other folders available.
       </p>
 
@@ -95,9 +92,7 @@ watch(
         <UiButton variant="primary" type="submit" :disabled="!canSubmit">
           {{ signsStore.isMoving ? 'Moving...' : 'Move' }}
         </UiButton>
-        <UiButton variant="secondary" type="button" @click="close">
-          Cancel
-        </UiButton>
+        <UiButton variant="secondary" type="button" @click="close"> Cancel </UiButton>
       </div>
     </form>
   </UiModal>

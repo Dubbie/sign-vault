@@ -10,10 +10,16 @@
     "test:unit": "vitest",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "lint": "run-s lint:*",
-    "lint:oxlint": "oxlint . --fix",
-    "lint:eslint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "check": "run-p type-check lint format:check",
+    "fix": "run-s lint:fix format",
+    "lint": "run-p lint:oxlint lint:eslint",
+    "lint:oxlint": "oxlint .",
+    "lint:eslint": "eslint . --cache",
+    "lint:fix": "run-s lint:fix:oxlint lint:fix:eslint",
+    "lint:fix:oxlint": "oxlint . --fix",
+    "lint:fix:eslint": "eslint . --fix --cache",
+    "format": "prettier --write --experimental-cli .",
+    "format:check": "prettier --check --experimental-cli ."
   },
   "dependencies": {
     "@lucide/vue": "^1.17.0",

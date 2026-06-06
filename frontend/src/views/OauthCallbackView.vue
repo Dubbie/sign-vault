@@ -15,9 +15,7 @@ const route = useRoute()
 const router = useRouter()
 const errorMessage = ref('')
 
-const providerLabel = computed(() =>
-  props.provider === 'discord' ? 'Discord' : 'Trackmania',
-)
+const providerLabel = computed(() => (props.provider === 'discord' ? 'Discord' : 'Trackmania'))
 
 const statusMessage = computed(() => {
   if (errorMessage.value) return errorMessage.value

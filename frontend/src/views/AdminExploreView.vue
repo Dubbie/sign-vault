@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getAllFolders, getAdminFolderSigns, banUser, deleteAdminFolder, deleteAdminSign } from '@/lib/admin'
+import {
+  getAllFolders,
+  getAdminFolderSigns,
+  banUser,
+  deleteAdminFolder,
+  deleteAdminSign,
+} from '@/lib/admin'
 import type { PaginationMeta, PublicFolderListing } from '@/types/public-folder'
 import { useAuthStore } from '@/stores/auth'
 
@@ -275,7 +281,9 @@ onMounted(() => {
           <div v-else>
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
-                <h2 class="text-lg font-semibold text-zinc-100">{{ selectedFolderName || selectedFolder.name }}</h2>
+                <h2 class="text-lg font-semibold text-zinc-100">
+                  {{ selectedFolderName || selectedFolder.name }}
+                </h2>
                 <div v-if="selectedFolder.owner" class="mt-1 flex items-center gap-2">
                   <img
                     v-if="selectedFolder.owner.avatar_url"
@@ -297,17 +305,19 @@ onMounted(() => {
                 <UiButton variant="danger" type="button" @click="showDeleteFolderModal = true">
                   Delete Folder
                 </UiButton>
-                <UiButton v-if="canBan()" variant="danger" type="button" @click="showBanModal = true">
+                <UiButton
+                  v-if="canBan()"
+                  variant="danger"
+                  type="button"
+                  @click="showBanModal = true"
+                >
                   Ban User
                 </UiButton>
               </div>
             </div>
 
             <div v-if="selectedFolderSigns.length > 0" class="mt-4">
-              <AdminSignGrid
-                v-model="selectedSignIds"
-                :signs="selectedFolderSigns"
-              />
+              <AdminSignGrid v-model="selectedSignIds" :signs="selectedFolderSigns" />
             </div>
             <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>
           </div>
@@ -380,7 +390,10 @@ onMounted(() => {
 
     <!-- Selection toolbar -->
     <Transition name="toolbar">
-      <div v-if="selectedSignIds.length > 0" class="fixed flex flex-col bottom-0 top-0 right-2 z-40">
+      <div
+        v-if="selectedSignIds.length > 0"
+        class="fixed flex flex-col bottom-0 top-0 right-2 z-40"
+      >
         <div
           class="bg-background/60 backdrop-blur border border-outline-variant/30 shadow-2xl p-3 rounded-xl my-auto flex flex-col items-center"
         >
@@ -390,10 +403,20 @@ onMounted(() => {
           </p>
 
           <div class="flex flex-col items-center gap-3">
-            <UiButton class="w-full" variant="secondary" type="button" @click="selectedSignIds = []">
+            <UiButton
+              class="w-full"
+              variant="secondary"
+              type="button"
+              @click="selectedSignIds = []"
+            >
               Clear
             </UiButton>
-            <UiButton class="w-full" variant="danger" type="button" @click="showDeleteSignsConfirm = true">
+            <UiButton
+              class="w-full"
+              variant="danger"
+              type="button"
+              @click="showDeleteSignsConfirm = true"
+            >
               Delete
             </UiButton>
           </div>
@@ -409,7 +432,8 @@ onMounted(() => {
     >
       <div v-if="selectedFolder">
         <p class="text-sm text-zinc-300">
-          Ban <strong>{{ selectedFolder.owner?.display_name }}</strong>? This will:
+          Ban <strong>{{ selectedFolder.owner?.display_name }}</strong
+          >? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">
           <li>Delete all their folders and signs</li>
@@ -428,11 +452,7 @@ onMounted(() => {
 
         <div class="mt-4 flex justify-end gap-3">
           <UiButton variant="secondary" @click="showBanModal = false">Cancel</UiButton>
-          <UiButton
-            variant="danger"
-            :disabled="!banReason.trim() || isBanning"
-            @click="handleBan"
-          >
+          <UiButton variant="danger" :disabled="!banReason.trim() || isBanning" @click="handleBan">
             {{ isBanning ? 'Banning...' : 'Ban & Nuke Content' }}
           </UiButton>
         </div>
@@ -447,18 +467,14 @@ onMounted(() => {
     >
       <div v-if="selectedFolder">
         <p class="text-sm text-zinc-300">
-          Permanently delete <strong>{{ selectedFolderName || selectedFolder.name }}</strong>?
-          This removes all {{ selectedFolder.signs_count }} sign(s) and cannot be undone.
-          The user account will not be affected.
+          Permanently delete <strong>{{ selectedFolderName || selectedFolder.name }}</strong
+          >? This removes all {{ selectedFolder.signs_count }} sign(s) and cannot be undone. The
+          user account will not be affected.
         </p>
 
         <div class="mt-6 flex justify-end gap-3">
           <UiButton variant="secondary" @click="showDeleteFolderModal = false">Cancel</UiButton>
-          <UiButton
-            variant="danger"
-            :disabled="isDeletingFolder"
-            @click="handleDeleteFolder"
-          >
+          <UiButton variant="danger" :disabled="isDeletingFolder" @click="handleDeleteFolder">
             {{ isDeletingFolder ? 'Deleting...' : 'Delete Folder' }}
           </UiButton>
         </div>
@@ -473,17 +489,14 @@ onMounted(() => {
     >
       <p class="text-sm text-zinc-300">
         Permanently delete
-        <strong>{{ selectedSignIds.length }} sign{{ selectedSignIds.length === 1 ? '' : 's' }}</strong>?
-        This cannot be undone.
+        <strong
+          >{{ selectedSignIds.length }} sign{{ selectedSignIds.length === 1 ? '' : 's' }}</strong
+        >? This cannot be undone.
       </p>
 
       <div class="mt-6 flex justify-end gap-3">
         <UiButton variant="secondary" @click="showDeleteSignsConfirm = false">Cancel</UiButton>
-        <UiButton
-          variant="danger"
-          :disabled="isDeletingSign"
-          @click="handleDeleteSelectedSigns"
-        >
+        <UiButton variant="danger" :disabled="isDeletingSign" @click="handleDeleteSelectedSigns">
           {{ isDeletingSign ? 'Deleting...' : 'Delete' }}
         </UiButton>
       </div>

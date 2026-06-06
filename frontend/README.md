@@ -14,17 +14,17 @@ SignVault is a platform for Trackmania players to upload, organise, and share in
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | [Vue 3](https://vuejs.org/) with Composition API |
-| Language | [TypeScript](https://www.typescriptlang.org/) |
-| Routing | [Vue Router](https://router.vuejs.org/) |
-| State | [Pinia](https://pinia.vuejs.org/) |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com/) |
-| HTTP | [Axios](https://axios-http.com/) |
-| Build | [Vite](https://vitejs.dev/) |
-| Lint | [Oxlint](https://oxc.rs/) + [ESLint](https://eslint.org/) |
-| Test | [Vitest](https://vitest.dev/) |
+| Layer     | Technology                                                |
+| --------- | --------------------------------------------------------- |
+| Framework | [Vue 3](https://vuejs.org/) with Composition API          |
+| Language  | [TypeScript](https://www.typescriptlang.org/)             |
+| Routing   | [Vue Router](https://router.vuejs.org/)                   |
+| State     | [Pinia](https://pinia.vuejs.org/)                         |
+| Styling   | [Tailwind CSS 4](https://tailwindcss.com/)                |
+| HTTP      | [Axios](https://axios-http.com/)                          |
+| Build     | [Vite](https://vitejs.dev/)                               |
+| Lint      | [Oxlint](https://oxc.rs/) + [ESLint](https://eslint.org/) |
+| Test      | [Vitest](https://vitest.dev/)                             |
 
 ## Requirements
 
@@ -64,14 +64,14 @@ Open [https://localhost:5173](https://localhost:5173). If your browser warns abo
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the HTTPS Vite dev server |
-| `npm run build` | Type-check and build for production |
-| `npm run preview` | Preview the production build locally |
-| `npm run test:unit` | Run unit tests with Vitest |
-| `npm run lint` | Run Oxlint and ESLint |
-| `npm run format` | Format source with Prettier |
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `npm run dev`       | Start the HTTPS Vite dev server      |
+| `npm run build`     | Type-check and build for production  |
+| `npm run preview`   | Preview the production build locally |
+| `npm run test:unit` | Run unit tests with Vitest           |
+| `npm run lint`      | Run Oxlint and ESLint                |
+| `npm run format`    | Format source with Prettier          |
 
 ## Authentication
 
@@ -85,16 +85,16 @@ SignVault uses **Discord OAuth2** with bearer-token authentication:
 
 ## Project Structure
 
-| Path | Purpose |
-|---|---|
-| `src/lib/` | API clients and utilities |
-| `src/stores/` | Pinia state stores |
-| `src/router/` | Route definitions and navigation guards |
-| `src/views/` | Page-level components |
-| `src/components/ui/` | Reusable UI primitives |
-| `src/components/explore/` | Explore-related components |
-| `src/components/folders/` | Folder management components |
-| `src/components/signs/` | Sign display and upload components |
-| `src/types/` | TypeScript type definitions |
-| `src/layouts/` | Layout components |
-| `certs/` | Local HTTPS certificates (not committed) |
+| Path                      | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| `src/lib/`                | API clients and utilities                |
+| `src/stores/`             | Pinia state stores                       |
+| `src/router/`             | Route definitions and navigation guards  |
+| `src/views/`              | Page-level components                    |
+| `src/components/ui/`      | Reusable UI primitives                   |
+| `src/components/explore/` | Explore-related components               |
+| `src/components/folders/` | Folder management components             |
+| `src/components/signs/`   | Sign display and upload components       |
+| `src/types/`              | TypeScript type definitions              |
+| `src/layouts/`            | Layout components                        |
+| `certs/`                  | Local HTTPS certificates (not committed) |

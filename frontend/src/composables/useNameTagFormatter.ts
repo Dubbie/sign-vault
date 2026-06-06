@@ -15,9 +15,15 @@ function normalizeColor(color: string): string {
   if (trimmed.startsWith('#')) return trimmed.toLowerCase()
   const match = trimmed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
   if (match) {
-    const r = parseInt(match[1] ?? '0').toString(16).padStart(2, '0')
-    const g = parseInt(match[2] ?? '0').toString(16).padStart(2, '0')
-    const b = parseInt(match[3] ?? '0').toString(16).padStart(2, '0')
+    const r = parseInt(match[1] ?? '0')
+      .toString(16)
+      .padStart(2, '0')
+    const g = parseInt(match[2] ?? '0')
+      .toString(16)
+      .padStart(2, '0')
+    const b = parseInt(match[3] ?? '0')
+      .toString(16)
+      .padStart(2, '0')
     return `#${r}${g}${b}`
   }
   return trimmed
@@ -189,12 +195,10 @@ export function useNameTagFormatter() {
       const child = children[i]!
       walk(child)
 
-      const childEl =
-        child instanceof HTMLElement ? (child as HTMLElement) : null
+      const childEl = child instanceof HTMLElement ? (child as HTMLElement) : null
       if (childEl?.dataset.gradient === 'true') {
         const next = children[i + 1]
-        const nextIsGradient =
-          next instanceof HTMLElement && next.dataset.gradient === 'true'
+        const nextIsGradient = next instanceof HTMLElement && next.dataset.gradient === 'true'
         if (!nextIsGradient) {
           parts.push('$z')
         }

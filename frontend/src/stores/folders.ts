@@ -9,11 +9,7 @@ import {
   getFolders as getFoldersRequest,
   updateFolder as updateFolderRequest,
 } from '@/lib/folders'
-import type {
-  CreateFolderPayload,
-  Folder,
-  UpdateFolderPayload,
-} from '@/types/folder'
+import type { CreateFolderPayload, Folder, UpdateFolderPayload } from '@/types/folder'
 
 export const useFoldersStore = defineStore('folders', () => {
   const folders = ref<Folder[]>([])

@@ -178,12 +178,7 @@ onUnmounted(() => {
 
   <Teleport to="body">
     <Transition name="popover">
-      <div
-        v-if="modelValue"
-        ref="panelRef"
-        :class="panelClass"
-        :style="panelStyle"
-      >
+      <div v-if="modelValue" ref="panelRef" :class="panelClass" :style="panelStyle">
         <slot :close="close" />
       </div>
     </Transition>

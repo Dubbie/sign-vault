@@ -19,7 +19,12 @@ const PER_COLUMN = 10
 type ColumnState = { currentPage: number; hasMore: boolean }
 
 function initialColumnState(): Record<ColumnRatio, ColumnState> {
-  return { 6: { currentPage: 0, hasMore: false }, 4: { currentPage: 0, hasMore: false }, 2: { currentPage: 0, hasMore: false }, 1: { currentPage: 0, hasMore: false } }
+  return {
+    6: { currentPage: 0, hasMore: false },
+    4: { currentPage: 0, hasMore: false },
+    2: { currentPage: 0, hasMore: false },
+    1: { currentPage: 0, hasMore: false },
+  }
 }
 
 export const useSignsStore = defineStore('signs', () => {

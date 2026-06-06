@@ -49,14 +49,20 @@ const iconPath = computed(() => {
   }
 })
 
-const iconStrokeWidth = computed(() => (props.tone === 'warning' || props.tone === 'danger' ? 1.75 : 2))
+const iconStrokeWidth = computed(() =>
+  props.tone === 'warning' || props.tone === 'danger' ? 1.75 : 2,
+)
 </script>
 
 <template>
   <div class="glass-card rounded-lg p-6 relative overflow-hidden group" :class="toneClasses">
-    <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 transition-opacity pointer-events-none group-hover:opacity-100"></div>
+    <div
+      class="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 transition-opacity pointer-events-none group-hover:opacity-100"
+    ></div>
     <div class="flex flex-col md:flex-row items-center gap-6">
-      <div class="size-12 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant/30">
+      <div
+        class="size-12 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant/30"
+      >
         <svg
           class="size-6"
           :class="iconClasses"

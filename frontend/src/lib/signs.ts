@@ -42,7 +42,9 @@ export async function getFolderSigns(
   if (columnRatio !== undefined) params.column_ratio = columnRatio
   if (variantId !== undefined) params.variant_id = variantId
 
-  const { data } = await api.get<PaginatedSignResponse>(`/api/folders/${folderId}/signs`, { params })
+  const { data } = await api.get<PaginatedSignResponse>(`/api/folders/${folderId}/signs`, {
+    params,
+  })
   return data
 }
 

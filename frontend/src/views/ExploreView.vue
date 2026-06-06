@@ -108,11 +108,17 @@ onMounted(() => {
         placeholder="Search folders by name..."
         @update:model-value="handleSearchInput"
       />
-      <div class="flex rounded-lg border border-outline/30 overflow-hidden text-sm font-medium shrink-0">
+      <div
+        class="flex rounded-lg border border-outline/30 overflow-hidden text-sm font-medium shrink-0"
+      >
         <button
           type="button"
           class="px-3 py-2 transition-colors"
-          :class="sort === 'latest' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:text-on-surface'"
+          :class="
+            sort === 'latest'
+              ? 'bg-primary/10 text-primary'
+              : 'text-on-surface-variant hover:text-on-surface'
+          "
           @click="handleSortChange('latest')"
         >
           Latest
@@ -120,7 +126,11 @@ onMounted(() => {
         <button
           type="button"
           class="px-3 py-2 transition-colors border-l border-outline/30"
-          :class="sort === 'votes' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:text-on-surface'"
+          :class="
+            sort === 'votes'
+              ? 'bg-primary/10 text-primary'
+              : 'text-on-surface-variant hover:text-on-surface'
+          "
           @click="handleSortChange('votes')"
         >
           Top

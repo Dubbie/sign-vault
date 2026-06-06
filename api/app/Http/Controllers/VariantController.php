@@ -7,11 +7,14 @@ use App\Http\Requests\Variant\UpdateVariantRequest;
 use App\Http\Resources\VariantResource;
 use App\Models\Folder;
 use App\Models\Variant;
+use App\Services\VariantService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class VariantController extends Controller
 {
+    public function __construct(private VariantService $variantService) {}
+
     public function index(Folder $folder): AnonymousResourceCollection
     {
         $this->authorize('view', $folder);
@@ -25,29 +28,12 @@ class VariantController extends Controller
     {
         $this->authorize('update', $folder);
 
-        $validated = $request->validated();
-        $backfillPerformed = false;
-
-        $defaultVariant = $folder->defaultVariant;
-
-        if ($defaultVariant === null) {
-            $defaultVariant = $folder->variants()->create([
-                'name' => 'Default',
-                'is_default' => true,
-                'sort_order' => 0,
-            ]);
-
-            $folder->signs()->whereNull('variant_id')->update([
-                'variant_id' => $defaultVariant->id,
-            ]);
-
-            $backfillPerformed = true;
-        }
-
-        $maxSortOrder = $folder->variants()->max('sort_order') ?? 0;
+        $validated        = $request->validated();
+        $backfillPerformed = $this->variantService->ensureDefaultExists($folder);
+        $maxSortOrder     = $folder->variants()->max('sort_order') ?? 0;
 
         $variant = $folder->variants()->create([
-            'name' => $validated['name'],
+            'name'       => $validated['name'],
             'is_default' => false,
             'sort_order' => $maxSortOrder + 1,
         ]);
@@ -69,19 +55,7 @@ class VariantController extends Controller
         $validated = $request->validated();
 
         if (isset($validated['is_default']) && $validated['is_default']) {
-            if (! $variant->is_default) {
-                $oldDefault = $folder->defaultVariant;
-
-                if ($oldDefault !== null && $oldDefault->id !== $variant->id) {
-                    if ($oldDefault->name === 'Default') {
-                        $oldDefault->update(['name' => 'Original', 'is_default' => false]);
-                    } else {
-                        $oldDefault->update(['is_default' => false]);
-                    }
-                }
-
-                $variant->update(['is_default' => true, 'name' => null]);
-            }
+            $this->variantService->swapDefault($folder, $variant);
         } elseif (isset($validated['name'])) {
             $variant->update(['name' => $validated['name']]);
         }

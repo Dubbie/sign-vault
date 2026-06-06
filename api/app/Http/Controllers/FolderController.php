@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\FolderVisibility;
 use App\Http\Requests\Folder\StoreFolderRequest;
 use App\Http\Requests\Folder\UpdateFolderRequest;
 use App\Http\Resources\FolderResource;
 use App\Models\Folder;
+use App\Services\FolderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class FolderController extends Controller
 {
+    public function __construct(private FolderService $folderService) {}
+
     public function index(Request $request): JsonResponse
     {
         $folders = $request->user()
@@ -31,12 +32,12 @@ class FolderController extends Controller
         $validated = $request->validated();
 
         $folder = $request->user()->folders()->create([
-            'name' => $validated['name'],
-            'slug' => Folder::generateSlugFor($request->user(), $validated['name']),
-            'public_slug' => Folder::generatePublicSlugFor($validated['name']),
-            'visibility' => $validated['visibility'],
-            'password_hash' => $this->passwordHashFor($validated),
-            'attribution_name' => $validated['attribution_name'] ?? null,
+            'name'                   => $validated['name'],
+            'slug'                   => Folder::generateSlugFor($request->user(), $validated['name']),
+            'public_slug'            => Folder::generatePublicSlugFor($validated['name']),
+            'visibility'             => $validated['visibility'],
+            'password_hash'          => $this->folderService->hashPassword($validated),
+            'attribution_name'       => $validated['attribution_name'] ?? null,
             'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
@@ -57,23 +58,23 @@ class FolderController extends Controller
         $this->authorize('update', $folder);
 
         $validated = $request->validated();
-        $wasPrivate = $folder->visibility === FolderVisibility::Private;
-        $isBecomingPublicFacing = $validated['visibility'] !== FolderVisibility::Private->value;
+
+        // Resolve public slug BEFORE fill() changes the current visibility on the model.
+        $publicSlug = $this->folderService->resolvePublicSlug($folder, $validated);
 
         $folder->fill([
-            'name' => $validated['name'],
-            'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
-            'visibility' => $validated['visibility'],
-            'attribution_name' => $validated['attribution_name'] ?? null,
+            'name'                   => $validated['name'],
+            'slug'                   => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
+            'visibility'             => $validated['visibility'],
+            'attribution_name'       => $validated['attribution_name'] ?? null,
             'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
-        if ($wasPrivate && $isBecomingPublicFacing) {
-            $folder->public_slug = Folder::generatePublicSlugFor($validated['name'], $folder->id);
+        if ($publicSlug !== null) {
+            $folder->public_slug = $publicSlug;
         }
 
-        $folder->password_hash = $this->passwordHashFor($validated);
-
+        $folder->password_hash = $this->folderService->hashPassword($validated);
         $folder->save();
 
         return (new FolderResource($folder->refresh()))->response();
@@ -91,20 +92,6 @@ class FolderController extends Controller
 
         $folder->delete();
 
-        return response()->json([
-            'message' => 'Folder deleted.',
-        ]);
-    }
-
-    /**
-     * @param  array{name:string,visibility:string,password?:string|null,attribution_name?:string|null,attribution_source_url?:string|null}  $validated
-     */
-    private function passwordHashFor(array $validated): ?string
-    {
-        if ($validated['visibility'] !== FolderVisibility::Password->value) {
-            return null;
-        }
-
-        return Hash::make($validated['password']);
+        return response()->json(['message' => 'Folder deleted.']);
     }
 }

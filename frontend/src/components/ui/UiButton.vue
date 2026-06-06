@@ -29,7 +29,7 @@ const baseClasses =
 
 const sizeClasses = {
   sm: 'rounded h-8 px-3 text-sm gap-1.5',
-  md: 'rounded-lg px-component-padding-x h-10 text-label-md gap-2',
+  md: 'rounded-lg px-4 h-10 text-label-md gap-2',
   lg: 'h-11 px-4 py-3 text-body-md gap-2.5',
 } as const
 

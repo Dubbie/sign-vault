@@ -181,14 +181,17 @@ onMounted(() => {
             class="sr-only"
             @change="handleAvatarChange"
           />
-          <p v-if="avatarError" class="mt-2 text-xs text-red-400 max-w-[5rem] text-center">
+          <p v-if="avatarError" class="mt-2 text-xs text-red-400 max-w-20 text-center">
             {{ avatarError }}
           </p>
         </div>
 
         <!-- Display name -->
         <div class="flex-1">
-          <label for="display-name" class="block text-sm font-medium text-zinc-300 mb-1.5">
+          <label
+            for="display-name"
+            class="block text-sm font-medium text-on-surface-variant mb-1.5"
+          >
             Display name
           </label>
           <div class="flex gap-2">
@@ -232,16 +235,19 @@ onMounted(() => {
         >
           <div>
             <p class="font-medium text-on-surface text-sm">{{ label }}</p>
-            <p v-if="linkedProviderIds.has(id)" class="text-xs text-zinc-500 mt-0.5">
-              Connected as <span class="text-zinc-300">{{ providerInfo(id)?.username }}</span>
+            <p v-if="linkedProviderIds.has(id)" class="text-xs text-on-surface-variant/50 mt-0.5">
+              Connected as
+              <span class="text-on-surface-variant font-medium">{{
+                providerInfo(id)?.username
+              }}</span>
             </p>
-            <p v-else class="text-xs text-zinc-500 mt-0.5">Not connected</p>
+            <p v-else class="text-xs text-on-surface-variant/50 mt-0.5">Not connected</p>
           </div>
 
           <button
             v-if="!linkedProviderIds.has(id)"
             type="button"
-            class="shrink-0 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition hover:bg-emerald-500/20"
+            class="cursor-pointer shrink-0 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition hover:bg-emerald-500/20"
             @click="link(id)"
           >
             Connect
@@ -251,7 +257,7 @@ onMounted(() => {
             v-else
             type="button"
             :disabled="!canUnlink"
-            class="shrink-0 rounded-lg border border-red-500/30 bg-transparent px-3 py-1.5 text-xs font-medium text-red-400/80 transition hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+            class="cursor-pointer shrink-0 rounded-lg border border-red-500/30 bg-transparent px-3 py-1.5 text-xs font-medium text-red-400/80 transition hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
             :title="!canUnlink ? 'You must keep at least one login method' : undefined"
             @click="unlink(id)"
           >
@@ -260,7 +266,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <p v-if="!canUnlink" class="mt-4 text-xs text-zinc-500">
+      <p v-if="!canUnlink" class="mt-4 text-xs text-on-surface-variant/50">
         You must have at least one connected provider to log in.
       </p>
       <p v-if="providerError" class="mt-3 text-xs text-red-400">{{ providerError }}</p>

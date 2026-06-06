@@ -8,7 +8,7 @@ import { useFoldersStore } from '@/stores/folders'
 
 import CreateFolderModal from '@/components/folders/CreateFolderModal.vue'
 import UiButton from '@/components/ui/UiButton.vue'
-import { Archive, Folder, Link, Plus } from '@lucide/vue'
+import { Archive, Folder, Link, Monitor, Plus } from '@lucide/vue'
 import StatCard from '@/components/ui/StatCard.vue'
 import SmallFolderCard from '@/components/folders/SmallFolderCard.vue'
 
@@ -73,7 +73,7 @@ function handleCreateSaved(folderId: number) {
     <div class="grid gap-6 sm:grid-cols-4">
       <StatCard :icon="Archive" label="Total signs" :value="totalSigns.toLocaleString()" />
 
-      <StatCard :icon="Archive" label="Signs by you" :value="userSignCount.toLocaleString()" />
+      <StatCard :icon="Monitor" label="Signs by you" :value="userSignCount.toLocaleString()" />
 
       <StatCard
         :icon="Folder"

@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\BanUserAction;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class AdminUserController extends Controller
 {
+    public function __construct(private BanUserAction $banUser) {}
+
     public function index(Request $request): JsonResponse
     {
         $query = User::query()->withCount(['folders', 'signs']);
@@ -23,15 +25,15 @@ class AdminUserController extends Controller
 
         $users->through(function (User $user) {
             return [
-                'id'           => $user->id,
-                'display_name' => $user->display_name,
-                'avatar_url'   => $user->avatar_url,
-                'is_admin'     => $user->is_admin,
-                'banned_at'    => $user->banned_at?->toISOString(),
-                'ban_reason'   => $user->ban_reason,
+                'id'            => $user->id,
+                'display_name'  => $user->display_name,
+                'avatar_url'    => $user->avatar_url,
+                'is_admin'      => $user->is_admin,
+                'banned_at'     => $user->banned_at?->toISOString(),
+                'ban_reason'    => $user->ban_reason,
                 'folders_count' => $user->folders_count,
-                'signs_count'  => $user->signs_count,
-                'providers'    => $user->oauthProviders->map(fn ($p) => [
+                'signs_count'   => $user->signs_count,
+                'providers'     => $user->oauthProviders->map(fn ($p) => [
                     'provider' => $p->provider,
                     'username' => $p->username,
                 ]),
@@ -41,7 +43,7 @@ class AdminUserController extends Controller
         return response()->json([
             ...$users->toArray(),
             'stats' => [
-                'total' => User::count(),
+                'total'  => User::count(),
                 'admins' => User::where('is_admin', true)->count(),
                 'banned' => User::whereNotNull('banned_at')->count(),
             ],
@@ -60,20 +62,7 @@ class AdminUserController extends Controller
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $user->tokens()->delete();
-
-        foreach ($user->folders as $folder) {
-            foreach ($folder->signs as $sign) {
-                Storage::disk($sign->storage_disk)->delete($sign->storage_key);
-                $sign->delete();
-            }
-
-            $folder->delete();
-        }
-
-        $user->banned_at = now();
-        $user->ban_reason = $validated['reason'];
-        $user->save();
+        $this->banUser->handle($user, $validated['reason']);
 
         return response()->json(['message' => 'User has been banned and their content removed.']);
     }
@@ -86,7 +75,7 @@ class AdminUserController extends Controller
             ]);
         }
 
-        $user->banned_at = null;
+        $user->banned_at  = null;
         $user->ban_reason = null;
         $user->save();
 

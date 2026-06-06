@@ -4,6 +4,7 @@ import { X } from '@lucide/vue'
 defineProps<{
   modelValue: boolean
   title: string
+  size?: 'md' | 'lg' | 'xl'
 }>()
 
 const emit = defineEmits<{
@@ -28,7 +29,14 @@ function handleAfterLeave() {
         class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur px-4"
         @click.self="close"
       >
-        <div class="modal-box glass-card w-full max-w-lg rounded-xl p-6 shadow-2xl">
+        <div
+          class="modal-box glass-card w-full rounded-xl p-6 shadow-2xl"
+          :class="{
+            'max-w-lg': size === 'md' || !size,
+            'max-w-2xl': size === 'lg',
+            'max-w-4xl': size === 'xl',
+          }"
+        >
           <div class="mb-6 flex items-center justify-between">
             <h2 class="text-headline-md">{{ title }}</h2>
             <button

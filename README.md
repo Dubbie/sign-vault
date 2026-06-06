@@ -140,6 +140,14 @@ Both Vue apps use an HTTPS dev server; see the respective READMEs for certificat
 
 When deploying from this monorepo on Cloudflare Pages, configure **include paths** per project (`frontend/**` and `landing/**` respectively) so that changes to unrelated packages do not trigger unnecessary builds.
 
+## Releases
+
+SignVault uses a single repo-wide version across `api`, `frontend`, and `landing`.
+
+- All product changes land on `main` through pull requests and deploy continuously from `main`.
+- `release-please` watches `main` and maintains a dedicated Release PR that bumps the root version and updates [`CHANGELOG.md`](CHANGELOG.md).
+- Merging the Release PR creates the next tagged release and updates the frontend version badge + release notes modal automatically.
+
 ---
 
 ## Contributing

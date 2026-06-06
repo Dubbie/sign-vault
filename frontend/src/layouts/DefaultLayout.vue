@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import logoUrl from '@/assets/logo.svg'
 import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 import DiscordBanner from '@/components/ui/DiscordBanner.vue'
+import UiButton from '@/components/ui/UiButton.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
+import UiModal from '@/components/ui/UiModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { LogOut, Settings, ShieldAlert } from '@lucide/vue'
-import UiButton from '@/components/ui/UiButton.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const showUserMenu = ref(false)
+const showReleaseNotes = ref(false)
 const exploreRouteNames = new Set(['explore', 'public-folder'])
+const releaseVersion = __APP_VERSION__
+const releaseDate = __APP_RELEASE_DATE__
+const releaseNotes = __APP_RELEASE_NOTES__
+const releaseNotesBody = computed(() => releaseNotes.trim() || 'No published release notes yet.')
 
 function navClass(active: boolean) {
   return [
@@ -188,13 +194,20 @@ function isExploreActive() {
       class="w-full py-section-gap px-container-margin bg-surface-container-lowest border-t border-outline-variant/10"
     >
       <div class="max-w-7xl mx-auto">
-        <div class="w-full flex items-center justify-center gap-4">
+        <div class="w-full flex flex-col gap-6 md:flex-row md:items-center md:justify-center">
           <div class="flex flex-col flex-1 gap-1">
             <span class="text-headline-md font-bold text-on-surface">SignVault</span>
             <span class="text-label-sm text-on-surface-variant/80">Trackmania sign library</span>
           </div>
 
-          <div class="flex gap-8">
+          <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <button
+              type="button"
+              class="cursor-pointer rounded-full border border-outline-variant/60 bg-surface-container px-3 py-1 text-label-sm font-semibold text-on-surface transition hover:border-primary hover:text-primary"
+              @click="showReleaseNotes = true"
+            >
+              v{{ releaseVersion }}
+            </button>
             <RouterLink
               to="/terms"
               class="text-label-sm text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100"
@@ -227,5 +240,18 @@ function isExploreActive() {
         </div>
       </div>
     </footer>
+
+    <UiModal v-model="showReleaseNotes" :title="`Release notes · v${releaseVersion}`" size="lg">
+      <div class="space-y-4">
+        <p class="text-label-sm uppercase tracking-[0.18em] text-on-surface-variant/80">
+          {{ releaseDate }}
+        </p>
+        <div
+          class="max-h-[60vh] overflow-y-auto rounded-xl border border-outline-variant/30 bg-surface-container-low p-4 text-sm leading-6 text-on-surface-variant whitespace-pre-wrap"
+        >
+          {{ releaseNotesBody }}
+        </div>
+      </div>
+    </UiModal>
   </div>
 </template>

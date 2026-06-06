@@ -107,3 +107,10 @@ DISCORD_REDIRECT_URI=https://api.sign-vault.ddev.site/api/auth/discord/callback
 4. Open a pull request against `main` with a clear description of what changed and why.
 
 For larger changes, open an issue first so we can discuss the approach before you invest the time.
+
+## Releases
+
+- `main` is the only long-lived integration branch and all deployables auto-deploy from it.
+- Do not push directly to `main`; use pull requests and branch protection.
+- Use conventional commit-style PR titles or squash commit messages so `release-please` can infer the next version correctly.
+- `release-please` opens a separate Release PR for root version and changelog updates. Merging that PR creates the next tagged release.

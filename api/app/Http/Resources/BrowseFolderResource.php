@@ -23,9 +23,8 @@ class BrowseFolderResource extends JsonResource
             'signs_count' => $this->signs_count,
             'variants_count' => $this->variants_count,
             'owner' => [
-                'discord_username' => $this->user->discord_username,
-                'discord_global_name' => $this->user->discord_global_name,
-                'discord_avatar' => $this->user->discord_avatar,
+                'display_name' => $this->user->display_name,
+                'avatar_url'   => $this->user->avatar_url,
             ],
             'preview_signs' => $this->selectPreviewSigns(),
         ];

@@ -16,26 +16,25 @@ class AdminUserController extends Controller
         $query = User::query()->withCount(['folders', 'signs']);
 
         if ($search = $request->string('q', '')) {
-            $query->where(function ($q) use ($search): void {
-                $q->where('discord_username', 'like', '%'.$search.'%')
-                    ->orWhere('discord_global_name', 'like', '%'.$search.'%');
-            });
+            $query->where('display_name', 'like', '%'.$search.'%');
         }
 
-        $users = $query->latest()->paginate(20);
+        $users = $query->with('oauthProviders')->latest()->paginate(20);
 
         $users->through(function (User $user) {
             return [
-                'id' => $user->id,
-                'discord_id' => $user->discord_id,
-                'discord_username' => $user->discord_username,
-                'discord_global_name' => $user->discord_global_name,
-                'discord_avatar' => $user->discord_avatar,
-                'is_admin' => $user->is_admin,
-                'banned_at' => $user->banned_at?->toISOString(),
-                'ban_reason' => $user->ban_reason,
+                'id'           => $user->id,
+                'display_name' => $user->display_name,
+                'avatar_url'   => $user->avatar_url,
+                'is_admin'     => $user->is_admin,
+                'banned_at'    => $user->banned_at?->toISOString(),
+                'ban_reason'   => $user->ban_reason,
                 'folders_count' => $user->folders_count,
-                'signs_count' => $user->signs_count,
+                'signs_count'  => $user->signs_count,
+                'providers'    => $user->oauthProviders->map(fn ($p) => [
+                    'provider' => $p->provider,
+                    'username' => $p->username,
+                ]),
             ];
         });
 

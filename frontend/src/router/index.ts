@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 
-import DiscordCallbackView from '../views/DiscordCallbackView.vue'
+import OauthCallbackView from '../views/OauthCallbackView.vue'
+import LoginView from '../views/LoginView.vue'
 import DashboardView from '../views/DashboardView.vue'
 import FoldersIndexView from '../views/FoldersIndexView.vue'
 import FolderCreateView from '../views/FolderCreateView.vue'
@@ -18,6 +19,7 @@ import LegalPrivacyView from '../views/LegalPrivacyView.vue'
 import UtilitiesView from '../views/utilities/UtilitiesView.vue'
 import SignSizingView from '../views/utilities/SignSizingView.vue'
 import NameTagFormatterView from '../views/utilities/NameTagFormatterView.vue'
+import SettingsView from '../views/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -48,12 +50,22 @@ const router = createRouter({
     },
     {
       path: '/login',
-      redirect: '/',
+      name: 'login',
+      component: LoginView,
+      meta: { title: 'Sign In — SignVault' },
     },
     {
       path: '/auth/discord/callback',
       name: 'discord-callback',
-      component: DiscordCallbackView,
+      component: OauthCallbackView,
+      props: { provider: 'discord' },
+      meta: { title: 'Signing In — SignVault' },
+    },
+    {
+      path: '/auth/trackmania/callback',
+      name: 'trackmania-callback',
+      component: OauthCallbackView,
+      props: { provider: 'trackmania' },
       meta: { title: 'Signing In — SignVault' },
     },
     {
@@ -63,6 +75,15 @@ const router = createRouter({
       meta: {
         requiresAuth: true,
         title: 'Dashboard — SignVault',
+      },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: SettingsView,
+      meta: {
+        requiresAuth: true,
+        title: 'Settings — SignVault',
       },
     },
     {
@@ -173,16 +194,13 @@ router.beforeEach(async (to) => {
     await auth.fetchUser()
   }
 
-  if (to.name === 'discord-callback') {
-    if (auth.isAuthenticated) {
-      return { name: 'dashboard' }
-    }
-
+  if (to.name === 'discord-callback' || to.name === 'trackmania-callback') {
+    // Allow through — the callback view handles linking vs login.
     return true
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'explore' }
+    return { name: 'login' }
   }
 
   if (to.meta.requiresAdmin && !auth.isAdmin) {

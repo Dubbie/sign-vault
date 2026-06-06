@@ -24,9 +24,8 @@ class PublicFolderResource extends JsonResource
             'attribution_source_url' => $this->attribution_source_url,
             'user_id' => $this->user_id,
             'owner' => [
-                'discord_username' => $this->user->discord_username,
-                'discord_global_name' => $this->user->discord_global_name,
-                'discord_avatar' => $this->user->discord_avatar,
+                'display_name' => $this->user->display_name,
+                'avatar_url'   => $this->user->avatar_url,
             ],
             'variants' => $this->whenLoaded('variants', function (): array {
                 return $this->variants->map(fn ($variant): array => [

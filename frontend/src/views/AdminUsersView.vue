@@ -148,8 +148,11 @@ onMounted(() => {
               <thead class="bg-surface-container-low">
                 <tr class="text-left">
                   <th class="px-5 py-4 text-label-sm text-on-surface-variant">User</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-sm:hidden">
-                    Discord ID
+                  <th class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden">
+                    Discord
+                  </th>
+                  <th class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden">
+                    Trackmania
                   </th>
                   <th
                     class="px-5 py-4 text-label-sm text-on-surface-variant text-right max-md:hidden"
@@ -177,28 +180,36 @@ onMounted(() => {
                   <td class="px-5 py-4">
                     <div class="flex items-center gap-3">
                       <img
-                        v-if="user.discord_avatar"
-                        :src="user.discord_avatar"
-                        :alt="user.discord_username"
+                        v-if="user.avatar_url"
+                        :src="user.avatar_url"
+                        :alt="user.display_name"
                         class="size-8 shrink-0 rounded-full"
                       />
                       <div v-else class="size-8 shrink-0 rounded-full bg-surface-container-high" />
                       <div class="min-w-0">
                         <p class="truncate text-body-md font-semibold text-on-surface">
-                          {{ user.discord_global_name || user.discord_username }}
-                        </p>
-                        <p class="text-label-sm text-on-surface-variant sm:hidden">
-                          {{ user.discord_username }}
+                          {{ user.display_name }}
                         </p>
                         <p v-if="user.is_admin" class="text-label-sm text-emerald-400">Admin</p>
                       </div>
                     </div>
                   </td>
 
-                  <td class="px-5 py-4 max-sm:hidden">
-                    <span class="font-mono text-sm text-on-surface-variant">
-                      {{ user.discord_id }}
-                    </span>
+                  <td class="px-5 py-4 text-center max-sm:hidden">
+                    <span
+                      v-if="user.providers.some((p) => p.provider === 'discord')"
+                      class="text-emerald-400"
+                      title="Connected"
+                    >✓</span>
+                    <span v-else class="text-on-surface-variant/30">—</span>
+                  </td>
+                  <td class="px-5 py-4 text-center max-sm:hidden">
+                    <span
+                      v-if="user.providers.some((p) => p.provider === 'trackmania')"
+                      class="text-emerald-400"
+                      title="Connected"
+                    >✓</span>
+                    <span v-else class="text-on-surface-variant/30">—</span>
                   </td>
 
                   <td class="px-5 py-4 text-right max-md:hidden">
@@ -288,7 +299,7 @@ onMounted(() => {
     <UiModal :model-value="banTarget !== null" title="Ban User" @update:model-value="closeBanModal">
       <div v-if="banTarget">
         <p class="text-sm text-zinc-300">
-          Ban <strong>{{ banTarget.discord_global_name || banTarget.discord_username }}</strong
+          Ban <strong>{{ banTarget.display_name }}</strong
           >? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">

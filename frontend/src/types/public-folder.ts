@@ -15,17 +15,15 @@ export type PublicFolder = {
   attribution_source_url: string | null
   user_id: number
   owner: {
-    discord_username: string
-    discord_global_name: string | null
-    discord_avatar: string | null
+    display_name: string
+    avatar_url: string | null
   }
   variants: PublicFolderVariant[]
 }
 
 export type OwnerInfo = {
-  discord_username: string
-  discord_global_name: string | null
-  discord_avatar: string | null
+  display_name: string
+  avatar_url: string | null
 }
 
 export type PreviewSign = {

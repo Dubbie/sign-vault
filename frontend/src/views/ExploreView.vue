@@ -137,16 +137,13 @@ onMounted(() => {
                   <h2 class="text-lg font-semibold text-on-surface">{{ hoveredFolder.name }}</h2>
                   <div v-if="hoveredFolder.owner" class="mt-1 flex items-center gap-2">
                     <img
-                      v-if="hoveredFolder.owner.discord_avatar"
-                      :src="hoveredFolder.owner.discord_avatar"
-                      :alt="hoveredFolder.owner.discord_username"
+                      v-if="hoveredFolder.owner.avatar_url"
+                      :src="hoveredFolder.owner.avatar_url"
+                      :alt="hoveredFolder.owner.display_name"
                       class="size-5 rounded"
                     />
                     <span class="truncate text-sm text-secondary">
-                      {{
-                        hoveredFolder.owner.discord_global_name ||
-                        hoveredFolder.owner.discord_username
-                      }}
+                      {{ hoveredFolder.owner.display_name }}
                     </span>
                   </div>
                 </div>

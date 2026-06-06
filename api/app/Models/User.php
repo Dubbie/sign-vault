@@ -12,10 +12,9 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
-    'discord_id',
-    'discord_username',
-    'discord_global_name',
-    'discord_avatar',
+    'display_name',
+    'avatar_url',
+    'avatar_storage_key',
     'email',
     'is_admin',
     'banned_at',
@@ -42,6 +41,11 @@ class User extends Authenticatable
     public function scopeNotBanned(Builder $query): void
     {
         $query->whereNull('banned_at');
+    }
+
+    public function oauthProviders(): HasMany
+    {
+        return $this->hasMany(OauthProvider::class);
     }
 
     public function folders(): HasMany

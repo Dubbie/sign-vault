@@ -59,7 +59,7 @@ function handleCreateSaved(folderId: number) {
     <div class="flex items-end justify-between gap-4">
       <h1 class="text-headline-xl text-on-surface">
         Welcome back,
-        {{ auth.user?.discord_global_name ?? auth.user?.discord_username ?? 'Dude' }}
+        {{ auth.user?.display_name ?? 'there' }}
       </h1>
 
       <div>

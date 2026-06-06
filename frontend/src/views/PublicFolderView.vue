@@ -101,7 +101,7 @@ const selectedVariantOption = computed({
 })
 const ownerDisplayName = computed(
   () =>
-    folder.value?.owner.discord_global_name || folder.value?.owner.discord_username || 'Unknown',
+    folder.value?.owner.display_name || 'Unknown',
 )
 
 function activeVariantId(): number | null {
@@ -137,7 +137,7 @@ async function handleBan() {
   try {
     await banUser(folder.value.user_id, banReason.value.trim())
     bannedUserName.value =
-      folder.value.owner?.discord_global_name || folder.value.owner?.discord_username || 'User'
+      folder.value.owner?.display_name || 'User'
     showBanModal.value = false
     banReason.value = ''
     folder.value = null
@@ -523,7 +523,7 @@ watch(folderSlug, () => {
       <div v-if="folder">
         <p class="text-sm text-zinc-300">
           Ban
-          <strong>{{ folder.owner?.discord_global_name || folder.owner?.discord_username }}</strong
+          <strong>{{ folder.owner?.display_name }}</strong
           >? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">

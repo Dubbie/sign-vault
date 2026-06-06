@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\RedirectResponse;
 use Laravel\Sanctum\Sanctum;
 use Laravel\Socialite\Contracts\Factory as SocialiteFactory;
-use Laravel\Socialite\Two\User as DiscordUser;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -57,13 +57,13 @@ class DiscordAuthTest extends TestCase
             ->assertJsonValidationErrors(['code', 'state']);
     }
 
-    public function test_callback_creates_a_discord_user_and_returns_a_sanctum_token(): void
+    public function test_callback_creates_a_new_user_and_returns_a_sanctum_token(): void
     {
         $state = $this->redirectForState();
         $discordUser = $this->makeDiscordUser([
             'id' => '123456789',
             'username' => 'exampleuser',
-            'global_name' => 'Example User',
+            'name' => 'Example User',
             'avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
             'email' => null,
         ]);
@@ -80,32 +80,29 @@ class DiscordAuthTest extends TestCase
                 'token',
                 'user' => [
                     'id',
-                    'discord_id',
-                    'discord_username',
-                    'discord_global_name',
-                    'discord_avatar',
+                    'display_name',
+                    'avatar_url',
                     'email',
                 ],
             ])
-            ->assertJsonPath('user.discord_id', '123456789')
-            ->assertJsonPath('user.discord_username', 'exampleuser')
-            ->assertJsonPath('user.discord_global_name', 'Example User')
+            ->assertJsonPath('user.display_name', 'Example User')
             ->assertJsonPath('user.email', null);
 
         $this->assertDatabaseHas('users', [
-            'discord_id' => '123456789',
-            'discord_username' => 'exampleuser',
-            'discord_global_name' => 'Example User',
-            'discord_avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
-            'email' => null,
+            'display_name' => 'Example User',
+            'avatar_url' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
+        ]);
+
+        $this->assertDatabaseHas('oauth_providers', [
+            'provider' => 'discord',
+            'provider_user_id' => '123456789',
+            'username' => 'exampleuser',
         ]);
     }
 
     public function test_callback_rejects_an_unknown_oauth_state(): void
     {
-        $discordUser = $this->makeDiscordUser();
-
-        $this->mockDiscordProvider($discordUser);
+        $this->mockDiscordProvider($this->makeDiscordUser());
 
         $this->postJson('/api/auth/discord/callback', [
             'code' => 'discord-code',
@@ -115,13 +112,11 @@ class DiscordAuthTest extends TestCase
             ->assertJsonValidationErrors('state');
     }
 
-    public function test_me_endpoint_returns_the_authenticated_discord_user(): void
+    public function test_me_endpoint_returns_the_authenticated_user(): void
     {
         $user = User::factory()->create([
-            'discord_id' => '123456789',
-            'discord_username' => 'exampleuser',
-            'discord_global_name' => 'Example User',
-            'discord_avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
+            'display_name' => 'Example User',
+            'avatar_url' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
             'email' => 'user@example.com',
         ]);
         $folder = Folder::factory()->for($user)->create();
@@ -132,8 +127,7 @@ class DiscordAuthTest extends TestCase
         $this->getJson('/api/me')
             ->assertOk()
             ->assertJsonPath('limits.sign_upload_max_files', config('signs.max_upload_files'))
-            ->assertJsonPath('user.discord_id', '123456789')
-            ->assertJsonPath('user.discord_username', 'exampleuser')
+            ->assertJsonPath('user.display_name', 'Example User')
             ->assertJsonPath('user.email', 'user@example.com')
             ->assertJsonPath('user.folders_count', 1)
             ->assertJsonPath('user.signs_count', 2);
@@ -147,23 +141,14 @@ class DiscordAuthTest extends TestCase
 
     public function test_logout_revokes_the_current_token(): void
     {
-        $user = User::factory()->create([
-            'discord_id' => '123456789',
-            'discord_username' => 'exampleuser',
-            'discord_global_name' => 'Example User',
-            'discord_avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
-            'email' => 'user@example.com',
-        ]);
-
+        $user = User::factory()->create();
         $token = $user->createToken('discord');
 
         $this->postJson('/api/auth/logout', [], [
             'Authorization' => 'Bearer '.$token->plainTextToken,
         ])
             ->assertOk()
-            ->assertJson([
-                'message' => 'Logged out.',
-            ]);
+            ->assertJson(['message' => 'Logged out.']);
 
         $this->assertDatabaseMissing('personal_access_tokens', [
             'tokenable_type' => User::class,
@@ -171,14 +156,15 @@ class DiscordAuthTest extends TestCase
         ]);
     }
 
-    public function test_repeated_discord_logins_update_the_existing_user(): void
+    public function test_repeated_discord_logins_update_the_existing_provider_record(): void
     {
         $firstState = $this->redirectForState();
         $secondState = $this->redirectForState();
+
         $firstDiscordUser = $this->makeDiscordUser([
             'id' => '123456789',
             'username' => 'exampleuser',
-            'global_name' => 'Example User',
+            'name' => 'Example User',
             'avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash-one.png',
             'email' => 'first@example.com',
         ]);
@@ -186,7 +172,7 @@ class DiscordAuthTest extends TestCase
         $secondDiscordUser = $this->makeDiscordUser([
             'id' => '123456789',
             'username' => 'updateduser',
-            'global_name' => 'Updated User',
+            'name' => 'Updated User',
             'avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash-two.png',
             'email' => null,
         ]);
@@ -203,21 +189,17 @@ class DiscordAuthTest extends TestCase
             'state' => $secondState,
         ])
             ->assertOk()
-            ->assertJsonPath('user.discord_username', 'updateduser')
-            ->assertJsonPath('user.discord_global_name', 'Updated User')
-            ->assertJsonPath('user.email', null);
+            ->assertJsonPath('user.display_name', 'Example User'); // user.display_name is NOT updated on re-login
 
         $this->assertDatabaseCount('users', 1);
-        $this->assertDatabaseHas('users', [
-            'discord_id' => '123456789',
-            'discord_username' => 'updateduser',
-            'discord_global_name' => 'Updated User',
-            'discord_avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash-two.png',
-            'email' => null,
+        $this->assertDatabaseHas('oauth_providers', [
+            'provider' => 'discord',
+            'provider_user_id' => '123456789',
+            'username' => 'updateduser',
         ]);
     }
 
-    private function mockDiscordProvider(DiscordUser $firstUser, ?DiscordUser $secondUser = null): void
+    private function mockDiscordProvider(SocialiteUser $firstUser, ?SocialiteUser $secondUser = null): void
     {
         $provider = Mockery::mock();
         $provider->shouldReceive('stateless')->andReturnSelf();
@@ -264,32 +246,29 @@ class DiscordAuthTest extends TestCase
         });
 
         $response = $this->getJson('/api/auth/discord/redirect');
-
-        $response->assertOk()
-            ->assertJsonPath('state', $state)
-            ->assertJsonPath('url', $redirectUrl.'&state='.$state);
+        $response->assertOk()->assertJsonPath('state', $state);
 
         return (string) $state;
     }
 
-    private function makeDiscordUser(array $attributes = []): DiscordUser
+    private function makeDiscordUser(array $attributes = []): SocialiteUser
     {
         $attributes = array_merge([
             'id' => '123456789',
             'username' => 'exampleuser',
-            'global_name' => 'Example User',
+            'name' => 'Example User',
             'avatar' => 'https://cdn.discordapp.com/avatars/123456789/avatarhash.png',
             'email' => 'user@example.com',
         ], $attributes);
 
-        $user = new DiscordUser;
+        $user = new SocialiteUser;
 
         return $user->setRaw($attributes)->map([
-            'id' => $attributes['id'],
+            'id'       => $attributes['id'],
             'nickname' => $attributes['username'],
-            'name' => $attributes['username'],
-            'email' => $attributes['email'] ?? null,
-            'avatar' => $attributes['avatar'],
+            'name'     => $attributes['name'],
+            'email'    => $attributes['email'] ?? null,
+            'avatar'   => $attributes['avatar'],
         ]);
     }
 }

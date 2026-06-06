@@ -28,6 +28,12 @@ return [
         'redirect' => env('DISCORD_REDIRECT_URI'),
     ],
 
+    'trackmania' => [
+        'client_id' => env('TRACKMANIA_CLIENT_ID'),
+        'client_secret' => env('TRACKMANIA_CLIENT_SECRET'),
+        'redirect' => env('TRACKMANIA_REDIRECT_URI'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

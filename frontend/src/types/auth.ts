@@ -1,22 +1,32 @@
 export interface AuthUser {
   id: number
-  discord_id: string
-  discord_username: string
-  discord_global_name: string | null
-  discord_avatar: string | null
+  display_name: string
+  avatar_url: string | null
   email: string | null
   is_admin: boolean
   folders_count: number
   signs_count: number
 }
 
-export interface DiscordRedirectResponse {
+export interface LinkedProvider {
+  provider: 'discord' | 'trackmania'
+  username: string
+  display_name: string | null
+  avatar_url: string | null
+}
+
+export interface OauthRedirectResponse {
   url: string
   state: string
 }
 
-export interface DiscordCallbackResponse {
+export interface OauthCallbackResponse {
   token: string
+  user: AuthUser
+}
+
+export interface OauthLinkResponse {
+  message: string
   user: AuthUser
 }
 
@@ -28,15 +38,14 @@ export type MeResponse = AuthUser | { user: AuthUser; limits?: AppLimits }
 
 export interface AdminUser {
   id: number
-  discord_id: string
-  discord_username: string
-  discord_global_name: string | null
-  discord_avatar: string | null
+  display_name: string
+  avatar_url: string | null
   is_admin: boolean
   banned_at: string | null
   ban_reason: string | null
   folders_count: number
   signs_count: number
+  providers: Array<{ provider: string; username: string }>
 }
 
 export interface PaginatedAdminUsers {

@@ -7,7 +7,7 @@ import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 import DiscordBanner from '@/components/ui/DiscordBanner.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
 import { useAuthStore } from '@/stores/auth'
-import { LogOut, ShieldAlert } from '@lucide/vue'
+import { LogOut, Settings, ShieldAlert } from '@lucide/vue'
 import UiButton from '@/components/ui/UiButton.vue'
 
 const auth = useAuthStore()
@@ -30,8 +30,8 @@ async function handleLogout() {
   await router.replace({ name: 'explore' })
 }
 
-async function handleLogin() {
-  await auth.loginWithDiscord()
+function handleLogin() {
+  router.push({ name: 'login' })
 }
 
 function isExploreActive() {
@@ -134,9 +134,9 @@ function isExploreActive() {
                 >
                   <div class="size-9 overflow-hidden rounded-lg bg-zinc-600">
                     <img
-                      v-if="auth.user.discord_avatar"
-                      :src="auth.user.discord_avatar"
-                      :alt="auth.user.discord_username"
+                      v-if="auth.user.avatar_url"
+                      :src="auth.user.avatar_url"
+                      :alt="auth.user.display_name"
                       class="h-full w-full object-cover"
                     />
                   </div>
@@ -145,6 +145,14 @@ function isExploreActive() {
 
               <template #default="{ close }">
                 <div>
+                  <RouterLink
+                    to="/settings"
+                    class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-zinc-300 transition hover:bg-zinc-500/10"
+                    @click="close()"
+                  >
+                    <Settings class="size-4" />
+                    Settings
+                  </RouterLink>
                   <button
                     type="button"
                     class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10"
@@ -159,7 +167,7 @@ function isExploreActive() {
           </div>
 
           <UiButton v-else @click="handleLogin">
-            {{ auth.isLoading ? 'Redirecting...' : 'Login with Discord' }}
+            Login
           </UiButton>
         </div>
       </nav>

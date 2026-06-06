@@ -3,17 +3,22 @@
 use App\Http\Controllers\Admin\AdminBrowseController;
 use App\Http\Controllers\Admin\AdminContentController;
 use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Controllers\Auth\DiscordAuthController;
+use App\Http\Controllers\Auth\OauthAuthController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PublicFolderController;
 use App\Http\Controllers\SignController;
 use App\Http\Controllers\StatsController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VariantController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/stats', [StatsController::class, 'index']);
-Route::get('/auth/discord/redirect', [DiscordAuthController::class, 'redirect']);
-Route::post('/auth/discord/callback', [DiscordAuthController::class, 'callback']);
+
+Route::get('/auth/{provider}/redirect', [OauthAuthController::class, 'redirect'])
+    ->where('provider', 'discord|trackmania');
+Route::post('/auth/{provider}/callback', [OauthAuthController::class, 'callback'])
+    ->where('provider', 'discord|trackmania');
+
 Route::get('/public/folders', [PublicFolderController::class, 'index']);
 Route::get('/public/folders/{slug}', [PublicFolderController::class, 'show']);
 Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'unlock'])
@@ -21,8 +26,17 @@ Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'un
 Route::post('/public/folders/{slug}/signs', [PublicFolderController::class, 'signs']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::post('/auth/logout', [DiscordAuthController::class, 'logout']);
-    Route::get('/me', [DiscordAuthController::class, 'me']);
+    Route::post('/auth/logout', [OauthAuthController::class, 'logout']);
+    Route::get('/me', [OauthAuthController::class, 'me']);
+    Route::get('/me/providers', [UserController::class, 'linkedProviders']);
+    Route::patch('/me/profile', [UserController::class, 'updateProfile']);
+    Route::post('/me/avatar', [UserController::class, 'uploadAvatar']);
+
+    Route::post('/auth/{provider}/link', [OauthAuthController::class, 'link'])
+        ->where('provider', 'discord|trackmania');
+    Route::delete('/auth/{provider}/unlink', [OauthAuthController::class, 'unlink'])
+        ->where('provider', 'discord|trackmania');
+
     Route::apiResource('folders', FolderController::class)->only([
         'index',
         'store',

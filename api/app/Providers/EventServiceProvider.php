@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\TrackmaniaProvider;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
 use SocialiteProviders\Manager\SocialiteWasCalled;
@@ -18,4 +19,17 @@ class EventServiceProvider extends ServiceProvider
             DiscordExtendSocialite::class.'@handle',
         ],
     ];
+
+    public function boot(): void
+    {
+        parent::boot();
+
+        // Register the custom Trackmania Socialite provider.
+        $socialite = $this->app->make(\Laravel\Socialite\Contracts\Factory::class);
+        $socialite->extend(TrackmaniaProvider::IDENTIFIER, function ($app) use ($socialite): TrackmaniaProvider {
+            $config = $app['config']['services.trackmania'];
+
+            return $socialite->buildProvider(TrackmaniaProvider::class, $config);
+        });
+    }
 }

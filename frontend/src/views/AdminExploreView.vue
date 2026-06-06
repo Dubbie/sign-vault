@@ -242,13 +242,13 @@ onMounted(() => {
               <p class="truncate text-sm font-semibold text-zinc-100">{{ folder.name }}</p>
               <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
                 <img
-                  v-if="folder.owner.discord_avatar"
-                  :src="folder.owner.discord_avatar"
-                  :alt="folder.owner.discord_username"
+                  v-if="folder.owner.avatar_url"
+                  :src="folder.owner.avatar_url"
+                  :alt="folder.owner.display_name"
                   class="size-4 rounded-full"
                 />
                 <span class="truncate text-xs text-zinc-500">
-                  {{ folder.owner.discord_global_name || folder.owner.discord_username }}
+                  {{ folder.owner.display_name }}
                 </span>
               </div>
             </div>
@@ -278,16 +278,13 @@ onMounted(() => {
                 <h2 class="text-lg font-semibold text-zinc-100">{{ selectedFolderName || selectedFolder.name }}</h2>
                 <div v-if="selectedFolder.owner" class="mt-1 flex items-center gap-2">
                   <img
-                    v-if="selectedFolder.owner.discord_avatar"
-                    :src="selectedFolder.owner.discord_avatar"
-                    :alt="selectedFolder.owner.discord_username"
+                    v-if="selectedFolder.owner.avatar_url"
+                    :src="selectedFolder.owner.avatar_url"
+                    :alt="selectedFolder.owner.display_name"
                     class="size-5 rounded-full"
                   />
                   <span class="truncate text-sm text-zinc-400">
-                    {{
-                      selectedFolder.owner.discord_global_name ||
-                      selectedFolder.owner.discord_username
-                    }}
+                    {{ selectedFolder.owner.display_name }}
                   </span>
                 </div>
               </div>
@@ -329,13 +326,13 @@ onMounted(() => {
             <p class="truncate text-sm font-semibold text-zinc-100">{{ folder.name }}</p>
             <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
               <img
-                v-if="folder.owner.discord_avatar"
-                :src="folder.owner.discord_avatar"
-                :alt="folder.owner.discord_username"
+                v-if="folder.owner.avatar_url"
+                :src="folder.owner.avatar_url"
+                :alt="folder.owner.display_name"
                 class="size-4 rounded-full"
               />
               <span class="truncate text-xs text-zinc-500">
-                {{ folder.owner.discord_global_name || folder.owner.discord_username }}
+                {{ folder.owner.display_name }}
               </span>
             </div>
           </div>
@@ -412,7 +409,7 @@ onMounted(() => {
     >
       <div v-if="selectedFolder">
         <p class="text-sm text-zinc-300">
-          Ban <strong>{{ selectedFolder.owner?.discord_global_name || selectedFolder.owner?.discord_username }}</strong>? This will:
+          Ban <strong>{{ selectedFolder.owner?.display_name }}</strong>? This will:
         </p>
         <ul class="mt-2 list-inside list-disc text-sm text-zinc-400">
           <li>Delete all their folders and signs</li>

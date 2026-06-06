@@ -78,9 +78,8 @@ class PublicFolderAccessTest extends TestCase
     public function test_includes_owner_information(): void
     {
         $user = User::factory()->create([
-            'discord_username' => 'janedoe',
-            'discord_global_name' => 'Jane Doe',
-            'discord_avatar' => 'https://cdn.discord.com/avatars/123/abc.png',
+            'display_name' => 'Jane Doe',
+            'avatar_url' => 'https://cdn.discord.com/avatars/123/abc.png',
         ]);
 
         $folder = Folder::factory()->for($user)->create([
@@ -98,9 +97,8 @@ class PublicFolderAccessTest extends TestCase
 
         $this->getJson('/api/public/folders')
             ->assertOk()
-            ->assertJsonPath('data.0.owner.discord_username', 'janedoe')
-            ->assertJsonPath('data.0.owner.discord_global_name', 'Jane Doe')
-            ->assertJsonPath('data.0.owner.discord_avatar', 'https://cdn.discord.com/avatars/123/abc.png');
+            ->assertJsonPath('data.0.owner.display_name', 'Jane Doe')
+            ->assertJsonPath('data.0.owner.avatar_url', 'https://cdn.discord.com/avatars/123/abc.png');
     }
 
     public function test_includes_sign_count(): void
@@ -322,7 +320,7 @@ class PublicFolderAccessTest extends TestCase
             ->assertJsonPath('signs.0.name', 'Ice Warning')
             ->assertJsonPath('signs.0.public_url', 'https://cdn.example.com/signs/ice-warning.png')
             ->assertJsonPath('folder.user_id', $folder->user_id)
-            ->assertJsonPath('folder.owner.discord_username', $folder->user->discord_username)
+            ->assertJsonPath('folder.owner.display_name', $folder->user->display_name)
             ->assertJsonMissingPath('folder.password_hash')
             ->assertJsonMissingPath('signs.0.storage_key')
             ->assertJsonMissingPath('signs.0.storage_disk');
@@ -411,7 +409,7 @@ class PublicFolderAccessTest extends TestCase
             ->assertJsonPath('signs.0.name', 'Hidden Banner')
             ->assertJsonPath('signs.0.public_url', 'https://cdn.example.com/signs/hidden-banner.png')
             ->assertJsonPath('folder.user_id', $folder->user_id)
-            ->assertJsonPath('folder.owner.discord_username', $folder->user->discord_username)
+            ->assertJsonPath('folder.owner.display_name', $folder->user->display_name)
             ->assertJsonMissingPath('folder.password_hash')
             ->assertJsonMissingPath('signs.0.storage_key')
             ->assertJsonMissingPath('signs.0.storage_disk');

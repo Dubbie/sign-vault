@@ -19,13 +19,13 @@ defineProps<{
       <p class="text-label-md mb-2 truncate">{{ folder.name }}</p>
       <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
         <img
-          v-if="folder.owner.discord_avatar"
-          :src="folder.owner.discord_avatar"
-          :alt="folder.owner.discord_username"
+          v-if="folder.owner.avatar_url"
+          :src="folder.owner.avatar_url"
+          :alt="folder.owner.display_name"
           class="size-4 rounded"
         />
         <span class="truncate text-xs text-secondary">
-          {{ folder.owner.discord_global_name || folder.owner.discord_username }}
+          {{ folder.owner.display_name }}
         </span>
       </div>
     </div>

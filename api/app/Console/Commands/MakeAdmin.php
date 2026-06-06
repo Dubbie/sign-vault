@@ -2,23 +2,25 @@
 
 namespace App\Console\Commands;
 
+use App\Models\OauthProvider;
 use App\Models\User;
 use Illuminate\Console\Command;
 
 class MakeAdmin extends Command
 {
-    protected $signature = 'sign-vault:make-admin {discord_id : The Discord ID of the user}';
+    protected $signature = 'sign-vault:make-admin
+        {id : The user ID, or a provider-qualified ID like discord:123456789 or trackmania:uuid}';
 
-    protected $description = 'Grant admin privileges to a user by Discord ID';
+    protected $description = 'Grant admin privileges to a user by ID or provider ID';
 
     public function handle(): int
     {
-        $discordId = $this->argument('discord_id');
+        $input = (string) $this->argument('id');
 
-        $user = User::where('discord_id', $discordId)->first();
+        $user = $this->resolveUser($input);
 
         if ($user === null) {
-            $this->error("No user found with Discord ID: {$discordId}");
+            $this->error("No user found for: {$input}");
 
             return self::FAILURE;
         }
@@ -26,8 +28,22 @@ class MakeAdmin extends Command
         $user->is_admin = true;
         $user->save();
 
-        $this->info("User {$user->discord_username} ({$discordId}) is now an admin.");
+        $this->info("User \"{$user->display_name}\" (id={$user->id}) is now an admin.");
 
         return self::SUCCESS;
+    }
+
+    private function resolveUser(string $input): ?User
+    {
+        if (str_contains($input, ':')) {
+            [$provider, $providerId] = explode(':', $input, 2);
+
+            return OauthProvider::where('provider', $provider)
+                ->where('provider_user_id', $providerId)
+                ->first()
+                ?->user;
+        }
+
+        return User::find((int) $input);
     }
 }

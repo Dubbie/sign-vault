@@ -8,6 +8,7 @@ import DiscordBanner from '@/components/ui/DiscordBanner.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
 import UiModal from '@/components/ui/UiModal.vue'
+import { renderReleaseNotesMarkdown } from '@/lib/release-notes'
 import { useAuthStore } from '@/stores/auth'
 import { LogOut, Settings, ShieldAlert } from '@lucide/vue'
 
@@ -20,7 +21,7 @@ const exploreRouteNames = new Set(['explore', 'public-folder'])
 const releaseVersion = __APP_VERSION__
 const releaseDate = __APP_RELEASE_DATE__
 const releaseNotes = __APP_RELEASE_NOTES__
-const releaseNotesBody = computed(() => releaseNotes.trim() || 'No published release notes yet.')
+const releaseNotesBody = computed(() => renderReleaseNotesMarkdown(releaseNotes))
 
 function navClass(active: boolean) {
   return [
@@ -172,9 +173,7 @@ function isExploreActive() {
             </UiDropdown>
           </div>
 
-          <UiButton v-else @click="handleLogin">
-            Login
-          </UiButton>
+          <UiButton v-else @click="handleLogin"> Login </UiButton>
         </div>
       </nav>
     </header>
@@ -203,7 +202,7 @@ function isExploreActive() {
           <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
             <button
               type="button"
-              class="cursor-pointer rounded-full border border-outline-variant/60 bg-surface-container px-3 py-1 text-label-sm font-semibold text-on-surface transition hover:border-primary hover:text-primary"
+              class="font-mono cursor-pointer rounded-full border border-outline-variant/60 bg-surface-container px-2 py-0.5 text-xs text-on-surface transition hover:border-primary hover:text-primary"
               @click="showReleaseNotes = true"
             >
               v{{ releaseVersion }}
@@ -247,11 +246,69 @@ function isExploreActive() {
           {{ releaseDate }}
         </p>
         <div
-          class="max-h-[60vh] overflow-y-auto rounded-xl border border-outline-variant/30 bg-surface-container-low p-4 text-sm leading-6 text-on-surface-variant whitespace-pre-wrap"
-        >
-          {{ releaseNotesBody }}
-        </div>
+          class="release-notes-content max-h-[60vh] overflow-y-auto rounded-xl border border-outline-variant/30 bg-surface-container-low p-4 text-sm leading-6 text-on-surface-variant"
+          v-html="releaseNotesBody"
+        ></div>
       </div>
     </UiModal>
   </div>
 </template>
+
+<style scoped>
+:deep(.release-notes-content h2),
+:deep(.release-notes-content h3) {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-on-surface);
+  font-weight: 700;
+}
+
+:deep(.release-notes-content h2:first-child),
+:deep(.release-notes-content h3:first-child) {
+  margin-top: 0;
+}
+
+:deep(.release-notes-content h2) {
+  font-size: 1.1rem;
+}
+
+:deep(.release-notes-content h3) {
+  font-size: 1rem;
+}
+
+:deep(.release-notes-content p) {
+  margin-top: 0.75rem;
+}
+
+:deep(.release-notes-content p:first-child) {
+  margin-top: 0;
+}
+
+:deep(.release-notes-content ul) {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+:deep(.release-notes-content li + li) {
+  margin-top: 0.5rem;
+}
+
+:deep(.release-notes-content a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+:deep(.release-notes-content a:hover) {
+  color: var(--color-primary-fixed);
+}
+
+:deep(.release-notes-content code) {
+  padding: 0.125rem 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface-container-high) 75%, transparent);
+  color: var(--color-on-surface);
+  font-size: 0.85em;
+}
+</style>

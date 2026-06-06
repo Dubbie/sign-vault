@@ -44,6 +44,8 @@ export type PublicFolderListing = {
   name: string
   slug: string
   visibility: 'public'
+  attribution_name: string | null
+  attribution_source_url: string | null
   signs_count: number
   variants_count: number
   votes_count: number

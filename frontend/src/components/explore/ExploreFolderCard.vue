@@ -5,7 +5,7 @@ import { RouterLink } from 'vue-router'
 import { voteFolder } from '@/lib/public-folders'
 import { useAuthStore } from '@/stores/auth'
 import type { PublicFolderListing } from '@/types/public-folder'
-import { Plus } from '@lucide/vue'
+import { ThumbsUp } from '@lucide/vue'
 
 const props = defineProps<{
   folder: PublicFolderListing
@@ -41,15 +41,30 @@ async function handleVote(e: MouseEvent) {
     class="flex flex-col gap-2 rounded-lg border bg-surface px-3 py-2.5 no-underline transition hover:bg-surface-hover/50"
     :class="{ 'border-primary': active, 'border-outline/30': !active }"
   >
-    <p class="text-label-md truncate">{{ folder.name }}</p>
+    <div class="flex items-baseline gap-1.5 min-w-0">
+      <p class="text-label-md truncate">{{ folder.name }}</p>
+      <span v-if="folder.attribution_name" class="shrink-0 text-xs text-secondary">
+        by
+        <a
+          v-if="folder.attribution_source_url"
+          :href="folder.attribution_source_url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary hover:underline"
+          @click.stop
+          >{{ folder.attribution_name }}</a
+        >
+        <span v-else>{{ folder.attribution_name }}</span>
+      </span>
+    </div>
 
     <div class="flex items-center gap-2 min-w-0">
-      <div v-if="folder.owner" class="flex items-center gap-1.5 min-w-0 flex-1">
+      <div v-if="folder.owner" class="flex items-center gap-2 min-w-0 flex-1">
         <img
           v-if="folder.owner.avatar_url"
           :src="folder.owner.avatar_url"
           :alt="folder.owner.display_name"
-          class="size-4 shrink-0 rounded"
+          class="size-5 shrink-0 rounded"
         />
         <span class="truncate text-xs text-secondary">
           {{ folder.owner.display_name }}
@@ -66,7 +81,7 @@ async function handleVote(e: MouseEvent) {
 
       <button
         type="button"
-        class="shrink-0 ml-auto flex items-center gap-1.5 px-2 h-5 rounded font-bold text-xs transition-colors"
+        class="shrink-0 ml-auto flex items-center gap-1.5 px-2 h-6 rounded font-bold text-xs transition-colors"
         :class="
           userHasVoted
             ? 'bg-emerald-500 text-background'
@@ -76,10 +91,7 @@ async function handleVote(e: MouseEvent) {
         :title="auth.user ? (userHasVoted ? 'Remove vote' : 'Vote ++') : 'Login to vote'"
         @click="handleVote"
       >
-        <div class="flex -space-x-0.5">
-          <Plus class="size-3" stroke-width="4" />
-          <Plus class="size-3" stroke-width="4" />
-        </div>
+        <ThumbsUp class="size-4" />
         <span v-if="votesCount > 0">{{ votesCount }}</span>
       </button>
     </div>

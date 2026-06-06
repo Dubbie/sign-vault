@@ -103,10 +103,7 @@ const selectedVariantOption = computed({
     void handleVariantSwitch(Number(value))
   },
 })
-const ownerDisplayName = computed(
-  () =>
-    folder.value?.owner.display_name || 'Unknown',
-)
+const ownerDisplayName = computed(() => folder.value?.owner.display_name || 'Unknown')
 
 function activeVariantId(): number | null {
   if (selectedVariantId.value) return selectedVariantId.value
@@ -140,8 +137,7 @@ async function handleBan() {
 
   try {
     await banUser(folder.value.user_id, banReason.value.trim())
-    bannedUserName.value =
-      folder.value.owner?.display_name || 'User'
+    bannedUserName.value = folder.value.owner?.display_name || 'User'
     showBanModal.value = false
     banReason.value = ''
     folder.value = null
@@ -509,7 +505,9 @@ watch(folderSlug, () => {
             @click="handleVote"
           >
             <span>++</span>
-            <span v-if="votesCount > 0" class="font-sans font-normal text-xs">{{ votesCount }}</span>
+            <span v-if="votesCount > 0" class="font-sans font-normal text-xs">{{
+              votesCount
+            }}</span>
           </button>
 
           <UiButton variant="secondary" type="button" @click="handleCopyPublicUrl">

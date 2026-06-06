@@ -130,22 +130,12 @@ onMounted(() => {
 
         <div>
           <p class="mb-1 text-label-sm text-on-surface-variant">From</p>
-          <UiInput
-            v-model="filterDateFrom"
-            type="date"
-            class="w-40"
-            @change="applyFilters"
-          />
+          <UiInput v-model="filterDateFrom" type="date" class="w-40" @change="applyFilters" />
         </div>
 
         <div>
           <p class="mb-1 text-label-sm text-on-surface-variant">To</p>
-          <UiInput
-            v-model="filterDateTo"
-            type="date"
-            class="w-40"
-            @change="applyFilters"
-          />
+          <UiInput v-model="filterDateTo" type="date" class="w-40" @change="applyFilters" />
         </div>
       </div>
 
@@ -169,8 +159,12 @@ onMounted(() => {
                   <th class="px-5 py-4 text-label-sm text-on-surface-variant">When</th>
                   <th class="px-5 py-4 text-label-sm text-on-surface-variant">Event</th>
                   <th class="px-5 py-4 text-label-sm text-on-surface-variant">Actor</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-md:hidden">Subject</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-lg:hidden">Details</th>
+                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-md:hidden">
+                    Subject
+                  </th>
+                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-lg:hidden">
+                    Details
+                  </th>
                   <th class="px-5 py-4 text-label-sm text-on-surface-variant max-lg:hidden">IP</th>
                 </tr>
               </thead>
@@ -203,7 +197,9 @@ onMounted(() => {
                         class="size-6 shrink-0 rounded-full"
                       />
                       <div v-else class="size-6 shrink-0 rounded-full bg-surface-container-high" />
-                      <span class="text-body-sm text-on-surface">{{ entry.actor.display_name }}</span>
+                      <span class="text-body-sm text-on-surface">{{
+                        entry.actor.display_name
+                      }}</span>
                     </div>
                     <span v-else class="text-on-surface-variant/50">—</span>
                   </td>
@@ -219,7 +215,10 @@ onMounted(() => {
                   </td>
 
                   <td class="px-5 py-4 max-lg:hidden">
-                    <span v-if="entry.ip_address" class="font-mono text-xs text-on-surface-variant/70">
+                    <span
+                      v-if="entry.ip_address"
+                      class="font-mono text-xs text-on-surface-variant/70"
+                    >
                       {{ entry.ip_address }}
                     </span>
                     <span v-else class="text-on-surface-variant/50">—</span>

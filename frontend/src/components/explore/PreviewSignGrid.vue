@@ -75,11 +75,7 @@ const columns = computed(() => {
   <div class="relative overflow-hidden">
     <div class="grid gap-2 preview-sign-grid">
       <div v-for="col in columns" :key="col.label" class="flex flex-col gap-2">
-        <SignMedia
-          v-for="sign in col.signs"
-          :key="sign.id"
-          :sign="sign"
-        />
+        <SignMedia v-for="sign in col.signs" :key="sign.id" :sign="sign" />
       </div>
     </div>
 

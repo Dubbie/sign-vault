@@ -55,10 +55,7 @@ function pauseVideo() {
     @mouseleave="pauseVideo"
   >
     <Transition name="skeleton-fade">
-      <div
-        v-if="!isLoaded"
-        class="absolute inset-0 animate-pulse rounded bg-zinc-800"
-      />
+      <div v-if="!isLoaded" class="absolute inset-0 animate-pulse rounded bg-zinc-800" />
     </Transition>
 
     <video

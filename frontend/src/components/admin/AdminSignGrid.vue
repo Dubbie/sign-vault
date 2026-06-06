@@ -68,9 +68,7 @@ function isSelected(id: number) {
 }
 
 function toggleSelect(id: number) {
-  const next = isSelected(id)
-    ? props.modelValue.filter((s) => s !== id)
-    : [...props.modelValue, id]
+  const next = isSelected(id) ? props.modelValue.filter((s) => s !== id) : [...props.modelValue, id]
   emit('update:modelValue', next)
 }
 
@@ -81,7 +79,10 @@ function allSelectedInCol(signs: AdminGridSign[]) {
 function toggleColumn(signs: AdminGridSign[]) {
   if (allSelectedInCol(signs)) {
     const ids = new Set(signs.map((s) => s.id))
-    emit('update:modelValue', props.modelValue.filter((id) => !ids.has(id)))
+    emit(
+      'update:modelValue',
+      props.modelValue.filter((id) => !ids.has(id)),
+    )
   } else {
     const current = new Set(props.modelValue)
     for (const sign of signs) current.add(sign.id)
@@ -118,7 +119,9 @@ function toggleColumn(signs: AdminGridSign[]) {
             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <span class="text-xs text-on-surface-variant group-hover:text-on-surface transition">{{ col.label }}</span>
+        <span class="text-xs text-on-surface-variant group-hover:text-on-surface transition">{{
+          col.label
+        }}</span>
       </button>
 
       <div

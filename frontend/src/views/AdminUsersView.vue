@@ -148,10 +148,14 @@ onMounted(() => {
               <thead class="bg-surface-container-low">
                 <tr class="text-left">
                   <th class="px-5 py-4 text-label-sm text-on-surface-variant">User</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden">
+                  <th
+                    class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden"
+                  >
                     Discord
                   </th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden">
+                  <th
+                    class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden"
+                  >
                     Trackmania
                   </th>
                   <th
@@ -200,7 +204,8 @@ onMounted(() => {
                       v-if="user.providers.some((p) => p.provider === 'discord')"
                       class="text-emerald-400"
                       title="Connected"
-                    >✓</span>
+                      >✓</span
+                    >
                     <span v-else class="text-on-surface-variant/30">—</span>
                   </td>
                   <td class="px-5 py-4 text-center max-sm:hidden">
@@ -208,7 +213,8 @@ onMounted(() => {
                       v-if="user.providers.some((p) => p.provider === 'trackmania')"
                       class="text-emerald-400"
                       title="Connected"
-                    >✓</span>
+                      >✓</span
+                    >
                     <span v-else class="text-on-surface-variant/30">—</span>
                   </td>
 

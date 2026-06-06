@@ -67,7 +67,6 @@ async function fetchStats() {
 }
 
 onMounted(fetchStats);
-
 </script>
 
 <template>

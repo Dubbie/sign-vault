@@ -388,11 +388,7 @@ watch(
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <UiButton
-            v-if="canShareFolder()"
-            variant="tertiary"
-            :to="publicFolderPath"
-          >
+          <UiButton v-if="canShareFolder()" variant="tertiary" :to="publicFolderPath">
             <Link class="size-5" />
             Open public folder
           </UiButton>

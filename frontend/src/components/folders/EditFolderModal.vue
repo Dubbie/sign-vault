@@ -122,11 +122,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <UiModal
-    :model-value="modelValue"
-    title="Edit folder"
-    @update:model-value="close"
-  >
+  <UiModal :model-value="modelValue" title="Edit folder" @update:model-value="close">
     <UiErrorBanner v-if="foldersStore.error">
       {{ foldersStore.error }}
     </UiErrorBanner>

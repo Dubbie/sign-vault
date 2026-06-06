@@ -10,19 +10,6 @@
     "lint-staged": "^15.5.2",
     "prettier": "3.8.3"
   },
-  "lint-staged": {
-    "*.{md,json,yml,yaml,webmanifest}": [
-      "prettier --write --ignore-unknown"
-    ],
-    "frontend/**/*.{js,ts,vue,css}": [
-      "npm --workspace frontend exec prettier --write --ignore-unknown",
-      "npm --workspace frontend exec eslint --fix --cache --no-warn-ignored",
-      "npm --workspace frontend exec oxlint --fix"
-    ],
-    "landing/**/*.{js,ts,vue,css}": [
-      "npm --workspace landing exec prettier --write --ignore-unknown"
-    ]
-  },
   "workspaces": [
     "frontend",
     "landing"

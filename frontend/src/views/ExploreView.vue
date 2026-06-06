@@ -20,7 +20,9 @@ const folders = ref<PublicFolderListing[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const search = ref(String(route.query.q || ''))
-const sort = ref<SortOption>((route.query.sort as SortOption) || 'latest')
+const SORT_STORAGE_KEY = 'explore:sort'
+const storedSort = localStorage.getItem(SORT_STORAGE_KEY) as SortOption | null
+const sort = ref<SortOption>((route.query.sort as SortOption) || storedSort || 'latest')
 const meta = ref<PaginationMeta | null>(null)
 const hoveredFolder = ref<PublicFolderListing | null>(null)
 
@@ -55,6 +57,7 @@ function goToPage(page: number) {
 
 function handleSortChange(value: SortOption) {
   sort.value = value
+  localStorage.setItem(SORT_STORAGE_KEY, value)
   goToPage(1)
 }
 

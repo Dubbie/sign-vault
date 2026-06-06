@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { voteFolder } from '@/lib/public-folders'
 import { useAuthStore } from '@/stores/auth'
@@ -13,16 +13,23 @@ const props = defineProps<{
 }>()
 
 const auth = useAuthStore()
+const router = useRouter()
 
 const votesCount = ref(props.folder.votes_count)
 const userHasVoted = ref(props.folder.user_has_voted)
 const isVoting = ref(false)
+const showVoteButton = computed(() => auth.user || votesCount.value > 0)
 
 async function handleVote(e: MouseEvent) {
   e.preventDefault()
   e.stopPropagation()
 
-  if (!auth.user || isVoting.value) return
+  if (!auth.user) {
+    await router.push({ name: 'login' })
+    return
+  }
+
+  if (isVoting.value) return
 
   isVoting.value = true
   try {
@@ -80,14 +87,15 @@ async function handleVote(e: MouseEvent) {
       </span>
 
       <button
+        v-if="showVoteButton"
         type="button"
-        class="shrink-0 ml-auto flex items-center gap-1.5 px-2 h-6 rounded font-bold text-xs transition-colors"
+        class="shrink-0 ml-auto flex h-6 cursor-pointer items-center gap-1.5 rounded px-2 text-xs font-bold transition-colors"
         :class="
           userHasVoted
             ? 'bg-emerald-500 text-background'
             : 'bg-zinc-700 text-zinc-300 hover:bg-emerald-500 hover:text-white'
         "
-        :disabled="!auth.user || isVoting"
+        :disabled="isVoting"
         :title="auth.user ? (userHasVoted ? 'Remove vote' : 'Vote ++') : 'Login to vote'"
         @click="handleVote"
       >

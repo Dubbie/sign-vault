@@ -22,7 +22,7 @@ import UiInput from '@/components/ui/UiInput.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 import SignGrid from '@/components/signs/SignGrid.vue'
-import { Ban, Link, Wrench } from '@lucide/vue'
+import { Ban, Link, ThumbsUp, Wrench } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -466,7 +466,7 @@ watch(folderSlug, () => {
             </div>
           </div>
 
-          <div class="flex gap-x-3">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
             <p v-if="folder.attribution_name" class="text-body-lg text-on-surface-variant">
               Original author:
               <a
@@ -488,28 +488,28 @@ watch(folderSlug, () => {
             <p class="text-on-surface-variant text-body-lg">
               {{ signsTotal }} signs in this folder
             </p>
+
+            <button
+              type="button"
+              class="ml-auto flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-mono font-semibold transition-colors"
+              :class="
+                userHasVoted
+                  ? 'bg-emerald-500 text-background'
+                  : 'bg-zinc-700 text-zinc-300 hover:bg-emerald-500 hover:text-white'
+              "
+              :disabled="!authStore.user || isVoting"
+              :title="authStore.user ? (userHasVoted ? 'Remove vote' : 'Vote ++') : 'Login to vote'"
+              @click="handleVote"
+            >
+              <ThumbsUp class="size-4" />
+              <span v-if="votesCount > 0" class="font-sans text-xs font-normal">{{
+                votesCount
+              }}</span>
+            </button>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
-          <button
-            type="button"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-mono font-semibold transition-colors"
-            :class="
-              userHasVoted
-                ? 'bg-emerald-500 text-background'
-                : 'bg-zinc-700 text-zinc-300 hover:bg-emerald-500 hover:text-white'
-            "
-            :disabled="!authStore.user || isVoting"
-            :title="authStore.user ? (userHasVoted ? 'Remove vote' : 'Vote ++') : 'Login to vote'"
-            @click="handleVote"
-          >
-            <span>++</span>
-            <span v-if="votesCount > 0" class="font-sans font-normal text-xs">{{
-              votesCount
-            }}</span>
-          </button>
-
           <UiButton variant="secondary" type="button" @click="handleCopyPublicUrl">
             <Link class="size-5" />
 

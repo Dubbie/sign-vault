@@ -7,6 +7,7 @@ import {
   getPublicFolderErrorMessage,
   getPublicFolderSigns,
   unlockPublicFolder,
+  voteFolder,
 } from '@/lib/public-folders'
 import type { PublicFolder, PublicSign } from '@/types/public-folder'
 import { useAuthStore } from '@/stores/auth'
@@ -70,6 +71,9 @@ const error = ref<string | null>(null)
 const copiedSignId = ref<number | null>(null)
 const copiedPublicUrl = ref(false)
 const selectedVariantId = ref<number | null>(null)
+const votesCount = ref(0)
+const userHasVoted = ref(false)
+const isVoting = ref(false)
 
 const variants = computed(() => folder.value?.variants ?? [])
 const showVariantSwitcher = computed(() => variants.value.length > 1)
@@ -265,6 +269,8 @@ async function loadPublicFolder() {
     }
 
     folder.value = response.folder
+    votesCount.value = response.folder.votes_count
+    userHasVoted.value = response.folder.user_has_voted
     requiresPassword.value = false
     document.title = `${response.folder.name} — SignVault`
     checkIsAuthor().then((result) => {
@@ -309,6 +315,8 @@ async function handleUnlock() {
 
     unlockedPassword.value = unlockForm.password
     folder.value = response.folder
+    votesCount.value = response.folder.votes_count
+    userHasVoted.value = response.folder.user_has_voted
     requiresPassword.value = false
     document.title = `${response.folder.name} — SignVault`
     checkIsAuthor().then((result) => {
@@ -348,6 +356,21 @@ async function handleCopy(signId: number) {
     }, 1000)
   } catch {
     error.value = 'Could not copy the sign URL. Please copy it manually.'
+  }
+}
+
+async function handleVote() {
+  if (!authStore.user || isVoting.value) return
+
+  isVoting.value = true
+  try {
+    const result = await voteFolder(folderSlug.value)
+    votesCount.value = result.votes_count
+    userHasVoted.value = result.user_has_voted
+  } catch {
+    error.value = 'Failed to submit vote.'
+  } finally {
+    isVoting.value = false
   }
 }
 
@@ -473,6 +496,22 @@ watch(folderSlug, () => {
         </div>
 
         <div class="flex items-center gap-3">
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-mono font-semibold transition-colors"
+            :class="
+              userHasVoted
+                ? 'bg-emerald-500 text-background'
+                : 'bg-zinc-700 text-zinc-300 hover:bg-emerald-500 hover:text-white'
+            "
+            :disabled="!authStore.user || isVoting"
+            :title="authStore.user ? (userHasVoted ? 'Remove vote' : 'Vote ++') : 'Login to vote'"
+            @click="handleVote"
+          >
+            <span>++</span>
+            <span v-if="votesCount > 0" class="font-sans font-normal text-xs">{{ votesCount }}</span>
+          </button>
+
           <UiButton variant="secondary" type="button" @click="handleCopyPublicUrl">
             <Link class="size-5" />
 

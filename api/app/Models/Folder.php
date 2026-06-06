@@ -58,6 +58,11 @@ class Folder extends Model
         return $this->hasOne(Variant::class)->where('is_default', true);
     }
 
+    public function votes(): HasMany
+    {
+        return $this->hasMany(FolderVote::class);
+    }
+
     protected static function booted(): void
     {
         static::created(function (Folder $folder): void {

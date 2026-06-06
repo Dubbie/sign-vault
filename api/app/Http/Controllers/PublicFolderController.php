@@ -7,6 +7,7 @@ use App\Http\Resources\BrowseFolderResource;
 use App\Http\Resources\PublicFolderResource;
 use App\Http\Resources\PublicSignResource;
 use App\Models\Folder;
+use App\Models\FolderVote;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -23,6 +24,7 @@ class PublicFolderController extends Controller
             ->with([
                 'user',
                 'variants',
+                'votes',
                 'signs' => function ($query): void {
                     $query->orderBy('id')
                         ->select([
@@ -38,15 +40,46 @@ class PublicFolderController extends Controller
                         ]);
                 },
             ])
-            ->withCount(['signs', 'variants']);
+            ->withCount(['signs', 'variants', 'votes']);
 
         if ($search = $request->string('q', '')) {
             $query->where('name', 'like', '%'.$search.'%');
         }
 
-        $folders = $query->latest()->paginate(20);
+        if ($request->input('sort') === 'votes') {
+            $query->orderByDesc('votes_count');
+        } else {
+            $query->latest();
+        }
+
+        $folders = $query->paginate(20);
 
         return BrowseFolderResource::collection($folders);
+    }
+
+    public function vote(Request $request, string $slug): JsonResponse
+    {
+        $folder = $this->resolveFolder($slug);
+
+        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
+            abort(404);
+        }
+
+        $userId = $request->user()->id;
+        $existing = FolderVote::where('folder_id', $folder->id)->where('user_id', $userId)->first();
+
+        if ($existing) {
+            $existing->delete();
+            $userHasVoted = false;
+        } else {
+            FolderVote::create(['folder_id' => $folder->id, 'user_id' => $userId]);
+            $userHasVoted = true;
+        }
+
+        return response()->json([
+            'votes_count' => $folder->votes()->count(),
+            'user_has_voted' => $userHasVoted,
+        ]);
     }
 
     public function show(string $slug): JsonResponse

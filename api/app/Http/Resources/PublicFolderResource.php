@@ -27,6 +27,10 @@ class PublicFolderResource extends JsonResource
                 'display_name' => $this->user->display_name,
                 'avatar_url'   => $this->user->avatar_url,
             ],
+            'votes_count' => $this->votes()->count(),
+            'user_has_voted' => ($user = auth('sanctum')->user())
+                ? $this->votes()->where('user_id', $user->id)->exists()
+                : false,
             'variants' => $this->whenLoaded('variants', function (): array {
                 return $this->variants->map(fn ($variant): array => [
                     'id' => $variant->id,

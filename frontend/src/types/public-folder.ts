@@ -14,6 +14,8 @@ export type PublicFolder = {
   attribution_name: string | null
   attribution_source_url: string | null
   user_id: number
+  votes_count: number
+  user_has_voted: boolean
   owner: {
     display_name: string
     avatar_url: string | null
@@ -42,8 +44,12 @@ export type PublicFolderListing = {
   name: string
   slug: string
   visibility: 'public'
+  attribution_name: string | null
+  attribution_source_url: string | null
   signs_count: number
   variants_count: number
+  votes_count: number
+  user_has_voted: boolean
   owner: OwnerInfo
   preview_signs: PreviewSign[]
 }

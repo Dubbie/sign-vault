@@ -4,7 +4,6 @@ import logoUrl from "@/assets/logo.svg";
 import FeatureCard from "@/components/FeatureCard.vue";
 import StatCard from "@/components/StatCard.vue";
 
-const isLoggingIn = ref(false);
 const appUrl = import.meta.env.VITE_APP_URL;
 
 const stats = ref<Record<string, number> | null>(null);
@@ -69,20 +68,6 @@ async function fetchStats() {
 
 onMounted(fetchStats);
 
-async function loginWithDiscord() {
-  if (isLoggingIn.value) return;
-  isLoggingIn.value = true;
-
-  try {
-    const res = await fetch(
-      `${import.meta.env.VITE_API_URL}api/auth/discord/redirect`,
-    );
-    const { url } = await res.json();
-    window.location.assign(url);
-  } catch {
-    isLoggingIn.value = false;
-  }
-}
 </script>
 
 <template>
@@ -108,26 +93,12 @@ async function loginWithDiscord() {
         </div>
 
         <div class="flex items-center gap-3">
-          <button
-            type="button"
-            :disabled="isLoggingIn"
-            class="cursor-pointer flex items-center gap-x-1 rounded-md bg-emerald-400 px-4 py-1.5 text-sm font-semibold text-background no-underline transition hover:bg-emerald-200 disabled:opacity-75"
-            @click="loginWithDiscord"
+          <a
+            :href="appUrl + 'login'"
+            class="cursor-pointer flex items-center gap-x-1 rounded-md bg-emerald-400 px-4 py-1.5 text-sm font-semibold text-background no-underline transition hover:bg-emerald-200"
           >
-            <svg
-              width="16px"
-              height="16px"
-              viewBox="0 0 24 24"
-              class="-ml-1"
-              xmlns="http://www.w3.org/2000/svg"
-              xml:space="preserve"
-            >
-              <path
-                d="M18.942 5.556a16.299 16.299 0 0 0-4.126-1.297c-.178.321-.385.754-.529 1.097a15.175 15.175 0 0 0-4.573 0 11.583 11.583 0 0 0-.535-1.097 16.274 16.274 0 0 0-4.129 1.3c-2.611 3.946-3.319 7.794-2.965 11.587a16.494 16.494 0 0 0 5.061 2.593 12.65 12.65 0 0 0 1.084-1.785 10.689 10.689 0 0 1-1.707-.831c.143-.106.283-.217.418-.331 3.291 1.539 6.866 1.539 10.118 0 .137.114.277.225.418.331-.541.326-1.114.606-1.71.832a12.52 12.52 0 0 0 1.084 1.785 16.46 16.46 0 0 0 5.064-2.595c.415-4.396-.709-8.209-2.973-11.589zM8.678 14.813c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c.001 1.123-.793 2.045-1.798 2.045zm6.644 0c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c0 1.123-.793 2.045-1.798 2.045z"
-              />
-            </svg>
-            {{ isLoggingIn ? "Redirecting..." : "Login" }}
-          </button>
+            Login
+          </a>
         </div>
       </nav>
     </header>
@@ -150,28 +121,12 @@ async function loginWithDiscord() {
         </div>
 
         <div class="mb-12 flex items-center justify-center gap-x-2">
-          <button
-            type="button"
-            :disabled="isLoggingIn"
-            class="inline-flex gap-x-2 cursor-pointer items-center rounded-md bg-emerald-400 px-6 py-3 text-base font-semibold text-background no-underline shadow-lg shadow-emerald-400/20 transition hover:bg-emerald-200 disabled:opacity-75"
-            @click="loginWithDiscord"
+          <a
+            :href="appUrl + 'login'"
+            class="inline-flex gap-x-2 items-center rounded-md bg-emerald-400 px-6 py-3 text-base font-semibold text-background no-underline shadow-lg shadow-emerald-400/20 transition hover:bg-emerald-200"
           >
-            <svg
-              width="24px"
-              height="24px"
-              viewBox="0 0 24 24"
-              class="-ml-1 fill-background"
-              xmlns="http://www.w3.org/2000/svg"
-              xml:space="preserve"
-            >
-              <path
-                d="M18.942 5.556a16.299 16.299 0 0 0-4.126-1.297c-.178.321-.385.754-.529 1.097a15.175 15.175 0 0 0-4.573 0 11.583 11.583 0 0 0-.535-1.097 16.274 16.274 0 0 0-4.129 1.3c-2.611 3.946-3.319 7.794-2.965 11.587a16.494 16.494 0 0 0 5.061 2.593 12.65 12.65 0 0 0 1.084-1.785 10.689 10.689 0 0 1-1.707-.831c.143-.106.283-.217.418-.331 3.291 1.539 6.866 1.539 10.118 0 .137.114.277.225.418.331-.541.326-1.114.606-1.71.832a12.52 12.52 0 0 0 1.084 1.785 16.46 16.46 0 0 0 5.064-2.595c.415-4.396-.709-8.209-2.973-11.589zM8.678 14.813c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c.001 1.123-.793 2.045-1.798 2.045zm6.644 0c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c0 1.123-.793 2.045-1.798 2.045z"
-              />
-            </svg>
-            <span>{{
-              isLoggingIn ? "Redirecting..." : "Login with Discord"
-            }}</span>
-          </button>
+            Get started
+          </a>
           <a
             :href="appUrl"
             target="_blank"
@@ -248,8 +203,8 @@ async function loginWithDiscord() {
           </FeatureCard>
 
           <FeatureCard
-            title="Discord Login"
-            description="Jump right in with your Discord account. No sign-up forms, no extra passwords — just one click and you're in."
+            title="Easy Sign-in"
+            description="Log in with Discord or your Ubisoft / Trackmania account. No sign-up forms, no extra passwords — just one click and you're in."
           >
             <template #icon>
               <svg
@@ -262,7 +217,7 @@ async function loginWithDiscord() {
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                  d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
                 />
               </svg>
             </template>

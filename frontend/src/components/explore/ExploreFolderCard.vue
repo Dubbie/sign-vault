@@ -41,8 +41,8 @@ async function handleVote(e: MouseEvent) {
     class="flex flex-col gap-2 rounded-lg border bg-surface px-3 py-2.5 no-underline transition hover:bg-surface-hover/50"
     :class="{ 'border-primary': active, 'border-outline/30': !active }"
   >
-    <div class="flex items-baseline gap-1.5 min-w-0">
-      <p class="text-label-md truncate">{{ folder.name }}</p>
+    <div class="flex items-center gap-1.5 min-w-0">
+      <p class="min-w-0 truncate py-0.5 text-label-md leading-[1.2]">{{ folder.name }}</p>
       <span v-if="folder.attribution_name" class="shrink-0 text-xs text-secondary">
         by
         <a

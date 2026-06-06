@@ -15,12 +15,12 @@
       "prettier --write --ignore-unknown"
     ],
     "frontend/**/*.{js,ts,vue,css}": [
-      "prettier --write --ignore-unknown",
-      "eslint --fix --cache --no-warn-ignored",
-      "oxlint --fix"
+      "npm --workspace frontend exec prettier --write --ignore-unknown",
+      "npm --workspace frontend exec eslint --fix --cache --no-warn-ignored",
+      "npm --workspace frontend exec oxlint --fix"
     ],
     "landing/**/*.{js,ts,vue,css}": [
-      "prettier --write --ignore-unknown"
+      "npm --workspace landing exec prettier --write --ignore-unknown"
     ]
   },
   "workspaces": [

@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "test -d .git && husky || true"
   },
   "devDependencies": {
     "husky": "^9.1.7",

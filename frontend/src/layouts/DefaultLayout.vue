@@ -83,7 +83,7 @@ function isExploreActive() {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen flex-col overflow-hidden bg-background">
+  <div class="relative flex min-h-screen flex-col bg-background">
     <header
       class="fixed top-0 w-full z-50 flex justify-between items-center px-container-margin h-16 bg-surface-dim/80 backdrop-blur-xl border-b border-outline-variant/20"
     >

@@ -52,7 +52,7 @@ class PublicFolderController extends Controller
             $query->latest();
         }
 
-        $folders = $query->paginate(5);
+        $folders = $query->paginate(10);
 
         return BrowseFolderResource::collection($folders);
     }

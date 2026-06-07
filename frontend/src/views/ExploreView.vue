@@ -230,7 +230,7 @@ watch(folders, (nextFolders) => {
 
     <div v-else class="mt-6">
       <!-- lg+: two-column layout -->
-      <div class="hidden lg:grid gap-6" style="grid-template-columns: 350px 1fr">
+      <div class="hidden lg:grid gap-6 items-start" style="grid-template-columns: 350px 1fr">
         <div class="flex flex-col gap-6">
           <div
             role="listbox"
@@ -292,7 +292,7 @@ watch(folders, (nextFolders) => {
           </nav>
         </div>
 
-        <div>
+        <div class="sticky top-20">
           <Transition name="preview-panel" mode="out-in">
             <div
               v-if="!hoveredFolder"

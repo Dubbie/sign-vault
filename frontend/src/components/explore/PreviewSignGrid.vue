@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import {
-  getGridBackgroundPreviewOverlayClasses,
-  getGridBackgroundSurfaceClasses,
-} from '@/lib/grid-background-presets'
+import { getGridBackgroundSurfaceClasses } from '@/lib/grid-background-presets'
 import SignMedia from '@/components/signs/SignMedia.vue'
 import type { GridBackgroundPreset } from '@/types/grid-background'
 import UiButton from '../ui/UiButton.vue'
@@ -25,9 +22,10 @@ const props = withDefaults(
     signs: PreviewSign[]
     folderSlug?: string
     maxPerColumn?: number
+    totalSigns?: number
     backgroundPreset?: GridBackgroundPreset | null
   }>(),
-  { maxPerColumn: 4, backgroundPreset: null },
+  { maxPerColumn: 4, totalSigns: 0, backgroundPreset: null },
 )
 
 const COLUMNS: { value: number; label: string }[] = [
@@ -77,34 +75,31 @@ const columns = computed(() => {
 })
 
 const gridSurfaceClass = computed(() => getGridBackgroundSurfaceClasses(props.backgroundPreset))
-const previewOverlayClass = computed(() =>
-  getGridBackgroundPreviewOverlayClasses(props.backgroundPreset),
-)
+const hiddenSignsCount = computed(() => Math.max((props.totalSigns ?? 0) - props.signs.length, 0))
 </script>
 
 <template>
-  <div class="relative overflow-hidden" :class="gridSurfaceClass">
-    <div class="grid gap-2 preview-sign-grid">
-      <div v-for="col in columns" :key="col.label" class="flex flex-col gap-2">
-        <SignMedia v-for="sign in col.signs" :key="sign.id" :sign="sign" />
+  <div class="grid gap-4">
+    <div class="-m-2" :class="gridSurfaceClass">
+      <div class="grid gap-2 preview-sign-grid">
+        <div v-for="col in columns" :key="col.label" class="flex flex-col gap-2">
+          <SignMedia v-for="sign in col.signs" :key="sign.id" :sign="sign" />
+        </div>
       </div>
     </div>
 
-    <div
-      v-if="folderSlug"
-      class="pointer-events-none absolute inset-0 bg-linear-to-b"
-      :class="previewOverlayClass"
-    >
-      <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <RouterLink
-          class="pointer-events-auto"
-          :to="{ name: 'public-folder', params: { slug: folderSlug } }"
-        >
+    <div v-if="folderSlug" class="mt-2 flex flex-col items-center gap-2 pb-1 text-center">
+      <div class="flex flex-col items-center gap-2">
+        <RouterLink :to="{ name: 'public-folder', params: { slug: folderSlug } }">
           <UiButton>
             <Eye class="size-5" />
             Show all signs
           </UiButton>
         </RouterLink>
+
+        <p v-if="hiddenSignsCount > 0" class="text-xs text-on-surface-variant">
+          {{ hiddenSignsCount }} more sign{{ hiddenSignsCount === 1 ? '' : 's' }}
+        </p>
       </div>
     </div>
   </div>

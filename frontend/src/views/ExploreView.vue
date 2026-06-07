@@ -200,6 +200,7 @@ onMounted(() => {
                 <PreviewSignGrid
                   :signs="hoveredFolder.preview_signs"
                   :folder-slug="hoveredFolder.slug"
+                  :total-signs="hoveredFolder.signs_count"
                   :background-preset="hoveredFolder.preview_grid_background_preset"
                 />
               </div>

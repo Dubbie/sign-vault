@@ -143,222 +143,233 @@ onMounted(() => {
         </p>
 
         <template v-else>
-        <div class="hidden sm:block glass-card overflow-hidden rounded-lg">
-          <div class="overflow-x-auto">
-            <table class="min-w-full">
-              <thead class="bg-surface-container-low">
-                <tr class="text-left">
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant">User</th>
-                  <th
-                    class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden"
-                  >
-                    Discord
-                  </th>
-                  <th
-                    class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden"
-                  >
-                    Trackmania
-                  </th>
-                  <th
-                    class="px-5 py-4 text-label-sm text-on-surface-variant text-right max-md:hidden"
-                  >
-                    Folders
-                  </th>
-                  <th
-                    class="px-5 py-4 text-label-sm text-on-surface-variant text-right max-md:hidden"
-                  >
-                    Signs
-                  </th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant">Status</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant text-right">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr
-                  v-for="user in data.data"
-                  :key="user.id"
-                  class="group border-t border-outline-variant/60 transition hover:bg-surface-container-low"
-                >
-                  <td class="px-5 py-4">
-                    <div class="flex items-center gap-3">
-                      <img
-                        v-if="user.avatar_url"
-                        :src="user.avatar_url"
-                        :alt="user.display_name"
-                        class="size-8 shrink-0 rounded-full"
-                      />
-                      <div v-else class="size-8 shrink-0 rounded-full bg-surface-container-high" />
-                      <div class="min-w-0">
-                        <p class="truncate text-body-md font-semibold text-on-surface">
-                          {{ user.display_name }}
-                        </p>
-                        <p v-if="user.is_admin" class="text-label-sm text-emerald-400">Admin</p>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td class="px-5 py-4 text-center max-sm:hidden">
-                    <span
-                      v-if="user.providers.some((p) => p.provider === 'discord')"
-                      class="text-emerald-400"
-                      title="Connected"
-                      >✓</span
+          <div class="hidden sm:block glass-card overflow-hidden rounded-lg">
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-surface-container-low">
+                  <tr class="text-left">
+                    <th class="px-5 py-4 text-label-sm text-on-surface-variant">User</th>
+                    <th
+                      class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden"
                     >
-                    <span v-else class="text-on-surface-variant/30">—</span>
-                  </td>
-                  <td class="px-5 py-4 text-center max-sm:hidden">
-                    <span
-                      v-if="user.providers.some((p) => p.provider === 'trackmania')"
-                      class="text-emerald-400"
-                      title="Connected"
-                      >✓</span
+                      Discord
+                    </th>
+                    <th
+                      class="px-5 py-4 text-label-sm text-on-surface-variant text-center max-sm:hidden"
                     >
-                    <span v-else class="text-on-surface-variant/30">—</span>
-                  </td>
-
-                  <td class="px-5 py-4 text-right max-md:hidden">
-                    <span class="text-body-md text-on-surface">{{ user.folders_count }}</span>
-                  </td>
-
-                  <td class="px-5 py-4 text-right max-md:hidden">
-                    <span class="text-body-md text-on-surface">{{ user.signs_count }}</span>
-                  </td>
-
-                  <td class="px-5 py-4">
-                    <span
-                      v-if="user.banned_at"
-                      class="inline-flex items-center rounded-full border border-red-400/20 bg-red-400/10 px-2.5 py-1 text-label-sm text-red-400"
-                      :title="`Reason: ${user.ban_reason}`"
+                      Trackmania
+                    </th>
+                    <th
+                      class="px-5 py-4 text-label-sm text-on-surface-variant text-right max-md:hidden"
                     >
-                      Banned
-                    </span>
-                    <span
-                      v-else
-                      class="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-label-sm text-primary"
+                      Folders
+                    </th>
+                    <th
+                      class="px-5 py-4 text-label-sm text-on-surface-variant text-right max-md:hidden"
                     >
-                      Active
-                    </span>
-                  </td>
+                      Signs
+                    </th>
+                    <th class="px-5 py-4 text-label-sm text-on-surface-variant">Status</th>
+                    <th class="px-5 py-4 text-label-sm text-on-surface-variant text-right">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
 
-                  <td class="px-5 py-4">
-                    <div class="flex items-center justify-end gap-2">
-                      <div
-                        class="flex items-center gap-2 pointer-events-none opacity-0 transition-all -translate-x-4 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0"
-                      >
-                        <span
-                          v-if="user.id === authStore.user?.id"
-                          class="text-label-sm text-on-surface-variant"
-                        >
-                          You
-                        </span>
-                        <UiButton
-                          v-else-if="user.banned_at"
-                          size="sm"
-                          variant="secondary"
-                          type="button"
-                          @click="handleUnban(user)"
-                        >
-                          Unban
-                        </UiButton>
-                        <UiButton
+                <tbody>
+                  <tr
+                    v-for="user in data.data"
+                    :key="user.id"
+                    class="group border-t border-outline-variant/60 transition hover:bg-surface-container-low"
+                  >
+                    <td class="px-5 py-4">
+                      <div class="flex items-center gap-3">
+                        <img
+                          v-if="user.avatar_url"
+                          :src="user.avatar_url"
+                          :alt="user.display_name"
+                          class="size-8 shrink-0 rounded-full"
+                        />
+                        <div
                           v-else
-                          size="sm"
-                          variant="danger"
-                          type="button"
-                          @click="openBanModal(user)"
-                        >
-                          Ban
-                        </UiButton>
+                          class="size-8 shrink-0 rounded-full bg-surface-container-high"
+                        />
+                        <div class="min-w-0">
+                          <p class="truncate text-body-md font-semibold text-on-surface">
+                            {{ user.display_name }}
+                          </p>
+                          <p v-if="user.is_admin" class="text-label-sm text-emerald-400">Admin</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    </td>
 
-        <div class="flex flex-col gap-3 sm:hidden">
-          <div v-for="user in data.data" :key="user.id" class="glass-card rounded-lg p-4">
-            <div class="flex items-center gap-3">
-              <img
-                v-if="user.avatar_url"
-                :src="user.avatar_url"
-                :alt="user.display_name"
-                class="size-10 shrink-0 rounded-full"
-              />
-              <div v-else class="size-10 shrink-0 rounded-full bg-surface-container-high" />
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-body-md font-semibold text-on-surface">
-                  {{ user.display_name }}
-                </p>
-                <p v-if="user.is_admin" class="text-label-sm text-emerald-400">Admin</p>
+                    <td class="px-5 py-4 text-center max-sm:hidden">
+                      <span
+                        v-if="user.providers.some((p) => p.provider === 'discord')"
+                        class="text-emerald-400"
+                        title="Connected"
+                        >✓</span
+                      >
+                      <span v-else class="text-on-surface-variant/30">—</span>
+                    </td>
+                    <td class="px-5 py-4 text-center max-sm:hidden">
+                      <span
+                        v-if="user.providers.some((p) => p.provider === 'trackmania')"
+                        class="text-emerald-400"
+                        title="Connected"
+                        >✓</span
+                      >
+                      <span v-else class="text-on-surface-variant/30">—</span>
+                    </td>
+
+                    <td class="px-5 py-4 text-right max-md:hidden">
+                      <span class="text-body-md text-on-surface">{{ user.folders_count }}</span>
+                    </td>
+
+                    <td class="px-5 py-4 text-right max-md:hidden">
+                      <span class="text-body-md text-on-surface">{{ user.signs_count }}</span>
+                    </td>
+
+                    <td class="px-5 py-4">
+                      <span
+                        v-if="user.banned_at"
+                        class="inline-flex items-center rounded-full border border-red-400/20 bg-red-400/10 px-2.5 py-1 text-label-sm text-red-400"
+                        :title="`Reason: ${user.ban_reason}`"
+                      >
+                        Banned
+                      </span>
+                      <span
+                        v-else
+                        class="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-label-sm text-primary"
+                      >
+                        Active
+                      </span>
+                    </td>
+
+                    <td class="px-5 py-4">
+                      <div class="flex items-center justify-end gap-2">
+                        <div
+                          class="flex items-center gap-2 pointer-events-none opacity-0 transition-all -translate-x-4 group-hover:opacity-100 group-hover:pointer-events-auto group-hover:translate-x-0"
+                        >
+                          <span
+                            v-if="user.id === authStore.user?.id"
+                            class="text-label-sm text-on-surface-variant"
+                          >
+                            You
+                          </span>
+                          <UiButton
+                            v-else-if="user.banned_at"
+                            size="sm"
+                            variant="secondary"
+                            type="button"
+                            @click="handleUnban(user)"
+                          >
+                            Unban
+                          </UiButton>
+                          <UiButton
+                            v-else
+                            size="sm"
+                            variant="danger"
+                            type="button"
+                            @click="openBanModal(user)"
+                          >
+                            Ban
+                          </UiButton>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:hidden">
+            <div v-for="user in data.data" :key="user.id" class="glass-card rounded-lg p-4">
+              <div class="flex items-center gap-3">
+                <img
+                  v-if="user.avatar_url"
+                  :src="user.avatar_url"
+                  :alt="user.display_name"
+                  class="size-10 shrink-0 rounded-full"
+                />
+                <div v-else class="size-10 shrink-0 rounded-full bg-surface-container-high" />
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-body-md font-semibold text-on-surface">
+                    {{ user.display_name }}
+                  </p>
+                  <p v-if="user.is_admin" class="text-label-sm text-emerald-400">Admin</p>
+                </div>
+                <span
+                  v-if="user.banned_at"
+                  class="shrink-0 inline-flex items-center rounded-full border border-red-400/20 bg-red-400/10 px-2.5 py-1 text-label-sm text-red-400"
+                  :title="`Reason: ${user.ban_reason}`"
+                >
+                  Banned
+                </span>
+                <span
+                  v-else
+                  class="shrink-0 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-label-sm text-primary"
+                >
+                  Active
+                </span>
               </div>
-              <span
-                v-if="user.banned_at"
-                class="shrink-0 inline-flex items-center rounded-full border border-red-400/20 bg-red-400/10 px-2.5 py-1 text-label-sm text-red-400"
-                :title="`Reason: ${user.ban_reason}`"
-              >
-                Banned
-              </span>
-              <span
-                v-else
-                class="shrink-0 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-label-sm text-primary"
-              >
-                Active
-              </span>
-            </div>
 
-            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-label-sm text-on-surface-variant">
-              <span class="flex items-center gap-1.5">
-                Discord
-                <span
-                  v-if="user.providers.some((p) => p.provider === 'discord')"
-                  class="text-emerald-400"
-                  title="Connected"
-                  >✓</span
-                >
-                <span v-else class="text-on-surface-variant/30">—</span>
-              </span>
-              <span class="flex items-center gap-1.5">
-                Trackmania
-                <span
-                  v-if="user.providers.some((p) => p.provider === 'trackmania')"
-                  class="text-emerald-400"
-                  title="Connected"
-                  >✓</span
-                >
-                <span v-else class="text-on-surface-variant/30">—</span>
-              </span>
-              <span>{{ user.folders_count }} folders</span>
-              <span>{{ user.signs_count }} signs</span>
-            </div>
+              <div
+                class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-label-sm text-on-surface-variant"
+              >
+                <span class="flex items-center gap-1.5">
+                  Discord
+                  <span
+                    v-if="user.providers.some((p) => p.provider === 'discord')"
+                    class="text-emerald-400"
+                    title="Connected"
+                    >✓</span
+                  >
+                  <span v-else class="text-on-surface-variant/30">—</span>
+                </span>
+                <span class="flex items-center gap-1.5">
+                  Trackmania
+                  <span
+                    v-if="user.providers.some((p) => p.provider === 'trackmania')"
+                    class="text-emerald-400"
+                    title="Connected"
+                    >✓</span
+                  >
+                  <span v-else class="text-on-surface-variant/30">—</span>
+                </span>
+                <span>{{ user.folders_count }} folders</span>
+                <span>{{ user.signs_count }} signs</span>
+              </div>
 
-            <div class="mt-3 flex justify-end">
-              <span
-                v-if="user.id === authStore.user?.id"
-                class="text-label-sm text-on-surface-variant"
-              >
-                You
-              </span>
-              <UiButton
-                v-else-if="user.banned_at"
-                size="sm"
-                variant="secondary"
-                type="button"
-                @click="handleUnban(user)"
-              >
-                Unban
-              </UiButton>
-              <UiButton v-else size="sm" variant="danger" type="button" @click="openBanModal(user)">
-                Ban
-              </UiButton>
+              <div class="mt-3 flex justify-end">
+                <span
+                  v-if="user.id === authStore.user?.id"
+                  class="text-label-sm text-on-surface-variant"
+                >
+                  You
+                </span>
+                <UiButton
+                  v-else-if="user.banned_at"
+                  size="sm"
+                  variant="secondary"
+                  type="button"
+                  @click="handleUnban(user)"
+                >
+                  Unban
+                </UiButton>
+                <UiButton
+                  v-else
+                  size="sm"
+                  variant="danger"
+                  type="button"
+                  @click="openBanModal(user)"
+                >
+                  Ban
+                </UiButton>
+              </div>
             </div>
           </div>
-        </div>
         </template>
 
         <nav

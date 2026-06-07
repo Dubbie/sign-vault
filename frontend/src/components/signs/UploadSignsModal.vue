@@ -65,6 +65,9 @@ const allowedMimeTypes = new Set([
   'video/webm',
 ])
 
+// Mirrors the per-file `max:10240` (KB) rule in StoreSignRequest.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
 const variantOptions = computed(() => {
   if (!props.variants) return []
   return props.variants.map((v) => ({
@@ -77,6 +80,7 @@ function resetForm() {
   selectedFiles.value = []
   uploadVariantId.value = null
   signsStore.uploadFailedFiles = []
+  signsStore.uploadCancelled = false
   if (fileInput.value) fileInput.value.value = ''
 }
 
@@ -87,10 +91,18 @@ function validateSelectedFiles(files: File[]) {
   }
   const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
   if (invalidFile) return 'Files must be PNG, JPEG, WebP, AVIF, or WebM files.'
+
+  const oversizedFile = files.find((file) => file.size > MAX_FILE_SIZE_BYTES)
+  if (oversizedFile) return `"${oversizedFile.name}" is larger than 10 MB.`
+
   return null
 }
 
 function close() {
+  if (signsStore.isUploading) {
+    signsStore.cancelUpload()
+  }
+
   emit('update:modelValue', false)
   resetForm()
   signsStore.clearError()
@@ -112,6 +124,26 @@ function handleFileChange(event: Event) {
   selectedFiles.value = files
 }
 
+async function runUpload(files: File[]) {
+  const payload: CreateSignPayload = {
+    files,
+    variant_id: uploadVariantId.value ?? props.selectedVariantId ?? undefined,
+  }
+  const uploadedSigns = await signsStore.uploadSign(
+    props.folderId,
+    payload,
+    authStore.signUploadMaxFiles,
+  )
+
+  if (uploadedSigns) {
+    emit('saved')
+
+    if (signsStore.uploadFailedFiles.length === 0 && !signsStore.uploadCancelled) {
+      close()
+    }
+  }
+}
+
 async function handleSubmit() {
   signsStore.clearError()
 
@@ -126,23 +158,15 @@ async function handleSubmit() {
     return
   }
 
-  const payload: CreateSignPayload = {
-    files: selectedFiles.value,
-    variant_id: uploadVariantId.value ?? props.selectedVariantId ?? undefined,
-  }
-  const uploadedSigns = await signsStore.uploadSign(
-    props.folderId,
-    payload,
-    authStore.signUploadMaxFiles,
-  )
+  await runUpload(selectedFiles.value)
+}
 
-  if (uploadedSigns) {
-    emit('saved')
+async function handleRetryFailed() {
+  const filesToRetry = [...signsStore.uploadFailedFiles]
+  if (filesToRetry.length === 0) return
 
-    if (signsStore.uploadFailedFiles.length === 0) {
-      close()
-    }
-  }
+  signsStore.clearError()
+  await runUpload(filesToRetry)
 }
 </script>
 
@@ -205,16 +229,16 @@ async function handleSubmit() {
       </div>
 
       <div v-if="!signsStore.isUploading && signsStore.uploadFailedFiles.length" class="mt-3">
-        <p class="text-sm font-semibold text-warning">
+        <p class="text-sm font-semibold text-error">
           Failed to upload ({{ signsStore.uploadFailedFiles.length }})
         </p>
         <ul class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant">
           <li
-            v-for="(fileName, index) in signsStore.uploadFailedFiles"
-            :key="`${fileName}-${index}`"
+            v-for="(file, index) in signsStore.uploadFailedFiles"
+            :key="`${file.name}-${index}`"
             class="truncate px-2 py-1"
           >
-            {{ fileName }}
+            {{ file.name }}
           </li>
         </ul>
       </div>
@@ -226,7 +250,25 @@ async function handleSubmit() {
         <UiButton variant="primary" type="submit" :disabled="!canSubmit">
           {{ signsStore.isUploading ? 'Uploading...' : 'Upload' }}
         </UiButton>
-        <UiButton variant="secondary" type="button" @click="close"> Cancel </UiButton>
+
+        <UiButton
+          v-if="!signsStore.isUploading && signsStore.uploadFailedFiles.length"
+          variant="primary"
+          type="button"
+          @click="handleRetryFailed"
+        >
+          Retry failed ({{ signsStore.uploadFailedFiles.length }})
+        </UiButton>
+
+        <UiButton
+          v-if="signsStore.isUploading"
+          variant="secondary"
+          type="button"
+          @click="signsStore.cancelUpload()"
+        >
+          Stop upload
+        </UiButton>
+        <UiButton v-else variant="secondary" type="button" @click="close"> Cancel </UiButton>
       </div>
     </form>
   </UiModal>

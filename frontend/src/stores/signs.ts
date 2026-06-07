@@ -36,7 +36,9 @@ export const useSignsStore = defineStore('signs', () => {
   const isLoadingMore = ref(false)
   const isUploading = ref(false)
   const uploadProgress = ref<BatchUploadProgress | null>(null)
-  const uploadFailedFiles = ref<string[]>([])
+  const uploadFailedFiles = ref<File[]>([])
+  const uploadCancelled = ref(false)
+  let uploadController: AbortController | null = null
   const isMoving = ref(false)
   const error = ref<string | null>(null)
   const columnState = ref<Record<ColumnRatio, ColumnState>>(initialColumnState())
@@ -166,7 +168,10 @@ export const useSignsStore = defineStore('signs', () => {
     isUploading.value = true
     uploadProgress.value = { uploaded: 0, total: payload.files.length }
     uploadFailedFiles.value = []
+    uploadCancelled.value = false
     clearError()
+
+    uploadController = new AbortController()
 
     try {
       const { signs: createdSigns, failedFiles } = await createSignsInBatches(
@@ -177,6 +182,7 @@ export const useSignsStore = defineStore('signs', () => {
         (progress) => {
           uploadProgress.value = progress
         },
+        uploadController.signal,
       )
 
       createdSigns.forEach(upsertSign)
@@ -193,7 +199,13 @@ export const useSignsStore = defineStore('signs', () => {
       return null
     } finally {
       isUploading.value = false
+      uploadController = null
     }
+  }
+
+  function cancelUpload() {
+    uploadCancelled.value = true
+    uploadController?.abort()
   }
 
   async function deleteSigns(ids: number[]) {
@@ -255,6 +267,8 @@ export const useSignsStore = defineStore('signs', () => {
     isUploading,
     uploadProgress,
     uploadFailedFiles,
+    uploadCancelled,
+    cancelUpload,
     error,
     hasMore,
     fetchFolderSigns,

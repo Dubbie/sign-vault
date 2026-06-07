@@ -52,17 +52,20 @@ class VariantManagementTest extends TestCase
 
         $response = $this->postJson("/api/folders/{$folder->id}/variants", [
             'name' => 'Blue',
+            'grid_background_preset' => 'dark',
         ]);
 
         $response->assertCreated()
             ->assertJsonPath('name', 'Blue')
             ->assertJsonPath('is_default', false)
+            ->assertJsonPath('grid_background_preset', 'dark')
             ->assertJsonPath('backfill_performed', false);
 
         $this->assertDatabaseHas('variants', [
             'folder_id' => $folder->id,
             'name' => 'Blue',
             'is_default' => false,
+            'grid_background_preset' => 'dark',
         ]);
     }
 
@@ -120,6 +123,41 @@ class VariantManagementTest extends TestCase
             'id' => $variant->id,
             'name' => 'Cyan',
         ]);
+    }
+
+    public function test_user_can_update_variant_grid_background_preset(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->create(['user_id' => $user->id]);
+        $variant = $folder->variants()->create(['name' => 'Blue', 'is_default' => false, 'sort_order' => 1]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson("/api/folders/{$folder->id}/variants/{$variant->id}", [
+            'grid_background_preset' => 'medium',
+        ])
+            ->assertOk()
+            ->assertJsonPath('grid_background_preset', 'medium');
+
+        $this->assertDatabaseHas('variants', [
+            'id' => $variant->id,
+            'grid_background_preset' => 'medium',
+        ]);
+    }
+
+    public function test_variant_grid_background_preset_must_be_predefined(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->create(['user_id' => $user->id]);
+        $variant = $folder->variants()->create(['name' => 'Blue', 'is_default' => false, 'sort_order' => 1]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson("/api/folders/{$folder->id}/variants/{$variant->id}", [
+            'grid_background_preset' => 'magenta',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['grid_background_preset']);
     }
 
     public function test_user_can_set_named_variant_as_default(): void
@@ -395,11 +433,38 @@ class VariantManagementTest extends TestCase
         $response->assertJsonStructure([
             'folder' => [
                 'variants' => [
-                    '*' => ['id', 'name', 'is_default'],
+                    '*' => ['id', 'name', 'is_default', 'grid_background_preset'],
                 ],
             ],
         ]);
         $this->assertCount(2, $response->json('folder.variants'));
+    }
+
+    public function test_public_folder_index_exposes_default_variant_grid_background_preset(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->create([
+            'user_id' => $user->id,
+            'visibility' => FolderVisibility::Public,
+        ]);
+        $folder->defaultVariant->update(['grid_background_preset' => 'medium']);
+        $folder->signs()->create([
+            'user_id' => $user->id,
+            'name' => 'default-sign',
+            'variant_id' => $folder->defaultVariant->id,
+            'storage_disk' => 'public',
+            'storage_key' => 'signs/1/1/test.png',
+            'public_url' => 'http://localhost/storage/signs/1/1/test.png',
+            'mime_type' => 'image/png',
+            'size_bytes' => 100,
+            'width' => 100,
+            'height' => 100,
+            'column_ratio' => 1,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonPath('data.0.preview_grid_background_preset', 'medium');
     }
 
     public function test_public_folder_index_previews_default_variant_signs_only(): void

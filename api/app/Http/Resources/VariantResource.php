@@ -17,6 +17,7 @@ class VariantResource extends JsonResource
             'name' => $this->name,
             'is_default' => $this->is_default,
             'sort_order' => $this->sort_order,
+            'grid_background_preset' => $this->grid_background_preset,
             'created_at' => $this->created_at?->toIso8601ZuluString(),
             'updated_at' => $this->updated_at?->toIso8601ZuluString(),
         ];

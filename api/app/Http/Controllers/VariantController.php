@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\VariantGridBackgroundPreset;
 use App\Http\Requests\Variant\StoreVariantRequest;
 use App\Http\Requests\Variant\UpdateVariantRequest;
 use App\Http\Resources\VariantResource;
@@ -33,9 +34,10 @@ class VariantController extends Controller
         $maxSortOrder     = $folder->variants()->max('sort_order') ?? 0;
 
         $variant = $folder->variants()->create([
-            'name'       => $validated['name'],
+            'name' => $validated['name'],
             'is_default' => false,
             'sort_order' => $maxSortOrder + 1,
+            'grid_background_preset' => $validated['grid_background_preset'] ?? VariantGridBackgroundPreset::Darkest->value,
         ]);
 
         return response()->json([
@@ -56,8 +58,20 @@ class VariantController extends Controller
 
         if (isset($validated['is_default']) && $validated['is_default']) {
             $this->variantService->swapDefault($folder, $variant);
-        } elseif (isset($validated['name'])) {
-            $variant->update(['name' => $validated['name']]);
+        }
+
+        $updates = [];
+
+        if (isset($validated['name']) && ! ($validated['is_default'] ?? false)) {
+            $updates['name'] = $validated['name'];
+        }
+
+        if (array_key_exists('grid_background_preset', $validated)) {
+            $updates['grid_background_preset'] = $validated['grid_background_preset'];
+        }
+
+        if ($updates !== []) {
+            $variant->update($updates);
         }
 
         return (new VariantResource($variant->refresh()))->response();

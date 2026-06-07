@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { getGridBackgroundSurfaceClasses } from '@/lib/grid-background-presets'
 import SignMedia from '@/components/signs/SignMedia.vue'
+import type { GridBackgroundPreset } from '@/types/grid-background'
 
 interface GridSign {
   id: number
@@ -20,8 +22,15 @@ const props = withDefaults(
     selectable?: boolean
     hasMore?: boolean
     isLoadingMore?: boolean
+    backgroundPreset?: GridBackgroundPreset | null
   }>(),
-  { modelValue: () => [], selectable: true, hasMore: false, isLoadingMore: false },
+  {
+    modelValue: () => [],
+    selectable: true,
+    hasMore: false,
+    isLoadingMore: false,
+    backgroundPreset: null,
+  },
 )
 
 const emit = defineEmits<{
@@ -76,6 +85,8 @@ const columns = computed(() => {
   }))
 })
 
+const gridSurfaceClass = computed(() => getGridBackgroundSurfaceClasses(props.backgroundPreset))
+
 function isSelected(id: number): boolean {
   return props.modelValue.includes(id)
 }
@@ -128,7 +139,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div>
+  <div :class="gridSurfaceClass">
     <div class="grid gap-3 sign-grid">
       <div v-for="col in columns" :key="col.label" class="flex flex-col gap-3">
         <div

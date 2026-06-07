@@ -36,6 +36,7 @@ class PublicFolderResource extends JsonResource
                     'id' => $variant->id,
                     'name' => $variant->name,
                     'is_default' => $variant->is_default,
+                    'grid_background_preset' => $variant->grid_background_preset,
                 ])->values()->all();
             }, []),
         ];

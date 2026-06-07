@@ -31,6 +31,7 @@ class FolderResource extends JsonResource
                     'name' => $variant->name,
                     'is_default' => $variant->is_default,
                     'sort_order' => $variant->sort_order,
+                    'grid_background_preset' => $variant->grid_background_preset,
                 ])->values()->all();
             }, []),
         ];

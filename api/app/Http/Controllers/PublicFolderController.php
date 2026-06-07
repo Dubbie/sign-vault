@@ -52,7 +52,7 @@ class PublicFolderController extends Controller
             $query->latest();
         }
 
-        $folders = $query->paginate(20);
+        $folders = $query->paginate(5);
 
         return BrowseFolderResource::collection($folders);
     }
@@ -130,6 +130,8 @@ class PublicFolderController extends Controller
                 'password' => ['The provided password is incorrect.'],
             ]);
         }
+
+        $folder->load('variants');
 
         return response()->json([
             'folder' => new PublicFolderResource($folder),

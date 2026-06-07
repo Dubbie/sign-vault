@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Variant;
 
+use App\Enums\VariantGridBackgroundPreset;
 use App\Models\Folder;
 use App\Models\Variant;
 use Illuminate\Foundation\Http\FormRequest;
@@ -39,6 +40,11 @@ class UpdateVariantRequest extends FormRequest
                     ->ignore($variant->id),
             ],
             'is_default' => ['nullable', 'boolean'],
+            'grid_background_preset' => [
+                'nullable',
+                'string',
+                Rule::in(VariantGridBackgroundPreset::values()),
+            ],
         ];
     }
 }

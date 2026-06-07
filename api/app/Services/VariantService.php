@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\VariantGridBackgroundPreset;
 use App\Models\Folder;
 use App\Models\Variant;
 
@@ -24,6 +25,7 @@ class VariantService
             'name'       => 'Default',
             'is_default' => true,
             'sort_order' => 0,
+            'grid_background_preset' => VariantGridBackgroundPreset::Darkest->value,
         ]);
 
         $folder->signs()->whereNull('variant_id')->update(['variant_id' => $default->id]);

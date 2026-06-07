@@ -7,8 +7,10 @@ import {
   deleteVariant as deleteVariantRequest,
   updateVariant as updateVariantRequest,
 } from '@/lib/folders'
+import { gridBackgroundPresetOptions } from '@/lib/grid-background-presets'
 import { useFoldersStore } from '@/stores/folders'
 import { useSignsStore } from '@/stores/signs'
+import type { GridBackgroundPreset } from '@/types/grid-background'
 import type { Variant } from '@/types/folder'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
@@ -124,6 +126,7 @@ const selectedVariantId = ref<number | null>(null)
 const variantError = ref<string | null>(null)
 const newVariantName = ref('')
 const isCreatingVariant = ref(false)
+const isUpdatingGridBackgroundPreset = ref(false)
 const renamingVariant = ref<{ id: number; name: string } | null>(null)
 const showDeleteVariantConfirm = ref<number | null>(null)
 const showCreateVariantInput = ref(false)
@@ -314,6 +317,29 @@ async function handleDeleteVariant(variantId: number) {
   }
 }
 
+async function handleGridBackgroundPresetChange(value: string) {
+  if (!folder.value || !activeVariantRecord.value) return
+
+  const nextPreset = value as GridBackgroundPreset
+  const currentPreset = activeVariantRecord.value.grid_background_preset ?? 'darkest'
+
+  if (nextPreset === currentPreset) return
+
+  isUpdatingGridBackgroundPreset.value = true
+  variantError.value = null
+
+  try {
+    await updateVariantRequest(folder.value.id, activeVariantRecord.value.id, {
+      grid_background_preset: nextPreset,
+    })
+    await foldersStore.fetchFolder(folder.value.id)
+  } catch {
+    variantError.value = 'Failed to update grid background.'
+  } finally {
+    isUpdatingGridBackgroundPreset.value = false
+  }
+}
+
 function clearSelection() {
   selectedSignIds.value = []
 }
@@ -349,7 +375,7 @@ watch(
     <p v-if="foldersStore.isLoading && !folder" class="mt-3 text-zinc-400">Loading folder...</p>
 
     <div v-else-if="folder" class="mt-3">
-      <header class="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <header class="mb-6 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
           <UiBreadcrumbs :items="breadcrumbs" class="mb-4" />
 
@@ -407,19 +433,30 @@ watch(
 
       <section>
         <template v-if="showVariantTabs">
-          <div class="flex flex-wrap items-end justify-between gap-3">
-            <div class="flex items-baseline gap-x-2">
-              <h2 class="text-sm font-semibold text-on-surface">Variants</h2>
-              <p class="text-xs font-mono text-on-surface-variant">{{ variants.length }} total</p>
+          <div
+            class="mt-3 grid gap-3 lg:grid-cols-[minmax(12rem,14rem)_minmax(0,1fr)_auto] lg:items-end"
+          >
+            <div v-if="activeVariantRecord" class="grid gap-[0.4rem] min-w-0">
+              <div class="flex items-center justify-between gap-3">
+                <p class="text-xs font-semibold text-on-surface">Grid background</p>
+                <p class="text-[11px] text-on-surface-variant">
+                  {{ isUpdatingGridBackgroundPreset ? 'Saving...' : 'This variant only' }}
+                </p>
+              </div>
+
+              <UiSelect
+                :model-value="activeVariantRecord.grid_background_preset ?? 'darkest'"
+                name="grid_background_preset"
+                :options="gridBackgroundPresetOptions"
+                @update:model-value="handleGridBackgroundPresetChange"
+              />
             </div>
 
-            <UiButton variant="secondary" type="button" @click="showCreateVariantInput = true">
-              {{ variantCreateActionLabel }}
-            </UiButton>
-          </div>
-
-          <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-            <div class="grid gap-[0.4rem]">
+            <div class="grid gap-[0.4rem] min-w-0">
+              <div class="flex items-center justify-between gap-3">
+                <h2 class="text-xs font-semibold text-on-surface">Current variant</h2>
+                <p class="text-[11px] text-on-surface-variant">{{ variants.length }} total</p>
+              </div>
               <UiSelect
                 v-model="selectedVariantSelectValue"
                 name="variant"
@@ -427,7 +464,7 @@ watch(
               />
             </div>
 
-            <div class="flex items-start justify-end gap-2">
+            <div class="flex items-end justify-end gap-2 lg:self-end">
               <UiDropdown
                 v-if="activeVariantRecord"
                 v-model="showVariantActions"
@@ -473,11 +510,15 @@ watch(
                   </div>
                 </template>
               </UiDropdown>
+
+              <UiButton type="button" @click="showCreateVariantInput = true">
+                {{ variantCreateActionLabel }}
+              </UiButton>
             </div>
           </div>
         </template>
 
-        <template v-else>
+        <template v-else-if="activeVariantRecord">
           <UiAlert tone="info">
             <p class="text-headline-md text-on-surface">Need some variety?</p>
             <p class="text-on-surface-variant">
@@ -490,6 +531,22 @@ watch(
               </UiButton>
             </template>
           </UiAlert>
+
+          <div class="mt-3 grid max-w-64 gap-[0.4rem]">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-xs font-semibold text-on-surface">Grid background</p>
+              <p class="text-[11px] text-on-surface-variant">
+                {{ isUpdatingGridBackgroundPreset ? 'Saving...' : 'This variant only' }}
+              </p>
+            </div>
+
+            <UiSelect
+              :model-value="activeVariantRecord.grid_background_preset ?? 'darkest'"
+              name="grid_background_preset"
+              :options="gridBackgroundPresetOptions"
+              @update:model-value="handleGridBackgroundPresetChange"
+            />
+          </div>
         </template>
 
         <div v-if="showCreateVariantInput" class="mt-3 flex flex-wrap items-center gap-2">
@@ -540,6 +597,7 @@ watch(
               :copied-sign-id="copiedSignId"
               :has-more="signsStore.hasMore"
               :is-loading-more="signsStore.isLoadingMore"
+              :background-preset="activeVariantRecord?.grid_background_preset ?? null"
               v-model="selectedSignIds"
               @copy="handleCopy"
               @load-more="signsStore.fetchMoreSigns(folderId, selectedVariantId ?? undefined)"

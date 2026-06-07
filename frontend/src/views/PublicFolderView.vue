@@ -76,6 +76,11 @@ const userHasVoted = ref(false)
 const isVoting = ref(false)
 
 const variants = computed(() => folder.value?.variants ?? [])
+const activeVariantRecord = computed(() => {
+  const selectedId = activeVariantId()
+  if (selectedId === null) return null
+  return variants.value.find((variant) => variant.id === selectedId) ?? null
+})
 const showVariantSwitcher = computed(() => variants.value.length > 1)
 const breadcrumbs = computed(() =>
   folder.value
@@ -546,6 +551,7 @@ watch(folderSlug, () => {
           :selectable="false"
           :has-more="signsHasMore"
           :is-loading-more="isLoadingMore"
+          :background-preset="activeVariantRecord?.grid_background_preset ?? null"
           @copy="handleCopy"
           @load-more="loadMoreSigns"
         />

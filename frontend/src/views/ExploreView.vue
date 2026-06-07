@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getPublicFolders } from '@/lib/public-folders'
@@ -12,6 +12,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import ExploreFolderCard from '@/components/explore/ExploreFolderCard.vue'
 import PreviewSignGrid from '@/components/explore/PreviewSignGrid.vue'
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,6 +26,67 @@ const storedSort = localStorage.getItem(SORT_STORAGE_KEY) as SortOption | null
 const sort = ref<SortOption>((route.query.sort as SortOption) || storedSort || 'latest')
 const meta = ref<PaginationMeta | null>(null)
 const hoveredFolder = ref<PublicFolderListing | null>(null)
+const activeFolderIndex = ref(0)
+const activeFolderId = computed(() => {
+  const folder = folders.value[activeFolderIndex.value]
+  return folder ? `explore-folder-${folder.id}` : undefined
+})
+
+function setActiveFolder(index: number) {
+  if (folders.value.length === 0) {
+    activeFolderIndex.value = 0
+    hoveredFolder.value = null
+    return
+  }
+
+  const nextIndex = Math.min(Math.max(index, 0), folders.value.length - 1)
+  activeFolderIndex.value = nextIndex
+  hoveredFolder.value = folders.value[nextIndex] ?? null
+}
+
+async function focusActiveFolderCard() {
+  await nextTick()
+
+  if (!activeFolderId.value) return
+
+  const activeElement = document.getElementById(activeFolderId.value)
+  if (activeElement instanceof HTMLElement) {
+    activeElement.focus()
+  }
+}
+
+function handleFolderHover(index: number) {
+  setActiveFolder(index)
+}
+
+function handleFolderListKeydown(event: KeyboardEvent) {
+  if (folders.value.length === 0) return
+
+  switch (event.key) {
+    case 'ArrowDown':
+    case 'ArrowRight':
+      event.preventDefault()
+      setActiveFolder(activeFolderIndex.value + 1)
+      void focusActiveFolderCard()
+      break
+    case 'ArrowUp':
+    case 'ArrowLeft':
+      event.preventDefault()
+      setActiveFolder(activeFolderIndex.value - 1)
+      void focusActiveFolderCard()
+      break
+    case 'Home':
+      event.preventDefault()
+      setActiveFolder(0)
+      void focusActiveFolderCard()
+      break
+    case 'End':
+      event.preventDefault()
+      setActiveFolder(folders.value.length - 1)
+      void focusActiveFolderCard()
+      break
+  }
+}
 
 async function loadFolders(page = 1) {
   isLoading.value = true
@@ -38,6 +100,7 @@ async function loadFolders(page = 1) {
     const response = await getPublicFolders(params)
     folders.value = response.data
     meta.value = response.meta
+    setActiveFolder(0)
   } catch {
     error.value = 'Failed to load public folders.'
   } finally {
@@ -90,6 +153,23 @@ watch(
 
 onMounted(() => {
   void loadFolders(page.value)
+})
+
+watch(folders, (nextFolders) => {
+  if (nextFolders.length === 0) {
+    hoveredFolder.value = null
+    activeFolderIndex.value = 0
+    return
+  }
+
+  const currentId = hoveredFolder.value?.id
+  if (currentId === undefined) {
+    setActiveFolder(0)
+    return
+  }
+
+  const nextIndex = nextFolders.findIndex((folder) => folder.id === currentId)
+  setActiveFolder(nextIndex >= 0 ? nextIndex : 0)
 })
 </script>
 
@@ -151,14 +231,65 @@ onMounted(() => {
     <div v-else class="mt-6">
       <!-- lg+: two-column layout -->
       <div class="hidden lg:grid gap-6" style="grid-template-columns: 350px 1fr">
-        <div class="flex flex-col gap-2">
-          <ExploreFolderCard
-            v-for="folder in folders"
-            :key="folder.id"
-            :folder="folder"
-            :active="hoveredFolder === folder"
-            @mouseenter="hoveredFolder = folder"
-          />
+        <div class="flex flex-col gap-6">
+          <div
+            role="listbox"
+            aria-label="Public folders"
+            :aria-activedescendant="activeFolderId"
+            class="flex flex-col gap-2 rounded-xl"
+            @keydown="handleFolderListKeydown"
+          >
+            <ExploreFolderCard
+              v-for="(folder, index) in folders"
+              :key="folder.id"
+              :id="`explore-folder-${folder.id}`"
+              :folder="folder"
+              :active="hoveredFolder === folder"
+              :tabindex="hoveredFolder === folder ? 0 : -1"
+              @mouseenter="handleFolderHover(index)"
+              @focus="setActiveFolder(index)"
+            />
+          </div>
+
+          <nav
+            v-if="meta && meta.last_page > 1"
+            class="flex flex-wrap items-center justify-between gap-2"
+          >
+            <UiButton
+              variant="secondary"
+              class="size-10! p-0!"
+              :disabled="meta.current_page <= 1"
+              @click="goToPage(meta.current_page - 1)"
+            >
+              <ChevronLeft class="size-5" />
+            </UiButton>
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <button
+                v-for="p in pages"
+                :key="p"
+                type="button"
+                class="cursor-pointer flex size-9 items-center justify-center rounded-lg text-sm font-semibold transition"
+                :class="
+                  p === meta.current_page
+                    ? 'bg-primary text-background'
+                    : 'text-on-surface-variant hover:text-primary'
+                "
+                @click="goToPage(p)"
+              >
+                {{ p }}
+              </button>
+            </div>
+
+            <UiButton
+              variant="secondary"
+              class="size-10! p-0!"
+              :disabled="meta.current_page >= meta.last_page"
+              @click="goToPage(meta.current_page + 1)"
+            >
+              <ChevronRight class="size-5" />
+            </UiButton>
+          </nav>
         </div>
 
         <div>
@@ -200,6 +331,8 @@ onMounted(() => {
                 <PreviewSignGrid
                   :signs="hoveredFolder.preview_signs"
                   :folder-slug="hoveredFolder.slug"
+                  :total-signs="hoveredFolder.signs_count"
+                  :background-preset="hoveredFolder.preview_grid_background_preset"
                 />
               </div>
               <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>
@@ -214,7 +347,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <nav v-if="meta && meta.last_page > 1" class="mt-10 flex items-center justify-center gap-2">
+    <nav
+      v-if="meta && meta.last_page > 1"
+      class="mt-10 flex items-center justify-center gap-2 lg:hidden"
+    >
       <UiButton
         variant="secondary"
         :disabled="meta.current_page <= 1"

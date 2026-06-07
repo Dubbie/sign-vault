@@ -120,7 +120,7 @@ onMounted(() => {
     </UiErrorBanner>
 
     <div class="space-y-4">
-      <div class="flex items-center justify-between gap-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-baseline gap-3">
           <h2 class="text-headline-md text-on-surface">User list</h2>
           <span v-if="data" class="text-label-md text-on-surface-variant">
@@ -128,7 +128,7 @@ onMounted(() => {
           </span>
         </div>
         <UiInput
-          class="w-64"
+          class="w-full sm:w-64"
           :model-value="search"
           placeholder="Search by username..."
           @update:model-value="handleSearchInput"
@@ -142,7 +142,8 @@ onMounted(() => {
           {{ search ? 'No users match your search.' : 'No users found.' }}
         </p>
 
-        <div v-else class="glass-card overflow-hidden rounded-lg">
+        <template v-else>
+        <div class="hidden sm:block glass-card overflow-hidden rounded-lg">
           <div class="overflow-x-auto">
             <table class="min-w-full">
               <thead class="bg-surface-container-low">
@@ -280,7 +281,90 @@ onMounted(() => {
           </div>
         </div>
 
-        <nav v-if="data.last_page > 1" class="mt-6 flex items-center justify-center gap-2">
+        <div class="flex flex-col gap-3 sm:hidden">
+          <div v-for="user in data.data" :key="user.id" class="glass-card rounded-lg p-4">
+            <div class="flex items-center gap-3">
+              <img
+                v-if="user.avatar_url"
+                :src="user.avatar_url"
+                :alt="user.display_name"
+                class="size-10 shrink-0 rounded-full"
+              />
+              <div v-else class="size-10 shrink-0 rounded-full bg-surface-container-high" />
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-body-md font-semibold text-on-surface">
+                  {{ user.display_name }}
+                </p>
+                <p v-if="user.is_admin" class="text-label-sm text-emerald-400">Admin</p>
+              </div>
+              <span
+                v-if="user.banned_at"
+                class="shrink-0 inline-flex items-center rounded-full border border-red-400/20 bg-red-400/10 px-2.5 py-1 text-label-sm text-red-400"
+                :title="`Reason: ${user.ban_reason}`"
+              >
+                Banned
+              </span>
+              <span
+                v-else
+                class="shrink-0 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-label-sm text-primary"
+              >
+                Active
+              </span>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-label-sm text-on-surface-variant">
+              <span class="flex items-center gap-1.5">
+                Discord
+                <span
+                  v-if="user.providers.some((p) => p.provider === 'discord')"
+                  class="text-emerald-400"
+                  title="Connected"
+                  >✓</span
+                >
+                <span v-else class="text-on-surface-variant/30">—</span>
+              </span>
+              <span class="flex items-center gap-1.5">
+                Trackmania
+                <span
+                  v-if="user.providers.some((p) => p.provider === 'trackmania')"
+                  class="text-emerald-400"
+                  title="Connected"
+                  >✓</span
+                >
+                <span v-else class="text-on-surface-variant/30">—</span>
+              </span>
+              <span>{{ user.folders_count }} folders</span>
+              <span>{{ user.signs_count }} signs</span>
+            </div>
+
+            <div class="mt-3 flex justify-end">
+              <span
+                v-if="user.id === authStore.user?.id"
+                class="text-label-sm text-on-surface-variant"
+              >
+                You
+              </span>
+              <UiButton
+                v-else-if="user.banned_at"
+                size="sm"
+                variant="secondary"
+                type="button"
+                @click="handleUnban(user)"
+              >
+                Unban
+              </UiButton>
+              <UiButton v-else size="sm" variant="danger" type="button" @click="openBanModal(user)">
+                Ban
+              </UiButton>
+            </div>
+          </div>
+        </div>
+        </template>
+
+        <nav
+          v-if="data.last_page > 1"
+          class="mt-6 flex flex-wrap items-center justify-center gap-2"
+        >
           <UiButton
             variant="secondary"
             :disabled="data.current_page <= 1"

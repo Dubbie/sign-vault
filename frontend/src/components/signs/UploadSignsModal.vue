@@ -202,10 +202,10 @@ async function handleRetryFailed() {
       </div>
 
       <div v-if="selectedFiles.length && !signsStore.isUploading" class="mt-3">
-        <p class="text-sm font-semibold text-on-surface">
-          Selected ({{ selectedFiles.length }})
-        </p>
-        <ul class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant">
+        <p class="text-sm font-semibold text-on-surface">Selected ({{ selectedFiles.length }})</p>
+        <ul
+          class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant"
+        >
           <li
             v-for="(file, index) in selectedFiles"
             :key="`${file.name}-${index}`"
@@ -232,7 +232,9 @@ async function handleRetryFailed() {
         <p class="text-sm font-semibold text-error">
           Failed to upload ({{ signsStore.uploadFailedFiles.length }})
         </p>
-        <ul class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant">
+        <ul
+          class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant"
+        >
           <li
             v-for="(file, index) in signsStore.uploadFailedFiles"
             :key="`${file.name}-${index}`"

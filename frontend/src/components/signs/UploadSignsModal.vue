@@ -24,9 +24,11 @@ const emit = defineEmits<{
   saved: []
 }>()
 
+const MAX_SELECTABLE_FILES = 300
+
 const authStore = useAuthStore()
 const signsStore = useSignsStore()
-const maxFiles = computed(() => authStore.signUploadMaxFiles)
+const maxFiles = MAX_SELECTABLE_FILES
 
 const selectedFiles = ref<File[]>([])
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -38,6 +40,13 @@ const selectedUploadVariantValue = computed({
   set(value: string) {
     uploadVariantId.value = value ? Number(value) : null
   },
+})
+
+const uploadProgress = computed(() => signsStore.uploadProgress)
+const uploadPercentage = computed(() => {
+  const progress = uploadProgress.value
+  if (!progress || progress.total === 0) return 0
+  return Math.round((progress.uploaded / progress.total) * 100)
 })
 
 const showVariantSelector = computed(() => (props.variants?.length ?? 0) > 1)
@@ -56,6 +65,9 @@ const allowedMimeTypes = new Set([
   'video/webm',
 ])
 
+// Mirrors the per-file `max:10240` (KB) rule in StoreSignRequest.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
+
 const variantOptions = computed(() => {
   if (!props.variants) return []
   return props.variants.map((v) => ({
@@ -67,20 +79,30 @@ const variantOptions = computed(() => {
 function resetForm() {
   selectedFiles.value = []
   uploadVariantId.value = null
+  signsStore.uploadFailedFiles = []
+  signsStore.uploadCancelled = false
   if (fileInput.value) fileInput.value.value = ''
 }
 
 function validateSelectedFiles(files: File[]) {
   if (files.length === 0) return 'At least one image file is required.'
-  if (files.length > maxFiles.value) {
-    return `You may upload at most ${maxFiles.value} files at a time.`
+  if (files.length > maxFiles) {
+    return `You may upload at most ${maxFiles} files at a time.`
   }
   const invalidFile = files.find((file) => !allowedMimeTypes.has(file.type))
   if (invalidFile) return 'Files must be PNG, JPEG, WebP, AVIF, or WebM files.'
+
+  const oversizedFile = files.find((file) => file.size > MAX_FILE_SIZE_BYTES)
+  if (oversizedFile) return `"${oversizedFile.name}" is larger than 10 MB.`
+
   return null
 }
 
 function close() {
+  if (signsStore.isUploading) {
+    signsStore.cancelUpload()
+  }
+
   emit('update:modelValue', false)
   resetForm()
   signsStore.clearError()
@@ -102,6 +124,26 @@ function handleFileChange(event: Event) {
   selectedFiles.value = files
 }
 
+async function runUpload(files: File[]) {
+  const payload: CreateSignPayload = {
+    files,
+    variant_id: uploadVariantId.value ?? props.selectedVariantId ?? undefined,
+  }
+  const uploadedSigns = await signsStore.uploadSign(
+    props.folderId,
+    payload,
+    authStore.signUploadMaxFiles,
+  )
+
+  if (uploadedSigns) {
+    emit('saved')
+
+    if (signsStore.uploadFailedFiles.length === 0 && !signsStore.uploadCancelled) {
+      close()
+    }
+  }
+}
+
 async function handleSubmit() {
   signsStore.clearError()
 
@@ -116,16 +158,15 @@ async function handleSubmit() {
     return
   }
 
-  const payload: CreateSignPayload = {
-    files: selectedFiles.value,
-    variant_id: uploadVariantId.value ?? props.selectedVariantId ?? undefined,
-  }
-  const uploadedSigns = await signsStore.uploadSign(props.folderId, payload)
+  await runUpload(selectedFiles.value)
+}
 
-  if (uploadedSigns) {
-    emit('saved')
-    close()
-  }
+async function handleRetryFailed() {
+  const filesToRetry = [...signsStore.uploadFailedFiles]
+  if (filesToRetry.length === 0) return
+
+  signsStore.clearError()
+  await runUpload(filesToRetry)
 }
 </script>
 
@@ -160,12 +201,48 @@ async function handleSubmit() {
         </UiFormField>
       </div>
 
-      <div
-        v-if="selectedFiles.length"
-        class="mt-2 text-sm text-on-surface-variant max-h-60 overflow-y-auto"
-      >
-        <p class="font-semibold">Selected:</p>
-        <p class="ml-3">{{ selectedFiles.map((file) => file.name).join(', ') }}</p>
+      <div v-if="selectedFiles.length && !signsStore.isUploading" class="mt-3">
+        <p class="text-sm font-semibold text-on-surface">Selected ({{ selectedFiles.length }})</p>
+        <ul
+          class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant"
+        >
+          <li
+            v-for="(file, index) in selectedFiles"
+            :key="`${file.name}-${index}`"
+            class="truncate px-2 py-1"
+          >
+            {{ file.name }}
+          </li>
+        </ul>
+      </div>
+
+      <div v-if="signsStore.isUploading && uploadProgress" class="mt-3">
+        <p class="text-sm text-on-surface-variant">
+          Uploading {{ uploadProgress.uploaded }} / {{ uploadProgress.total }}…
+        </p>
+        <div class="mt-1 h-2 w-full overflow-hidden rounded bg-surface">
+          <div
+            class="h-full rounded bg-primary transition-all"
+            :style="{ width: `${uploadPercentage}%` }"
+          />
+        </div>
+      </div>
+
+      <div v-if="!signsStore.isUploading && signsStore.uploadFailedFiles.length" class="mt-3">
+        <p class="text-sm font-semibold text-error">
+          Failed to upload ({{ signsStore.uploadFailedFiles.length }})
+        </p>
+        <ul
+          class="mt-1 max-h-40 overflow-y-auto rounded bg-surface text-sm text-on-surface-variant"
+        >
+          <li
+            v-for="(file, index) in signsStore.uploadFailedFiles"
+            :key="`${file.name}-${index}`"
+            class="truncate px-2 py-1"
+          >
+            {{ file.name }}
+          </li>
+        </ul>
       </div>
 
       <p class="mt-1 text-xs text-on-surface-variant">PNG, JPEG, WebP, AVIF, or WebM</p>
@@ -175,7 +252,25 @@ async function handleSubmit() {
         <UiButton variant="primary" type="submit" :disabled="!canSubmit">
           {{ signsStore.isUploading ? 'Uploading...' : 'Upload' }}
         </UiButton>
-        <UiButton variant="secondary" type="button" @click="close"> Cancel </UiButton>
+
+        <UiButton
+          v-if="!signsStore.isUploading && signsStore.uploadFailedFiles.length"
+          variant="primary"
+          type="button"
+          @click="handleRetryFailed"
+        >
+          Retry failed ({{ signsStore.uploadFailedFiles.length }})
+        </UiButton>
+
+        <UiButton
+          v-if="signsStore.isUploading"
+          variant="secondary"
+          type="button"
+          @click="signsStore.cancelUpload()"
+        >
+          Stop upload
+        </UiButton>
+        <UiButton v-else variant="secondary" type="button" @click="close"> Cancel </UiButton>
       </div>
     </form>
   </UiModal>

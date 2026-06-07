@@ -12,7 +12,7 @@ export type ReleaseMetadata = {
 }
 
 const releaseHeadingPattern =
-  /^##\s+\[?v?(\d+\.\d+\.\d+)\]?\s*(?:[-–]\s*|\()\s*(\d{4}-\d{2}-\d{2})\)?\s*$/m
+  /^##\s+\[?v?(\d+\.\d+\.\d+)\]?(?:\([^)]*\))?\s*(?:[-–]\s*|\()\s*(\d{4}-\d{2}-\d{2})\)?\s*$/m
 
 export function parseLatestReleaseSection(
   changelog: string,

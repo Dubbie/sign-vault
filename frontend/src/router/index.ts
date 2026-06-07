@@ -43,7 +43,7 @@ const router = createRouter({
       path: '/',
       name: 'explore',
       component: ExploreView,
-      meta: { title: 'Explore — SignVault' },
+      meta: { title: 'SignVault - Explore' },
     },
     {
       path: '/explore',
@@ -53,21 +53,21 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: { title: 'Sign In — SignVault' },
+      meta: { title: 'SignVault - Sign In' },
     },
     {
       path: '/auth/discord/callback',
       name: 'discord-callback',
       component: OauthCallbackView,
       props: { provider: 'discord' },
-      meta: { title: 'Signing In — SignVault' },
+      meta: { title: 'SignVault - Signing In' },
     },
     {
       path: '/auth/trackmania/callback',
       name: 'trackmania-callback',
       component: OauthCallbackView,
       props: { provider: 'trackmania' },
-      meta: { title: 'Signing In — SignVault' },
+      meta: { title: 'SignVault - Signing In' },
     },
     {
       path: '/dashboard',
@@ -75,7 +75,7 @@ const router = createRouter({
       component: DashboardView,
       meta: {
         requiresAuth: true,
-        title: 'Dashboard — SignVault',
+        title: 'SignVault - Dashboard',
       },
     },
     {
@@ -84,7 +84,7 @@ const router = createRouter({
       component: SettingsView,
       meta: {
         requiresAuth: true,
-        title: 'Settings — SignVault',
+        title: 'SignVault - Settings',
       },
     },
     {
@@ -93,7 +93,7 @@ const router = createRouter({
       component: FoldersIndexView,
       meta: {
         requiresAuth: true,
-        title: 'My Folders — SignVault',
+        title: 'SignVault - My Folders',
       },
     },
     {
@@ -102,7 +102,7 @@ const router = createRouter({
       component: FolderCreateView,
       meta: {
         requiresAuth: true,
-        title: 'New Folder — SignVault',
+        title: 'SignVault - New Folder',
       },
     },
     {
@@ -111,7 +111,7 @@ const router = createRouter({
       component: FolderShowView,
       meta: {
         requiresAuth: true,
-        title: 'Folder — SignVault',
+        title: 'SignVault - Folder',
       },
     },
     {
@@ -120,7 +120,7 @@ const router = createRouter({
       component: FolderEditView,
       meta: {
         requiresAuth: true,
-        title: 'Edit Folder — SignVault',
+        title: 'SignVault - Edit Folder',
       },
     },
 
@@ -128,7 +128,7 @@ const router = createRouter({
       path: '/public/folders/:slug',
       name: 'public-folder',
       component: PublicFolderView,
-      meta: { title: 'Public Folder — SignVault' },
+      meta: { title: 'SignVault - Public Folder' },
     },
     {
       path: '/admin',
@@ -140,19 +140,19 @@ const router = createRouter({
           path: 'users',
           name: 'admin-users',
           component: AdminUsersView,
-          meta: { title: 'Users — SignVault Admin' },
+          meta: { title: 'SignVault Admin - Users' },
         },
         {
           path: 'folders',
           name: 'admin-folders',
           component: AdminExploreView,
-          meta: { title: 'All Folders — SignVault Admin' },
+          meta: { title: 'SignVault Admin - All Folders' },
         },
         {
           path: 'logs',
           name: 'admin-logs',
           component: AdminLogsView,
-          meta: { title: 'Activity Log — SignVault Admin' },
+          meta: { title: 'SignVault Admin - Activity Log' },
         },
       ],
     },
@@ -169,13 +169,13 @@ const router = createRouter({
           path: 'sign-sizing',
           name: 'utilities-sign-sizing',
           component: SignSizingView,
-          meta: { title: 'Sign Sizing Guide — SignVault' },
+          meta: { title: 'SignVault - Sign Sizing Guide' },
         },
         {
           path: 'name-tag-formatter',
           name: 'utilities-name-tag-formatter',
           component: NameTagFormatterView,
-          meta: { title: 'Name Tag Formatter — SignVault' },
+          meta: { title: 'SignVault - Name Tag Formatter' },
         },
       ],
     },
@@ -183,13 +183,13 @@ const router = createRouter({
       path: '/terms',
       name: 'terms',
       component: LegalTermsView,
-      meta: { title: 'Terms of Service — SignVault' },
+      meta: { title: 'SignVault - Terms of Service' },
     },
     {
       path: '/privacy',
       name: 'privacy',
       component: LegalPrivacyView,
-      meta: { title: 'Privacy Policy — SignVault' },
+      meta: { title: 'SignVault - Privacy Policy' },
     },
   ],
 })

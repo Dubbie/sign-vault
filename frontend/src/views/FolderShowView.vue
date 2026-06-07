@@ -153,7 +153,7 @@ async function loadFolder() {
   }
   const loadedFolder = await foldersStore.fetchFolder(id)
   if (loadedFolder) {
-    document.title = `${loadedFolder.name} — SignVault`
+    document.title = `SignVault - ${loadedFolder.name}`
 
     const variantParam = route.query.variant
     if (variantParam) {

@@ -273,7 +273,7 @@ async function loadPublicFolder() {
     votesCount.value = response.folder.votes_count
     userHasVoted.value = response.folder.user_has_voted
     requiresPassword.value = false
-    document.title = `${response.folder.name} — SignVault`
+    document.title = `SignVault - ${response.folder.name}`
     checkIsAuthor().then((result) => {
       isAuthor.value = result
     })
@@ -319,7 +319,7 @@ async function handleUnlock() {
     votesCount.value = response.folder.votes_count
     userHasVoted.value = response.folder.user_has_voted
     requiresPassword.value = false
-    document.title = `${response.folder.name} — SignVault`
+    document.title = `SignVault - ${response.folder.name}`
     checkIsAuthor().then((result) => {
       isAuthor.value = result
     })

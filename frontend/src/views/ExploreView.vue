@@ -133,12 +133,18 @@ function handleSearchInput(value: string) {
   }, 400)
 }
 
-const pages = ref<number[]>([])
-watch(meta, (m) => {
-  if (!m) return
-  const p: number[] = []
-  for (let i = 1; i <= m.last_page; i++) p.push(i)
-  pages.value = p
+const MAX_VISIBLE_PAGES = 5
+const visiblePages = computed<number[]>(() => {
+  if (!meta.value) return []
+
+  const { current_page, last_page } = meta.value
+  let start = Math.max(1, current_page - Math.floor(MAX_VISIBLE_PAGES / 2))
+  const end = Math.min(last_page, start + MAX_VISIBLE_PAGES - 1)
+  start = Math.max(1, end - MAX_VISIBLE_PAGES + 1)
+
+  const result: number[] = []
+  for (let i = start; i <= end; i++) result.push(i)
+  return result
 })
 
 const page = ref(1)
@@ -193,11 +199,11 @@ watch(folders, (nextFolders) => {
       >
         <button
           type="button"
-          class="px-3 py-2 transition-colors"
+          class="cursor-pointer px-3 py-2 transition-colors"
           :class="
             sort === 'latest'
               ? 'bg-primary/10 text-primary'
-              : 'text-on-surface-variant hover:text-on-surface'
+              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
           "
           @click="handleSortChange('latest')"
         >
@@ -205,11 +211,11 @@ watch(folders, (nextFolders) => {
         </button>
         <button
           type="button"
-          class="px-3 py-2 transition-colors border-l border-outline/30"
+          class="cursor-pointer px-3 py-2 transition-colors border-l border-outline/30"
           :class="
             sort === 'votes'
               ? 'bg-primary/10 text-primary'
-              : 'text-on-surface-variant hover:text-on-surface'
+              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
           "
           @click="handleSortChange('votes')"
         >
@@ -230,7 +236,7 @@ watch(folders, (nextFolders) => {
 
     <div v-else class="mt-6">
       <!-- lg+: two-column layout -->
-      <div class="hidden lg:grid gap-6" style="grid-template-columns: 350px 1fr">
+      <div class="hidden lg:grid gap-6 items-start" style="grid-template-columns: 350px 1fr">
         <div class="flex flex-col gap-6">
           <div
             role="listbox"
@@ -266,7 +272,7 @@ watch(folders, (nextFolders) => {
 
             <div class="flex flex-wrap items-center justify-between gap-2">
               <button
-                v-for="p in pages"
+                v-for="p in visiblePages"
                 :key="p"
                 type="button"
                 class="cursor-pointer flex size-9 items-center justify-center rounded-lg text-sm font-semibold transition"
@@ -292,7 +298,7 @@ watch(folders, (nextFolders) => {
           </nav>
         </div>
 
-        <div>
+        <div class="sticky top-20">
           <Transition name="preview-panel" mode="out-in">
             <div
               v-if="!hoveredFolder"
@@ -360,7 +366,7 @@ watch(folders, (nextFolders) => {
       </UiButton>
 
       <button
-        v-for="p in pages"
+        v-for="p in visiblePages"
         :key="p"
         type="button"
         class="flex size-9 items-center justify-center rounded text-sm font-semibold transition"

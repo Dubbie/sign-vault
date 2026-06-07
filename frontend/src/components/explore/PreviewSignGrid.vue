@@ -25,7 +25,7 @@ const props = withDefaults(
     totalSigns?: number
     backgroundPreset?: GridBackgroundPreset | null
   }>(),
-  { maxPerColumn: 4, totalSigns: 0, backgroundPreset: null },
+  { maxPerColumn: 6, totalSigns: 0, backgroundPreset: null },
 )
 
 const COLUMNS: { value: number; label: string }[] = [
@@ -88,7 +88,7 @@ const hiddenSignsCount = computed(() => Math.max((props.totalSigns ?? 0) - props
       </div>
     </div>
 
-    <div v-if="folderSlug" class="mt-2 flex flex-col items-center gap-2 pb-1 text-center">
+    <div v-if="folderSlug" class="mt-6 flex flex-col items-center gap-2 pb-1 text-center">
       <div class="flex flex-col items-center gap-2">
         <RouterLink :to="{ name: 'public-folder', params: { slug: folderSlug } }">
           <UiButton>

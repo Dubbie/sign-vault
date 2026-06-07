@@ -276,9 +276,9 @@ class PublicFolderAccessTest extends TestCase
                 'data',
                 'meta' => ['current_page', 'last_page', 'per_page', 'total'],
             ])
-            ->assertJsonCount(5, 'data')
+            ->assertJsonCount(10, 'data')
             ->assertJsonPath('meta.total', 25)
-            ->assertJsonPath('meta.per_page', 5)
+            ->assertJsonPath('meta.per_page', 10)
             ->assertJsonPath('meta.current_page', 1);
     }
 

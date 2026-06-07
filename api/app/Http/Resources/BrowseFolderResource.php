@@ -65,7 +65,7 @@ class BrowseFolderResource extends JsonResource
         $selected = [];
 
         foreach (['1:1', '2:1', '4:1', 'wide', 'unknown'] as $category) {
-            $take = min(4, count($groups[$category]));
+            $take = min(6, count($groups[$category]));
 
             for ($i = 0; $i < $take; $i++) {
                 $sign = $groups[$category][$i];

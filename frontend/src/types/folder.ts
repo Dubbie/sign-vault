@@ -1,3 +1,5 @@
+import type { GridBackgroundPreset } from '@/types/grid-background'
+
 export type FolderVisibility = 'private' | 'public' | 'password'
 
 export type Variant = {
@@ -5,6 +7,7 @@ export type Variant = {
   name: string | null
   is_default: boolean
   sort_order: number
+  grid_background_preset: GridBackgroundPreset | null
   created_at: string
   updated_at: string
 }
@@ -44,11 +47,13 @@ export type FolderValidationErrors = Partial<
 
 export type CreateVariantPayload = {
   name: string
+  grid_background_preset?: GridBackgroundPreset | null
 }
 
 export type UpdateVariantPayload = {
   name?: string
   is_default?: boolean
+  grid_background_preset?: GridBackgroundPreset | null
 }
 
 export type ChangeSignVariantPayload = {

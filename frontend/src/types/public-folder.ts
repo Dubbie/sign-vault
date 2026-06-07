@@ -1,9 +1,12 @@
+import type { GridBackgroundPreset } from '@/types/grid-background'
+
 export type PublicFolderVisibility = 'public' | 'password'
 
 export type PublicFolderVariant = {
   id: number
   name: string | null
   is_default: boolean
+  grid_background_preset: GridBackgroundPreset | null
 }
 
 export type PublicFolder = {
@@ -50,6 +53,7 @@ export type PublicFolderListing = {
   variants_count: number
   votes_count: number
   user_has_voted: boolean
+  preview_grid_background_preset: GridBackgroundPreset | null
   owner: OwnerInfo
   preview_signs: PreviewSign[]
 }

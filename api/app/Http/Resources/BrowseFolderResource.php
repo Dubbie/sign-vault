@@ -29,6 +29,7 @@ class BrowseFolderResource extends JsonResource
                 'avatar_url'   => $this->user->avatar_url,
             ],
             'preview_signs' => $this->selectPreviewSigns(),
+            'preview_grid_background_preset' => $this->defaultVariant()?->grid_background_preset,
             'votes_count' => (int) ($this->votes_count ?? 0),
             'user_has_voted' => ($user = auth('sanctum')->user())
                 ? $this->votes->contains('user_id', $user->id)
@@ -41,8 +42,7 @@ class BrowseFolderResource extends JsonResource
      */
     private function selectPreviewSigns(): array
     {
-        $defaultVariantId = $this->variants
-            ->firstWhere('is_default', true)?->id;
+        $defaultVariantId = $this->defaultVariant()?->id;
 
         $folderSigns = $this->signs->filter(function ($sign) use ($defaultVariantId): bool {
             if ($defaultVariantId === null) {
@@ -82,6 +82,11 @@ class BrowseFolderResource extends JsonResource
         }
 
         return $selected;
+    }
+
+    private function defaultVariant()
+    {
+        return $this->variants->firstWhere('is_default', true);
     }
 
     private function categorizeAspect(?int $width, ?int $height): string

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Variant;
 
+use App\Enums\VariantGridBackgroundPreset;
 use App\Models\Folder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,6 +34,11 @@ class StoreVariantRequest extends FormRequest
                 Rule::unique('variants', 'name')
                     ->where('folder_id', $folder->id)
                     ->whereNotNull('name'),
+            ],
+            'grid_background_preset' => [
+                'nullable',
+                'string',
+                Rule::in(VariantGridBackgroundPreset::values()),
             ],
         ];
     }

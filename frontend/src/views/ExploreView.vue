@@ -200,6 +200,7 @@ onMounted(() => {
                 <PreviewSignGrid
                   :signs="hoveredFolder.preview_signs"
                   :folder-slug="hoveredFolder.slug"
+                  :background-preset="hoveredFolder.preview_grid_background_preset"
                 />
               </div>
               <p v-else class="mt-4 text-sm text-zinc-500">No signs in this folder.</p>

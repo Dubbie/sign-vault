@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\VariantGridBackgroundPreset;
 use App\Models\Folder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,6 +18,7 @@ class VariantFactory extends Factory
             'name' => 'Default',
             'is_default' => true,
             'sort_order' => 0,
+            'grid_background_preset' => VariantGridBackgroundPreset::Darkest->value,
         ];
     }
 

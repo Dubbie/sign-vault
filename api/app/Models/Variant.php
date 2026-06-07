@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'name',
     'is_default',
     'sort_order',
+    'grid_background_preset',
 ])]
 class Variant extends Model
 {

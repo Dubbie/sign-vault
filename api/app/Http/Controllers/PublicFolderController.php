@@ -131,6 +131,8 @@ class PublicFolderController extends Controller
             ]);
         }
 
+        $folder->load('variants');
+
         return response()->json([
             'folder' => new PublicFolderResource($folder),
             'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),

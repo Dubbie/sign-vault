@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\FolderVisibility;
+use App\Enums\VariantGridBackgroundPreset;
 use Database\Factories\FolderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -70,6 +71,7 @@ class Folder extends Model
                 'name' => 'Default',
                 'is_default' => true,
                 'sort_order' => 0,
+                'grid_background_preset' => VariantGridBackgroundPreset::Darkest->value,
             ]);
         });
     }

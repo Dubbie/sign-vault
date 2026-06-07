@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import {
+  getGridBackgroundPreviewOverlayClasses,
+  getGridBackgroundSurfaceClasses,
+} from '@/lib/grid-background-presets'
 import SignMedia from '@/components/signs/SignMedia.vue'
+import type { GridBackgroundPreset } from '@/types/grid-background'
 import UiButton from '../ui/UiButton.vue'
 import { Eye } from '@lucide/vue'
 
@@ -20,8 +25,9 @@ const props = withDefaults(
     signs: PreviewSign[]
     folderSlug?: string
     maxPerColumn?: number
+    backgroundPreset?: GridBackgroundPreset | null
   }>(),
-  { maxPerColumn: 4 },
+  { maxPerColumn: 4, backgroundPreset: null },
 )
 
 const COLUMNS: { value: number; label: string }[] = [
@@ -69,10 +75,15 @@ const columns = computed(() => {
     signs: [...(byRatio[col.value] ?? [])].slice(0, props.maxPerColumn),
   }))
 })
+
+const gridSurfaceClass = computed(() => getGridBackgroundSurfaceClasses(props.backgroundPreset))
+const previewOverlayClass = computed(() =>
+  getGridBackgroundPreviewOverlayClasses(props.backgroundPreset),
+)
 </script>
 
 <template>
-  <div class="relative overflow-hidden">
+  <div class="relative overflow-hidden" :class="gridSurfaceClass">
     <div class="grid gap-2 preview-sign-grid">
       <div v-for="col in columns" :key="col.label" class="flex flex-col gap-2">
         <SignMedia v-for="sign in col.signs" :key="sign.id" :sign="sign" />
@@ -81,7 +92,8 @@ const columns = computed(() => {
 
     <div
       v-if="folderSlug"
-      class="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-background"
+      class="pointer-events-none absolute inset-0 bg-linear-to-b"
+      :class="previewOverlayClass"
     >
       <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
         <RouterLink

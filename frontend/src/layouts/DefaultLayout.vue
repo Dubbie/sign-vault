@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import logoUrl from '@/assets/logo.svg'
@@ -10,12 +10,13 @@ import UiDropdown from '@/components/ui/UiDropdown.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import { renderReleaseNotesMarkdown } from '@/lib/release-notes'
 import { useAuthStore } from '@/stores/auth'
-import { LogOut, Settings, ShieldAlert } from '@lucide/vue'
+import { LogOut, Menu, Settings, ShieldAlert, X } from '@lucide/vue'
 
 const auth = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 const showUserMenu = ref(false)
+const showMobileNav = ref(false)
 const showReleaseNotes = ref(false)
 const exploreRouteNames = new Set(['explore', 'public-folder'])
 const releaseVersion = __APP_VERSION__
@@ -31,6 +32,41 @@ function navClass(active: boolean) {
       : 'border-transparent text-on-surface-variant hover:text-on-surface ',
   ]
 }
+
+function mobileNavClass(active: boolean) {
+  return [
+    'rounded-lg px-3 py-2.5 font-medium no-underline transition-colors',
+    active
+      ? 'bg-primary/10 text-primary'
+      : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface',
+  ]
+}
+
+function onMobileNavKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') showMobileNav.value = false
+}
+
+watch(showMobileNav, (open) => {
+  if (open) {
+    document.addEventListener('keydown', onMobileNavKeydown)
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.removeEventListener('keydown', onMobileNavKeydown)
+    document.body.style.overflow = ''
+  }
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    showMobileNav.value = false
+  },
+)
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onMobileNavKeydown)
+  document.body.style.overflow = ''
+})
 
 async function handleLogout() {
   await auth.logout()
@@ -97,7 +133,7 @@ function isExploreActive() {
           </li>
         </ul>
 
-        <div class="flex items-center justify-end gap-x-8">
+        <div class="flex items-center justify-end gap-x-8 ml-auto">
           <a
             href="https://discord.gg/vkaXfkr4qa"
             target="_blank"
@@ -116,7 +152,7 @@ function isExploreActive() {
             </svg>
           </a>
 
-          <div v-if="auth.user" class="flex items-center gap-3">
+          <div v-if="auth.user" class="hidden items-center gap-3 sm:flex">
             <!-- TODO: Add global search <div class="relative hidden sm:block opacity-50">
               <Search
                 stroke-width="3"
@@ -173,7 +209,18 @@ function isExploreActive() {
             </UiDropdown>
           </div>
 
-          <UiButton v-else @click="handleLogin"> Login </UiButton>
+          <div v-else class="hidden sm:block">
+            <UiButton @click="handleLogin"> Login </UiButton>
+          </div>
+
+          <button
+            type="button"
+            class="sm:hidden cursor-pointer text-on-surface-variant transition-colors hover:text-on-surface"
+            aria-label="Open navigation menu"
+            @click="showMobileNav = true"
+          >
+            <Menu class="size-6" />
+          </button>
         </div>
       </nav>
     </header>
@@ -193,13 +240,17 @@ function isExploreActive() {
       class="w-full py-section-gap px-container-margin bg-surface-container-lowest border-t border-outline-variant/10"
     >
       <div class="max-w-7xl mx-auto">
-        <div class="w-full flex flex-col gap-6 md:flex-row md:items-center md:justify-center">
-          <div class="flex flex-col flex-1 gap-1">
+        <div
+          class="w-full flex flex-col items-center gap-6 text-center md:flex-row md:items-center md:justify-center md:text-left"
+        >
+          <div class="flex flex-col items-center gap-1 md:flex-1 md:items-start">
             <span class="text-headline-md font-bold text-on-surface">SignVault</span>
             <span class="text-label-sm text-on-surface-variant/80">Trackmania sign library</span>
           </div>
 
-          <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div
+            class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start md:gap-x-8"
+          >
             <button
               type="button"
               class="font-mono cursor-pointer rounded-full border border-outline-variant/60 bg-surface-container px-2 py-0.5 text-xs text-on-surface transition hover:border-primary hover:text-primary"
@@ -240,6 +291,115 @@ function isExploreActive() {
       </div>
     </footer>
 
+    <Teleport to="body">
+      <Transition name="mobile-nav-backdrop">
+        <div
+          v-if="showMobileNav"
+          class="fixed inset-0 z-50 bg-background/80 backdrop-blur sm:hidden"
+          @click.self="showMobileNav = false"
+        >
+          <Transition name="mobile-nav-panel">
+            <nav
+              v-if="showMobileNav"
+              class="fixed top-0 right-0 bottom-0 w-72 max-w-[85vw] bg-surface-dim border-l border-outline-variant/20 shadow-2xl flex flex-col overflow-y-auto"
+            >
+              <div
+                class="flex items-center justify-between px-container-margin h-16 border-b border-outline-variant/10"
+              >
+                <span class="text-label-md text-on-surface-variant">Menu</span>
+                <button
+                  type="button"
+                  aria-label="Close navigation menu"
+                  class="cursor-pointer text-on-surface-variant hover:text-on-surface"
+                  @click="showMobileNav = false"
+                >
+                  <X class="size-5" />
+                </button>
+              </div>
+
+              <ul class="flex flex-col gap-1 p-3">
+                <li v-if="auth.user">
+                  <RouterLink
+                    to="/dashboard"
+                    :class="mobileNavClass(route.name === 'dashboard')"
+                    @click="showMobileNav = false"
+                  >
+                    Dashboard
+                  </RouterLink>
+                </li>
+                <li>
+                  <RouterLink
+                    to="/"
+                    :class="mobileNavClass(isExploreActive())"
+                    @click="showMobileNav = false"
+                  >
+                    Explore
+                  </RouterLink>
+                </li>
+                <li v-if="auth.user">
+                  <RouterLink
+                    to="/folders"
+                    :class="mobileNavClass(route.path.startsWith('/folders'))"
+                    @click="showMobileNav = false"
+                  >
+                    My folders
+                  </RouterLink>
+                </li>
+                <li>
+                  <RouterLink
+                    to="/utilities"
+                    :class="mobileNavClass(route.path.startsWith('/utilities'))"
+                    @click="showMobileNav = false"
+                  >
+                    Utilities
+                  </RouterLink>
+                </li>
+                <li v-if="auth.isAdmin">
+                  <RouterLink
+                    to="/admin/users"
+                    class="flex items-center gap-2 rounded-lg px-3 py-2.5 font-medium no-underline transition-colors"
+                    :class="
+                      route.path.startsWith('/admin')
+                        ? 'bg-red-400/10 text-red-400'
+                        : 'text-red-400/60 hover:bg-red-400/5 hover:text-red-400'
+                    "
+                    @click="showMobileNav = false"
+                  >
+                    <ShieldAlert class="size-4" />
+                    Admin
+                  </RouterLink>
+                </li>
+              </ul>
+
+              <div class="mt-auto border-t border-outline-variant/10 p-3">
+                <template v-if="auth.user">
+                  <RouterLink
+                    to="/settings"
+                    class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-on-surface-variant transition hover:bg-surface-container-low"
+                    @click="showMobileNav = false"
+                  >
+                    <Settings class="size-4" />
+                    Settings
+                  </RouterLink>
+                  <button
+                    type="button"
+                    class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm text-red-400 transition hover:bg-red-500/10"
+                    @click="((showMobileNav = false), void handleLogout())"
+                  >
+                    <LogOut class="size-4" />
+                    Logout
+                  </button>
+                </template>
+                <UiButton v-else class="w-full" @click="((showMobileNav = false), handleLogin())">
+                  Login
+                </UiButton>
+              </div>
+            </nav>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+
     <UiModal v-model="showReleaseNotes" :title="`Release notes · v${releaseVersion}`" size="lg">
       <div class="space-y-4">
         <p class="text-label-sm uppercase tracking-[0.18em] text-on-surface-variant/80">
@@ -255,6 +415,29 @@ function isExploreActive() {
 </template>
 
 <style scoped>
+.mobile-nav-backdrop-enter-active,
+.mobile-nav-backdrop-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.mobile-nav-backdrop-enter-from,
+.mobile-nav-backdrop-leave-to {
+  opacity: 0;
+}
+
+.mobile-nav-panel-enter-active {
+  transition: transform 0.25s ease-out;
+}
+
+.mobile-nav-panel-leave-active {
+  transition: transform 0.2s ease-in;
+}
+
+.mobile-nav-panel-enter-from,
+.mobile-nav-panel-leave-to {
+  transform: translateX(100%);
+}
+
 :deep(.release-notes-content h2),
 :deep(.release-notes-content h3) {
   margin-top: 1rem;

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/Dubbie/sign-vault/compare/v1.1.0...v1.2.0) (2026-06-07)
+
+
+### Features
+
+* **explore:** expand pagination, grow preview grid, and add sticky preview panel ([34ce624](https://github.com/Dubbie/sign-vault/commit/34ce624474e8bc8954800e4b5874e67b426c6c97))
+* **frontend:** make the site usable on mobile for admins ([f0d9d6b](https://github.com/Dubbie/sign-vault/commit/f0d9d6b5581fbd8098073c0e4703e2af9689789d))
+* **signs:** upload large sign selections in batches ([c448196](https://github.com/Dubbie/sign-vault/commit/c448196feffd45629c83e30080223a704df5476c))
+
+
+### Bug Fixes
+
+* **activity-log:** group batched sign uploads ([6508f95](https://github.com/Dubbie/sign-vault/commit/6508f95569bc16f274c0e1e13f45185ee2de96d4))
+* **frontend:** align vote button inline on public folder page ([b734a13](https://github.com/Dubbie/sign-vault/commit/b734a1334bc16d6e43b171edefef222a9317448a))
+* **frontend:** match release-please linked headings in changelog parser ([65edfec](https://github.com/Dubbie/sign-vault/commit/65edfec4e1453d47d380e4325213a3223f0fee15))
+
 ## [1.1.0](https://github.com/Dubbie/sign-vault/compare/v1.0.0...v1.1.0) (2026-06-07)
 
 

@@ -23,7 +23,7 @@ const error = ref<string | null>(null)
 const search = ref(String(route.query.q || ''))
 const SORT_STORAGE_KEY = 'explore:sort'
 const storedSort = localStorage.getItem(SORT_STORAGE_KEY) as SortOption | null
-const sort = ref<SortOption>((route.query.sort as SortOption) || storedSort || 'latest')
+const sort = ref<SortOption>((route.query.sort as SortOption) || storedSort || 'votes')
 const meta = ref<PaginationMeta | null>(null)
 const hoveredFolder = ref<PublicFolderListing | null>(null)
 const activeFolderIndex = ref(0)
@@ -95,7 +95,7 @@ async function loadFolders(page = 1) {
   try {
     const params: { q?: string; page?: number; sort?: SortOption } = { page }
     if (search.value) params.q = search.value
-    if (sort.value !== 'latest') params.sort = sort.value
+    if (sort.value !== 'votes') params.sort = sort.value
 
     const response = await getPublicFolders(params)
     folders.value = response.data
@@ -112,7 +112,7 @@ function goToPage(page: number) {
   if (!meta.value) return
   const query: Record<string, string> = {}
   if (search.value) query.q = search.value
-  if (sort.value !== 'latest') query.sort = sort.value
+  if (sort.value !== 'votes') query.sort = sort.value
   if (page > 1) query.page = String(page)
   router.replace({ query }).catch(() => {})
   void loadFolders(page)
@@ -201,18 +201,6 @@ watch(folders, (nextFolders) => {
           type="button"
           class="cursor-pointer px-3 py-2 transition-colors"
           :class="
-            sort === 'latest'
-              ? 'bg-primary/10 text-primary'
-              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
-          "
-          @click="handleSortChange('latest')"
-        >
-          Latest
-        </button>
-        <button
-          type="button"
-          class="cursor-pointer px-3 py-2 transition-colors border-l border-outline/30"
-          :class="
             sort === 'votes'
               ? 'bg-primary/10 text-primary'
               : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
@@ -220,6 +208,18 @@ watch(folders, (nextFolders) => {
           @click="handleSortChange('votes')"
         >
           Top
+        </button>
+        <button
+          type="button"
+          class="cursor-pointer px-3 py-2 transition-colors border-l border-outline/30"
+          :class="
+            sort === 'latest'
+              ? 'bg-primary/10 text-primary'
+              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
+          "
+          @click="handleSortChange('latest')"
+        >
+          Latest
         </button>
       </div>
     </div>

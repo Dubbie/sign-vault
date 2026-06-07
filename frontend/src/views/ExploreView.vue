@@ -133,12 +133,18 @@ function handleSearchInput(value: string) {
   }, 400)
 }
 
-const pages = ref<number[]>([])
-watch(meta, (m) => {
-  if (!m) return
-  const p: number[] = []
-  for (let i = 1; i <= m.last_page; i++) p.push(i)
-  pages.value = p
+const MAX_VISIBLE_PAGES = 5
+const visiblePages = computed<number[]>(() => {
+  if (!meta.value) return []
+
+  const { current_page, last_page } = meta.value
+  let start = Math.max(1, current_page - Math.floor(MAX_VISIBLE_PAGES / 2))
+  const end = Math.min(last_page, start + MAX_VISIBLE_PAGES - 1)
+  start = Math.max(1, end - MAX_VISIBLE_PAGES + 1)
+
+  const result: number[] = []
+  for (let i = start; i <= end; i++) result.push(i)
+  return result
 })
 
 const page = ref(1)
@@ -266,7 +272,7 @@ watch(folders, (nextFolders) => {
 
             <div class="flex flex-wrap items-center justify-between gap-2">
               <button
-                v-for="p in pages"
+                v-for="p in visiblePages"
                 :key="p"
                 type="button"
                 class="cursor-pointer flex size-9 items-center justify-center rounded-lg text-sm font-semibold transition"
@@ -360,7 +366,7 @@ watch(folders, (nextFolders) => {
       </UiButton>
 
       <button
-        v-for="p in pages"
+        v-for="p in visiblePages"
         :key="p"
         type="button"
         class="flex size-9 items-center justify-center rounded text-sm font-semibold transition"

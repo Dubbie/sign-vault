@@ -496,7 +496,7 @@ watch(folderSlug, () => {
 
             <button
               type="button"
-              class="ml-auto flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-mono font-semibold transition-colors"
+              class="flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-mono font-semibold transition-colors"
               :class="
                 userHasVoted
                   ? 'bg-emerald-500 text-background'

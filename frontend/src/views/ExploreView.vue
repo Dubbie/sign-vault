@@ -199,11 +199,11 @@ watch(folders, (nextFolders) => {
       >
         <button
           type="button"
-          class="px-3 py-2 transition-colors"
+          class="cursor-pointer px-3 py-2 transition-colors"
           :class="
             sort === 'latest'
               ? 'bg-primary/10 text-primary'
-              : 'text-on-surface-variant hover:text-on-surface'
+              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
           "
           @click="handleSortChange('latest')"
         >
@@ -211,11 +211,11 @@ watch(folders, (nextFolders) => {
         </button>
         <button
           type="button"
-          class="px-3 py-2 transition-colors border-l border-outline/30"
+          class="cursor-pointer px-3 py-2 transition-colors border-l border-outline/30"
           :class="
             sort === 'votes'
               ? 'bg-primary/10 text-primary'
-              : 'text-on-surface-variant hover:text-on-surface'
+              : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
           "
           @click="handleSortChange('votes')"
         >

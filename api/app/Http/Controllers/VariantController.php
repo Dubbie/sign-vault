@@ -29,9 +29,9 @@ class VariantController extends Controller
     {
         $this->authorize('update', $folder);
 
-        $validated        = $request->validated();
+        $validated = $request->validated();
         $backfillPerformed = $this->variantService->ensureDefaultExists($folder);
-        $maxSortOrder     = $folder->variants()->max('sort_order') ?? 0;
+        $maxSortOrder = $folder->variants()->max('sort_order') ?? 0;
 
         $variant = $folder->variants()->create([
             'name' => $validated['name'],

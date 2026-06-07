@@ -26,7 +26,7 @@ class BrowseFolderResource extends JsonResource
             'attribution_source_url' => $this->attribution_source_url,
             'owner' => [
                 'display_name' => $this->user->display_name,
-                'avatar_url'   => $this->user->avatar_url,
+                'avatar_url' => $this->user->avatar_url,
             ],
             'preview_signs' => $this->selectPreviewSigns(),
             'preview_grid_background_preset' => $this->defaultVariant()?->grid_background_preset,

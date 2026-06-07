@@ -18,10 +18,10 @@ class UserController extends Controller
             ->oauthProviders()
             ->get(['provider', 'username', 'display_name', 'avatar_url'])
             ->map(fn ($p) => [
-                'provider'     => $p->provider,
-                'username'     => $p->username,
+                'provider' => $p->provider,
+                'username' => $p->username,
                 'display_name' => $p->display_name,
-                'avatar_url'   => $p->avatar_url,
+                'avatar_url' => $p->avatar_url,
             ]);
 
         return response()->json(['providers' => $providers]);
@@ -29,7 +29,7 @@ class UserController extends Controller
 
     public function updateProfile(UpdateProfileRequest $request): JsonResponse
     {
-        $user               = $request->user();
+        $user = $request->user();
         $user->display_name = $request->validated()['display_name'];
         $user->save();
 

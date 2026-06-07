@@ -30,8 +30,8 @@ class OauthIdentityService
 
         $user = User::create([
             'display_name' => $attrs['display_name'] ?? $attrs['username'],
-            'avatar_url'   => $attrs['avatar_url'],
-            'email'        => $attrs['email'],
+            'avatar_url' => $attrs['avatar_url'],
+            'email' => $attrs['email'],
         ]);
 
         $user->oauthProviders()->create(array_merge(['provider' => $provider], $attrs));
@@ -80,10 +80,10 @@ class OauthIdentityService
     {
         return [
             'provider_user_id' => (string) $externalUser->getId(),
-            'username'         => (string) ($externalUser->getNickname() ?? $externalUser->getName()),
-            'display_name'     => $externalUser->getName(),
-            'avatar_url'       => $externalUser->getAvatar(),
-            'email'            => $externalUser->getEmail(),
+            'username' => (string) ($externalUser->getNickname() ?? $externalUser->getName()),
+            'display_name' => $externalUser->getName(),
+            'avatar_url' => $externalUser->getAvatar(),
+            'email' => $externalUser->getEmail(),
         ];
     }
 }

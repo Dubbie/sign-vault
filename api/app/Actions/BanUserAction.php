@@ -17,7 +17,7 @@ class BanUserAction
             $this->signDeletion->deleteFolder($folder);
         }
 
-        $user->banned_at  = now();
+        $user->banned_at = now();
         $user->ban_reason = $reason;
         $user->save();
     }

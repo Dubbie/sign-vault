@@ -30,7 +30,7 @@ class SignController extends Controller
     {
         $this->authorize('view', $folder);
 
-        $perPage          = min((int) $request->query('per_page', 10), 100);
+        $perPage = min((int) $request->query('per_page', 10), 100);
         $defaultVariantId = $folder->defaultVariant?->id;
 
         $query = $folder->signs()->orderBy('sort_key');
@@ -54,6 +54,7 @@ class SignController extends Controller
 
         $validated = $request->validated();
         $variantId = $validated['variant_id'] ?? $folder->defaultVariant?->id;
+        $uploadSessionId = $validated['upload_session_id'] ?? null;
 
         $signs = $this->uploadSigns->handle(
             $request->user(),
@@ -62,11 +63,14 @@ class SignController extends Controller
             $variantId,
         );
 
-        $this->activityLog->log(ActivityLog::SIGNS_UPLOADED, $request->user()->id, [
-            'subject_folder_id' => $folder->id,
-            'metadata'          => ['folder_id' => $folder->id, 'folder_name' => $folder->name, 'count' => count($signs)],
-            'ip'                => $request->ip(),
-        ]);
+        $this->activityLog->logUploadedSigns(
+            $request->user()->id,
+            $folder->id,
+            $folder->name,
+            count($signs),
+            $request->ip(),
+            $uploadSessionId,
+        );
 
         return response()->json([
             'signs' => SignResource::collection(collect($signs)),
@@ -82,14 +86,14 @@ class SignController extends Controller
 
     public function destroy(DeleteSignsRequest $request): JsonResponse|Response
     {
-        $ids   = $request->validated('ids');
+        $ids = $request->validated('ids');
         $signs = Sign::whereIn('id', $ids)->where('user_id', $request->user()->id)->with('folder:id,name')->get();
 
         if ($signs->isEmpty()) {
             return response()->json(['message' => 'No signs found.'], 404);
         }
 
-        $folderId   = $signs->first()->folder_id;
+        $folderId = $signs->first()->folder_id;
         $folderName = $signs->first()->folder?->name;
 
         foreach ($signs as $sign) {
@@ -98,8 +102,8 @@ class SignController extends Controller
 
         $this->activityLog->log(ActivityLog::SIGNS_DELETED, $request->user()->id, [
             'subject_folder_id' => $folderId,
-            'metadata'          => ['folder_id' => $folderId, 'folder_name' => $folderName, 'count' => $signs->count()],
-            'ip'                => $request->ip(),
+            'metadata' => ['folder_id' => $folderId, 'folder_name' => $folderName, 'count' => $signs->count()],
+            'ip' => $request->ip(),
         ]);
 
         return response()->noContent();
@@ -107,29 +111,29 @@ class SignController extends Controller
 
     public function move(MoveSignsRequest $request): JsonResponse
     {
-        $ids            = $request->validated('ids');
+        $ids = $request->validated('ids');
         $targetFolderId = (int) $request->validated('folder_id');
 
-        $targetFolder           = Folder::findOrFail($targetFolderId);
+        $targetFolder = Folder::findOrFail($targetFolderId);
         $targetDefaultVariantId = $targetFolder->defaultVariant?->id;
 
         $updated = Sign::whereIn('id', $ids)
             ->where('user_id', $request->user()->id)
             ->where('folder_id', '!=', $targetFolderId)
             ->update([
-                'folder_id'  => $targetFolderId,
+                'folder_id' => $targetFolderId,
                 'variant_id' => $targetDefaultVariantId,
             ]);
 
         return response()->json([
-            'message'     => "{$updated} sign(s) moved successfully.",
+            'message' => "{$updated} sign(s) moved successfully.",
             'moved_count' => $updated,
         ]);
     }
 
     public function changeVariant(ChangeSignVariantRequest $request): JsonResponse
     {
-        $ids       = $request->validated('ids');
+        $ids = $request->validated('ids');
         $variantId = (int) $request->validated('variant_id');
 
         $variant = Variant::findOrFail($variantId);
@@ -140,7 +144,7 @@ class SignController extends Controller
             ->update(['variant_id' => $variantId]);
 
         return response()->json([
-            'message'       => "{$updated} sign(s) variant changed.",
+            'message' => "{$updated} sign(s) variant changed.",
             'changed_count' => $updated,
         ]);
     }

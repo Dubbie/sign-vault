@@ -58,7 +58,7 @@ class MediaMetadataExtractor
                 'file_name' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
                 'exception' => $throwable::class,
-                'message'   => $throwable->getMessage(),
+                'message' => $throwable->getMessage(),
             ]);
 
             return [null, null];
@@ -72,7 +72,7 @@ class MediaMetadataExtractor
             return [null, null];
         }
 
-        $width  = isset($stream['width'])  && is_numeric($stream['width'])  ? (int) $stream['width']  : null;
+        $width = isset($stream['width']) && is_numeric($stream['width']) ? (int) $stream['width'] : null;
         $height = isset($stream['height']) && is_numeric($stream['height']) ? (int) $stream['height'] : null;
 
         return [$width, $height];

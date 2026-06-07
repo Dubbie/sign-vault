@@ -45,7 +45,7 @@ class OauthAuthController extends Controller
         $this->assertValidProvider($provider);
 
         $validated = $request->validated();
-        $cached    = $cache->pull($this->stateCacheKey($provider, $validated['state']));
+        $cached = $cache->pull($this->stateCacheKey($provider, $validated['state']));
 
         if ($cached === null) {
             throw ValidationException::withMessages([
@@ -57,16 +57,16 @@ class OauthAuthController extends Controller
 
         if (! empty($cached['link_user_id'])) {
             $currentUser = User::findOrFail($cached['link_user_id']);
-            $user        = $this->oauthIdentity->link($currentUser, $provider, $externalUser);
+            $user = $this->oauthIdentity->link($currentUser, $provider, $externalUser);
 
             $this->activityLog->log(ActivityLog::PROVIDER_LINKED, $currentUser->id, [
                 'metadata' => ['provider' => $provider],
-                'ip'       => $request->ip(),
+                'ip' => $request->ip(),
             ]);
 
             return response()->json([
                 'message' => ucfirst($provider).' account linked successfully.',
-                'user'    => $this->userResponse($user->loadCount(['folders', 'signs'])),
+                'user' => $this->userResponse($user->loadCount(['folders', 'signs'])),
             ]);
         }
 
@@ -74,7 +74,7 @@ class OauthAuthController extends Controller
 
         if ($user->isBanned()) {
             return response()->json([
-                'message'    => 'Your account has been banned.',
+                'message' => 'Your account has been banned.',
                 'ban_reason' => $user->ban_reason,
             ], Response::HTTP_FORBIDDEN);
         }
@@ -82,14 +82,14 @@ class OauthAuthController extends Controller
         $event = $user->wasRecentlyCreated ? ActivityLog::REGISTERED : ActivityLog::LOGIN;
         $this->activityLog->log($event, $user->id, [
             'metadata' => ['provider' => $provider],
-            'ip'       => $request->ip(),
+            'ip' => $request->ip(),
         ]);
 
         $token = $user->createToken($provider);
 
         return response()->json([
             'token' => $token->plainTextToken,
-            'user'  => $this->userResponse($user->loadCount(['folders', 'signs'])),
+            'user' => $this->userResponse($user->loadCount(['folders', 'signs'])),
         ]);
     }
 
@@ -132,7 +132,7 @@ class OauthAuthController extends Controller
 
         $this->activityLog->log(ActivityLog::PROVIDER_UNLINKED, $user->id, [
             'metadata' => ['provider' => $provider],
-            'ip'       => $request->ip(),
+            'ip' => $request->ip(),
         ]);
 
         return response()->json(['message' => ucfirst($provider).' has been unlinked.']);
@@ -144,13 +144,13 @@ class OauthAuthController extends Controller
 
         if ($user->isBanned()) {
             return response()->json([
-                'banned'     => true,
+                'banned' => true,
                 'ban_reason' => $user->ban_reason,
             ], Response::HTTP_FORBIDDEN);
         }
 
         return response()->json([
-            'user'   => $this->userResponse($user->loadCount(['folders', 'signs'])),
+            'user' => $this->userResponse($user->loadCount(['folders', 'signs'])),
             'limits' => [
                 'sign_upload_max_files' => config('signs.max_upload_files'),
             ],

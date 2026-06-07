@@ -30,15 +30,15 @@ class AdminUserController extends Controller
 
         $users->through(function (User $user) {
             return [
-                'id'            => $user->id,
-                'display_name'  => $user->display_name,
-                'avatar_url'    => $user->avatar_url,
-                'is_admin'      => $user->is_admin,
-                'banned_at'     => $user->banned_at?->toISOString(),
-                'ban_reason'    => $user->ban_reason,
+                'id' => $user->id,
+                'display_name' => $user->display_name,
+                'avatar_url' => $user->avatar_url,
+                'is_admin' => $user->is_admin,
+                'banned_at' => $user->banned_at?->toISOString(),
+                'ban_reason' => $user->ban_reason,
                 'folders_count' => $user->folders_count,
-                'signs_count'   => $user->signs_count,
-                'providers'     => $user->oauthProviders->map(fn ($p) => [
+                'signs_count' => $user->signs_count,
+                'providers' => $user->oauthProviders->map(fn ($p) => [
                     'provider' => $p->provider,
                     'username' => $p->username,
                 ]),
@@ -48,7 +48,7 @@ class AdminUserController extends Controller
         return response()->json([
             ...$users->toArray(),
             'stats' => [
-                'total'  => User::count(),
+                'total' => User::count(),
                 'admins' => User::where('is_admin', true)->count(),
                 'banned' => User::whereNotNull('banned_at')->count(),
             ],
@@ -73,8 +73,8 @@ class AdminUserController extends Controller
 
         $this->activityLog->log(ActivityLog::ADMIN_USER_BANNED, $request->user()->id, [
             'subject_user_id' => $user->id,
-            'metadata'        => ['reason' => $validated['reason'], 'target_name' => $targetName],
-            'ip'              => $request->ip(),
+            'metadata' => ['reason' => $validated['reason'], 'target_name' => $targetName],
+            'ip' => $request->ip(),
         ]);
 
         return response()->json(['message' => 'User has been banned and their content removed.']);
@@ -88,14 +88,14 @@ class AdminUserController extends Controller
             ]);
         }
 
-        $user->banned_at  = null;
+        $user->banned_at = null;
         $user->ban_reason = null;
         $user->save();
 
         $this->activityLog->log(ActivityLog::ADMIN_USER_UNBANNED, $request->user()->id, [
             'subject_user_id' => $user->id,
-            'metadata'        => ['target_name' => $user->display_name],
-            'ip'              => $request->ip(),
+            'metadata' => ['target_name' => $user->display_name],
+            'ip' => $request->ip(),
         ]);
 
         return response()->json(['message' => 'User has been unbanned.']);

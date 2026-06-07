@@ -65,6 +65,9 @@ export async function createSigns(
   if (payload.variant_id !== undefined) {
     formData.append('variant_id', String(payload.variant_id))
   }
+  if (payload.upload_session_id !== undefined) {
+    formData.append('upload_session_id', payload.upload_session_id)
+  }
 
   const { data } = await api.post<{ signs: Sign[] }>(`/api/folders/${folderId}/signs`, formData, {
     signal,
@@ -90,10 +93,19 @@ function chunk<T>(items: T[], size: number): T[][] {
   return chunks
 }
 
+export function generateUploadSessionId(): string {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return `upload-${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
 export async function createSignsInBatches(
   folderId: number,
   files: File[],
   variantId: number | undefined,
+  uploadSessionId: string,
   batchSize: number,
   onProgress?: (progress: BatchUploadProgress) => void,
   signal?: AbortSignal,
@@ -111,7 +123,7 @@ export async function createSignsInBatches(
     try {
       const createdSigns = await createSigns(
         folderId,
-        { files: batch, variant_id: variantId },
+        { files: batch, variant_id: variantId, upload_session_id: uploadSessionId },
         signal,
       )
       signs.push(...createdSigns)
@@ -127,7 +139,7 @@ export async function createSignsInBatches(
         try {
           const createdSigns = await createSigns(
             folderId,
-            { files: [file], variant_id: variantId },
+            { files: [file], variant_id: variantId, upload_session_id: uploadSessionId },
             signal,
           )
           signs.push(...createdSigns)

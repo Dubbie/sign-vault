@@ -37,6 +37,7 @@ class StoreSignRequest extends FormRequest
                 Rule::exists('variants', 'id')
                     ->where('folder_id', $folder->id),
             ],
+            'upload_session_id' => ['nullable', 'uuid'],
             'files' => [
                 'required',
                 'array',

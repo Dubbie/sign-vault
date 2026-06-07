@@ -14,8 +14,8 @@ class UserFactory extends Factory
     {
         return [
             'display_name' => fake()->name(),
-            'avatar_url'   => null,
-            'email'        => fake()->optional()->safeEmail(),
+            'avatar_url' => null,
+            'email' => fake()->optional()->safeEmail(),
         ];
     }
 }

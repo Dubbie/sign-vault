@@ -26,4 +26,5 @@ export type PaginatedSignResponse = {
 export type CreateSignPayload = {
   files: File[]
   variant_id?: number
+  upload_session_id?: string
 }

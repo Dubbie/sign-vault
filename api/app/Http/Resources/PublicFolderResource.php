@@ -25,7 +25,7 @@ class PublicFolderResource extends JsonResource
             'user_id' => $this->user_id,
             'owner' => [
                 'display_name' => $this->user->display_name,
-                'avatar_url'   => $this->user->avatar_url,
+                'avatar_url' => $this->user->avatar_url,
             ],
             'votes_count' => $this->votes()->count(),
             'user_has_voted' => ($user = auth('sanctum')->user())

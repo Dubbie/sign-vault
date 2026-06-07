@@ -264,11 +264,11 @@ class DiscordAuthTest extends TestCase
         $user = new SocialiteUser;
 
         return $user->setRaw($attributes)->map([
-            'id'       => $attributes['id'],
+            'id' => $attributes['id'],
             'nickname' => $attributes['username'],
-            'name'     => $attributes['name'],
-            'email'    => $attributes['email'] ?? null,
-            'avatar'   => $attributes['avatar'],
+            'name' => $attributes['name'],
+            'email' => $attributes['email'] ?? null,
+            'avatar' => $attributes['avatar'],
         ]);
     }
 }

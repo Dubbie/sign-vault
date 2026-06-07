@@ -26,11 +26,11 @@ class UploadSignsAction
         $disk = config('filesystems.default');
 
         Log::info('Sign bulk upload started.', [
-            'user_id'    => $user->id,
-            'folder_id'  => $folder->id,
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
             'folder_slug' => $folder->slug,
             'variant_id' => $variantId,
-            'disk'       => $disk,
+            'disk' => $disk,
             'file_count' => count($files),
         ]);
 
@@ -50,41 +50,41 @@ class UploadSignsAction
         $name = $this->nameFor($file);
 
         Log::info('Sign upload started.', [
-            'user_id'      => $user->id,
-            'folder_id'    => $folder->id,
-            'folder_slug'  => $folder->slug,
-            'variant_id'   => $variantId,
-            'file_name'    => $file->getClientOriginalName(),
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'folder_slug' => $folder->slug,
+            'variant_id' => $variantId,
+            'file_name' => $file->getClientOriginalName(),
             'derived_name' => $name,
-            'mime_type'    => $file->getClientMimeType(),
-            'size_bytes'   => $file->getSize(),
+            'mime_type' => $file->getClientMimeType(),
+            'size_bytes' => $file->getSize(),
         ]);
 
         [$width, $height] = $this->mediaMetadata->dimensions($file);
 
-        $existing   = $this->findExisting($user->id, $folder->id, $variantId, $name, $width, $height);
+        $existing = $this->findExisting($user->id, $folder->id, $variantId, $name, $width, $height);
         $storageKey = $this->signStorage->keyFor($user->id, $folder->id, $variantId, $name, $file, $width, $height);
-        $publicUrl  = $this->signStorage->url($disk, $storageKey);
-        $storedKey  = $this->signStorage->store($disk, $storageKey, $file);
+        $publicUrl = $this->signStorage->url($disk, $storageKey);
+        $storedKey = $this->signStorage->store($disk, $storageKey, $file);
 
         $sign = $existing ?? $user->signs()->make([
-            'folder_id'  => $folder->id,
+            'folder_id' => $folder->id,
             'variant_id' => $variantId,
-            'name'       => $name,
+            'name' => $name,
         ]);
 
         $oldStorageKey = $sign->exists ? $sign->storage_key : null;
 
         $sign->fill([
             'storage_disk' => $disk,
-            'storage_key'  => $storedKey,
-            'public_url'   => $publicUrl,
-            'mime_type'    => $file->getMimeType() ?? $file->getClientMimeType(),
-            'size_bytes'   => $file->getSize() ?? 0,
-            'width'        => $width,
-            'height'       => $height,
+            'storage_key' => $storedKey,
+            'public_url' => $publicUrl,
+            'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
+            'size_bytes' => $file->getSize() ?? 0,
+            'width' => $width,
+            'height' => $height,
             'column_ratio' => $this->columnRatioFor($width, $height),
-            'sort_key'     => $this->naturalSortKey($name),
+            'sort_key' => $this->naturalSortKey($name),
         ]);
 
         $sign->save();
@@ -99,7 +99,7 @@ class UploadSignsAction
     private function nameFor(UploadedFile $file): string
     {
         $original = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $derived  = trim((string) $original);
+        $derived = trim((string) $original);
 
         return $derived !== '' ? $derived : 'sign';
     }
@@ -138,7 +138,7 @@ class UploadSignsAction
             return 1;
         }
 
-        $ratio   = $width / $height;
+        $ratio = $width / $height;
         $columns = [6, 4, 2, 1];
         $closest = $columns[0];
         $minDiff = abs($ratio - $closest);

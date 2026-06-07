@@ -14,13 +14,13 @@ class OauthProviderFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id'          => User::factory(),
-            'provider'         => OauthProvider::DISCORD,
+            'user_id' => User::factory(),
+            'provider' => OauthProvider::DISCORD,
             'provider_user_id' => fake()->unique()->numerify('##################'),
-            'username'         => fake()->userName(),
-            'display_name'     => fake()->optional()->name(),
-            'avatar_url'       => null,
-            'email'            => fake()->optional()->safeEmail(),
+            'username' => fake()->userName(),
+            'display_name' => fake()->optional()->name(),
+            'avatar_url' => null,
+            'email' => fake()->optional()->safeEmail(),
         ];
     }
 
@@ -32,7 +32,7 @@ class OauthProviderFactory extends Factory
     public function trackmania(): static
     {
         return $this->state([
-            'provider'         => OauthProvider::TRACKMANIA,
+            'provider' => OauthProvider::TRACKMANIA,
             'provider_user_id' => fake()->uuid(),
         ]);
     }

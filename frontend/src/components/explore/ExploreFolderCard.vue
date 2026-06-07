@@ -10,6 +10,8 @@ import { ThumbsUp } from '@lucide/vue'
 const props = defineProps<{
   folder: PublicFolderListing
   active?: boolean
+  id?: string
+  tabindex?: number
 }>()
 
 const auth = useAuthStore()
@@ -44,7 +46,11 @@ async function handleVote(e: MouseEvent) {
 
 <template>
   <RouterLink
+    :id="id"
     :to="{ name: 'public-folder', params: { slug: folder.slug } }"
+    role="option"
+    :aria-selected="active ? 'true' : 'false'"
+    :tabindex="tabindex ?? -1"
     class="flex flex-col gap-2 rounded-lg border bg-surface px-3 py-2.5 no-underline transition hover:bg-surface-hover/50"
     :class="{ 'border-primary': active, 'border-outline/30': !active }"
   >

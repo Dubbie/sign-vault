@@ -66,6 +66,53 @@ export async function createSigns(folderId: number, payload: CreateSignPayload):
   return data.signs
 }
 
+export type BatchUploadProgress = {
+  uploaded: number
+  total: number
+}
+
+export type BatchUploadResult = {
+  signs: Sign[]
+  failedFiles: string[]
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = []
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size))
+  }
+  return chunks
+}
+
+export async function createSignsInBatches(
+  folderId: number,
+  files: File[],
+  variantId: number | undefined,
+  batchSize: number,
+  onProgress?: (progress: BatchUploadProgress) => void,
+): Promise<BatchUploadResult> {
+  const batches = chunk(files, batchSize)
+  const signs: Sign[] = []
+  const failedFiles: string[] = []
+  let uploaded = 0
+
+  onProgress?.({ uploaded, total: files.length })
+
+  for (const batch of batches) {
+    try {
+      const createdSigns = await createSigns(folderId, { files: batch, variant_id: variantId })
+      signs.push(...createdSigns)
+    } catch {
+      failedFiles.push(...batch.map((file) => file.name))
+    }
+
+    uploaded += batch.length
+    onProgress?.({ uploaded, total: files.length })
+  }
+
+  return { signs, failedFiles }
+}
+
 export async function deleteSigns(ids: number[]): Promise<void> {
   await api.delete('/api/signs', { data: { ids } })
 }

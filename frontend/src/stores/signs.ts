@@ -3,18 +3,20 @@ import { defineStore } from 'pinia'
 
 import {
   changeSignVariant as changeSignVariantRequest,
-  createSigns as createSignsRequest,
+  createSignsInBatches,
   deleteSigns as deleteSignsRequest,
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
   getSignErrorMessage,
   moveSigns as moveSignsRequest,
 } from '@/lib/signs'
+import type { BatchUploadProgress } from '@/lib/signs'
 import type { CreateSignPayload, Sign } from '@/types/sign'
 
 const COLUMN_RATIOS = [6, 4, 2, 1] as const
 type ColumnRatio = (typeof COLUMN_RATIOS)[number]
 const PER_COLUMN = 10
+const UPLOAD_BATCH_SIZE = 20
 
 type ColumnState = { currentPage: number; hasMore: boolean }
 
@@ -33,6 +35,8 @@ export const useSignsStore = defineStore('signs', () => {
   const isLoading = ref(false)
   const isLoadingMore = ref(false)
   const isUploading = ref(false)
+  const uploadProgress = ref<BatchUploadProgress | null>(null)
+  const uploadFailedFiles = ref<string[]>([])
   const isMoving = ref(false)
   const error = ref<string | null>(null)
   const columnState = ref<Record<ColumnRatio, ColumnState>>(initialColumnState())
@@ -158,13 +162,31 @@ export const useSignsStore = defineStore('signs', () => {
     }
   }
 
-  async function uploadSign(folderId: number, payload: CreateSignPayload) {
+  async function uploadSign(folderId: number, payload: CreateSignPayload, batchSize?: number) {
     isUploading.value = true
+    uploadProgress.value = { uploaded: 0, total: payload.files.length }
+    uploadFailedFiles.value = []
     clearError()
 
     try {
-      const createdSigns = await createSignsRequest(folderId, payload)
+      const { signs: createdSigns, failedFiles } = await createSignsInBatches(
+        folderId,
+        payload.files,
+        payload.variant_id,
+        batchSize ?? UPLOAD_BATCH_SIZE,
+        (progress) => {
+          uploadProgress.value = progress
+        },
+      )
+
       createdSigns.forEach(upsertSign)
+      uploadFailedFiles.value = failedFiles
+
+      if (failedFiles.length > 0 && createdSigns.length === 0) {
+        error.value = 'Upload failed for all files. Please try again.'
+        return null
+      }
+
       return createdSigns
     } catch (exception) {
       setErrorFromUnknown(exception)
@@ -231,6 +253,8 @@ export const useSignsStore = defineStore('signs', () => {
     isLoading,
     isLoadingMore,
     isUploading,
+    uploadProgress,
+    uploadFailedFiles,
     error,
     hasMore,
     fetchFolderSigns,

@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\VariantGridBackgroundPreset;
 use App\Models\Folder;
+use App\Models\Variant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Variant>
+ * @extends Factory<Variant>
  */
 class VariantFactory extends Factory
 {

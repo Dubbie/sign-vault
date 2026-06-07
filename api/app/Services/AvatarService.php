@@ -12,7 +12,7 @@ class AvatarService
     public function upload(User $user, UploadedFile $file): string
     {
         $disk = config('filesystems.default');
-        $key  = 'avatars/'.$user->id.'/'.Str::uuid().'.'.$file->extension();
+        $key = 'avatars/'.$user->id.'/'.Str::uuid().'.'.$file->extension();
 
         if ($user->avatar_storage_key) {
             Storage::disk($disk)->delete($user->avatar_storage_key);
@@ -22,7 +22,7 @@ class AvatarService
 
         $url = Storage::disk($disk)->url($key);
 
-        $user->avatar_url         = $url;
+        $user->avatar_url = $url;
         $user->avatar_storage_key = $key;
         $user->save();
 

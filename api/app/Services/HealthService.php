@@ -9,7 +9,7 @@ class HealthService
 {
     public function uptimePercentage(): ?float
     {
-        $apiKey    = config('services.uptimerobot.api_key');
+        $apiKey = config('services.uptimerobot.api_key');
         $monitorId = config('services.uptimerobot.monitor_id');
 
         if (! $apiKey || ! $monitorId) {
@@ -19,9 +19,9 @@ class HealthService
         return Cache::remember('uptime_percentage', 300, function () use ($apiKey, $monitorId): ?float {
             try {
                 $response = Http::asForm()->post('https://api.uptimerobot.com/v2/getMonitors', [
-                    'api_key'             => $apiKey,
-                    'format'              => 'json',
-                    'monitors'            => $monitorId,
+                    'api_key' => $apiKey,
+                    'format' => 'json',
+                    'monitors' => $monitorId,
                     'custom_uptime_ratios' => 30,
                 ]);
 

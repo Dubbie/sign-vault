@@ -212,11 +212,11 @@ class AccountLinkingTest extends TestCase
         $user = new SocialiteUser;
 
         return $user->setRaw($attributes)->map([
-            'id'       => $attributes['id'],
-            'name'     => $attributes['name'],
+            'id' => $attributes['id'],
+            'name' => $attributes['name'],
             'nickname' => $attributes['nickname'],
-            'email'    => $attributes['email'],
-            'avatar'   => $attributes['avatar'],
+            'email' => $attributes['email'],
+            'avatar' => $attributes['avatar'],
         ]);
     }
 }

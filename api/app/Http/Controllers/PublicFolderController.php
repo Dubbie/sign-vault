@@ -8,9 +8,11 @@ use App\Http\Resources\PublicFolderResource;
 use App\Http\Resources\PublicSignResource;
 use App\Models\Folder;
 use App\Models\FolderVote;
+use App\Models\Sign;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -180,7 +182,7 @@ class PublicFolderController extends Controller
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, \App\Models\Sign>
+     * @return Collection<int, Sign>
      */
     private function publicSignsForFolder(Folder $folder)
     {

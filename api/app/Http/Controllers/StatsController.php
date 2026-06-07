@@ -14,12 +14,12 @@ class StatsController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'total_users'            => User::notBanned()->count(),
-            'total_signs'            => Sign::count(),
-            'cdn_latency_ms'         => $this->healthService->cdnLatencyMs(),
-            'uptime_percentage'      => $this->healthService->uptimePercentage(),
-            'server_uptime_seconds'  => $this->healthService->serverUptimeSeconds(),
-            'is_up'                  => true,
+            'total_users' => User::notBanned()->count(),
+            'total_signs' => Sign::count(),
+            'cdn_latency_ms' => $this->healthService->cdnLatencyMs(),
+            'uptime_percentage' => $this->healthService->uptimePercentage(),
+            'server_uptime_seconds' => $this->healthService->serverUptimeSeconds(),
+            'is_up' => true,
         ]);
     }
 }

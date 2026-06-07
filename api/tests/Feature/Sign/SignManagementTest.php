@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Sign;
 
+use App\Models\ActivityLog;
 use App\Models\Folder;
 use App\Models\Sign;
 use App\Models\User;
@@ -15,6 +16,117 @@ use Tests\TestCase;
 class SignManagementTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_upload_without_session_id_creates_a_single_activity_log_row(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $this->fakeSignStorage();
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+                UploadedFile::fake()->image('start-banner.png', 512, 256),
+            ],
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('activity_logs', [
+            'event' => ActivityLog::SIGNS_UPLOADED,
+            'actor_id' => $user->id,
+            'subject_folder_id' => $folder->id,
+            'upload_session_id' => null,
+        ]);
+
+        $activityLog = ActivityLog::query()
+            ->where('event', ActivityLog::SIGNS_UPLOADED)
+            ->sole();
+
+        $this->assertSame(2, $activityLog->metadata['count'] ?? null);
+        $this->assertSame($folder->name, $activityLog->metadata['folder_name'] ?? null);
+    }
+
+    public function test_uploads_with_the_same_session_id_are_aggregated_into_one_activity_log_row(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $this->fakeSignStorage();
+        Sanctum::actingAs($user);
+
+        $uploadSessionId = '31f2bbf7-11d3-486f-a247-572822ed4620';
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'upload_session_id' => $uploadSessionId,
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+                UploadedFile::fake()->image('start-banner.png', 512, 256),
+            ],
+        ])->assertCreated();
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'upload_session_id' => $uploadSessionId,
+            'files' => [
+                UploadedFile::fake()->image('finish-banner.png', 600, 150),
+            ],
+        ])->assertCreated();
+
+        $activityLog = ActivityLog::query()
+            ->where('event', ActivityLog::SIGNS_UPLOADED)
+            ->sole();
+
+        $this->assertSame($uploadSessionId, $activityLog->upload_session_id);
+        $this->assertSame(3, $activityLog->metadata['count'] ?? null);
+    }
+
+    public function test_failed_upload_attempt_does_not_create_a_new_log_row_for_an_existing_session(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $this->fakeSignStorage();
+        Sanctum::actingAs($user);
+
+        $uploadSessionId = '66e4a67d-4b53-4601-ac54-9342be060f9f';
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'upload_session_id' => $uploadSessionId,
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+                UploadedFile::fake()->image('start-banner.png', 512, 256),
+            ],
+        ])->assertCreated();
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'upload_session_id' => $uploadSessionId,
+            'files' => [
+                UploadedFile::fake()->create('broken.txt', 10, 'text/plain'),
+            ],
+        ])->assertStatus(422);
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'upload_session_id' => $uploadSessionId,
+            'files' => [
+                UploadedFile::fake()->image('retry-banner.png', 256, 256),
+            ],
+        ])->assertCreated();
+
+        $activityLog = ActivityLog::query()
+            ->where('event', ActivityLog::SIGNS_UPLOADED)
+            ->sole();
+
+        $this->assertSame(3, $activityLog->metadata['count'] ?? null);
+    }
 
     public function test_authenticated_user_can_upload_a_valid_sign_to_own_folder(): void
     {

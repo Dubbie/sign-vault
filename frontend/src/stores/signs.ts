@@ -5,6 +5,7 @@ import {
   changeSignVariant as changeSignVariantRequest,
   createSignsInBatches,
   deleteSigns as deleteSignsRequest,
+  generateUploadSessionId,
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
   getSignErrorMessage,
@@ -174,10 +175,13 @@ export const useSignsStore = defineStore('signs', () => {
     uploadController = new AbortController()
 
     try {
+      const uploadSessionId = generateUploadSessionId()
+
       const { signs: createdSigns, failedFiles } = await createSignsInBatches(
         folderId,
         payload.files,
         payload.variant_id,
+        uploadSessionId,
         batchSize ?? UPLOAD_BATCH_SIZE,
         (progress) => {
           uploadProgress.value = progress

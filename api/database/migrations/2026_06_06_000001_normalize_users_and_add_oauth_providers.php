@@ -38,20 +38,20 @@ return new class extends Migration
             ->chunk(500, function ($users): void {
                 foreach ($users as $user) {
                     DB::table('oauth_providers')->insertOrIgnore([
-                        'user_id'          => $user->id,
-                        'provider'         => 'discord',
+                        'user_id' => $user->id,
+                        'provider' => 'discord',
                         'provider_user_id' => $user->discord_id,
-                        'username'         => $user->discord_username,
-                        'display_name'     => $user->discord_global_name,
-                        'avatar_url'       => $user->discord_avatar,
-                        'email'            => $user->email,
-                        'created_at'       => now(),
-                        'updated_at'       => now(),
+                        'username' => $user->discord_username,
+                        'display_name' => $user->discord_global_name,
+                        'avatar_url' => $user->discord_avatar,
+                        'email' => $user->email,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ]);
 
                     DB::table('users')->where('id', $user->id)->update([
                         'display_name' => $user->discord_global_name ?? $user->discord_username,
-                        'avatar_url'   => $user->discord_avatar,
+                        'avatar_url' => $user->discord_avatar,
                     ]);
                 }
             });
@@ -85,10 +85,10 @@ return new class extends Migration
             ->chunk(500, function ($providers): void {
                 foreach ($providers as $provider) {
                     DB::table('users')->where('id', $provider->user_id)->update([
-                        'discord_id'          => $provider->provider_user_id,
-                        'discord_username'     => $provider->username,
-                        'discord_global_name'  => $provider->display_name,
-                        'discord_avatar'       => $provider->avatar_url,
+                        'discord_id' => $provider->provider_user_id,
+                        'discord_username' => $provider->username,
+                        'discord_global_name' => $provider->display_name,
+                        'discord_avatar' => $provider->avatar_url,
                     ]);
                 }
             });

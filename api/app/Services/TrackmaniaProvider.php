@@ -45,11 +45,11 @@ class TrackmaniaProvider extends AbstractProvider
     protected function mapUserToObject(array $user): User
     {
         return (new User)->setRaw($user)->map([
-            'id'       => $user['accountId'] ?? null,
-            'name'     => $user['displayName'] ?? null,
+            'id' => $user['accountId'] ?? null,
+            'name' => $user['displayName'] ?? null,
             'nickname' => $user['displayName'] ?? null,
-            'email'    => null,
-            'avatar'   => null,
+            'email' => null,
+            'avatar' => null,
         ]);
     }
 }

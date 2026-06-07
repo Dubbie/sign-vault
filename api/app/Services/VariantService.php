@@ -22,7 +22,7 @@ class VariantService
         }
 
         $default = $folder->variants()->create([
-            'name'       => 'Default',
+            'name' => 'Default',
             'is_default' => true,
             'sort_order' => 0,
             'grid_background_preset' => VariantGridBackgroundPreset::Darkest->value,

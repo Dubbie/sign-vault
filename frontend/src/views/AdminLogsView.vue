@@ -11,20 +11,20 @@ import UiSelect from '@/components/ui/UiSelect.vue'
 
 const EVENT_OPTIONS = [
   { value: '', label: 'All events' },
-  { value: 'admin.user.banned', label: 'Admin — Ban user' },
-  { value: 'admin.user.unbanned', label: 'Admin — Unban user' },
-  { value: 'admin.folder.deleted', label: 'Admin — Delete folder' },
-  { value: 'admin.sign.deleted', label: 'Admin — Delete sign' },
-  { value: 'auth.registered', label: 'Auth — Register' },
-  { value: 'auth.login', label: 'Auth — Login' },
-  { value: 'auth.logout', label: 'Auth — Logout' },
-  { value: 'auth.provider.linked', label: 'Auth — Link provider' },
-  { value: 'auth.provider.unlinked', label: 'Auth — Unlink provider' },
-  { value: 'folder.created', label: 'Content — Folder created' },
-  { value: 'folder.deleted', label: 'Content — Folder deleted' },
-  { value: 'folder.visibility_changed', label: 'Content — Visibility changed' },
-  { value: 'signs.uploaded', label: 'Content — Signs uploaded' },
-  { value: 'signs.deleted', label: 'Content — Signs deleted' },
+  { value: 'admin.user.banned', label: 'Admin - Ban user' },
+  { value: 'admin.user.unbanned', label: 'Admin - Unban user' },
+  { value: 'admin.folder.deleted', label: 'Admin - Delete folder' },
+  { value: 'admin.sign.deleted', label: 'Admin - Delete sign' },
+  { value: 'auth.registered', label: 'Auth - Register' },
+  { value: 'auth.login', label: 'Auth - Login' },
+  { value: 'auth.logout', label: 'Auth - Logout' },
+  { value: 'auth.provider.linked', label: 'Auth - Link provider' },
+  { value: 'auth.provider.unlinked', label: 'Auth - Unlink provider' },
+  { value: 'folder.created', label: 'Content - Folder created' },
+  { value: 'folder.deleted', label: 'Content - Folder deleted' },
+  { value: 'folder.visibility_changed', label: 'Content - Visibility changed' },
+  { value: 'signs.uploaded', label: 'Content - Signs uploaded' },
+  { value: 'signs.deleted', label: 'Content - Signs deleted' },
 ]
 
 const data = ref<PaginatedActivityLogs | null>(null)
@@ -153,19 +153,24 @@ onMounted(() => {
 
         <div v-else class="glass-card overflow-hidden rounded-lg">
           <div class="overflow-x-auto">
-            <table class="min-w-full">
+            <table class="min-w-full table-fixed">
+              <colgroup>
+                <col class="w-28" />
+                <col class="w-52" />
+                <col class="w-44" />
+                <col class="w-44 max-md:hidden" />
+                <col class="w-56 max-lg:hidden" />
+                <col class="w-36 max-lg:hidden" />
+              </colgroup>
+
               <thead class="bg-surface-container-low">
                 <tr class="text-left">
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant">When</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant">Event</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant">Actor</th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-md:hidden">
-                    Subject
-                  </th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-lg:hidden">
-                    Details
-                  </th>
-                  <th class="px-5 py-4 text-label-sm text-on-surface-variant max-lg:hidden">IP</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant">When</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant">Event</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant">Actor</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant max-md:hidden">Subject</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant max-lg:hidden">Details</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant max-lg:hidden">IP</th>
                 </tr>
               </thead>
 
@@ -175,21 +180,22 @@ onMounted(() => {
                   :key="entry.id"
                   class="border-t border-outline-variant/60 transition hover:bg-surface-container-low"
                 >
-                  <td class="px-5 py-4 text-body-sm text-on-surface-variant whitespace-nowrap">
+                  <td class="px-4 py-3 text-xs text-on-surface-variant whitespace-nowrap">
                     <span :title="entry.created_at">{{ formatRelative(entry.created_at) }}</span>
                   </td>
 
-                  <td class="px-5 py-4">
+                  <td class="px-4 py-3">
                     <span
-                      class="inline-flex items-center rounded-full border px-2.5 py-1 text-label-sm"
+                      :title="eventLabel(entry.event)"
+                      class="inline-flex max-w-full items-center rounded-full border px-2 py-1 text-xs whitespace-nowrap"
                       :class="eventBadgeClass(entry.event)"
                     >
-                      {{ eventLabel(entry.event) }}
+                      <span class="truncate">{{ eventLabel(entry.event) }}</span>
                     </span>
                   </td>
 
-                  <td class="px-5 py-4">
-                    <div v-if="entry.actor" class="flex items-center gap-2">
+                  <td class="px-4 py-3">
+                    <div v-if="entry.actor" class="flex min-w-0 items-center gap-2">
                       <img
                         v-if="entry.actor.avatar_url"
                         :src="entry.actor.avatar_url"
@@ -197,27 +203,42 @@ onMounted(() => {
                         class="size-6 shrink-0 rounded-full"
                       />
                       <div v-else class="size-6 shrink-0 rounded-full bg-surface-container-high" />
-                      <span class="text-body-sm text-on-surface">{{
-                        entry.actor.display_name
-                      }}</span>
+                      <span
+                        class="block truncate text-sm text-on-surface"
+                        :title="entry.actor.display_name"
+                        >{{ entry.actor.display_name }}</span
+                      >
                     </div>
                     <span v-else class="text-on-surface-variant/50">—</span>
                   </td>
 
-                  <td class="px-5 py-4 text-body-sm text-on-surface-variant max-md:hidden">
-                    <span v-if="subjectLabel(entry)">{{ subjectLabel(entry) }}</span>
+                  <td class="px-4 py-3 text-sm text-on-surface-variant max-md:hidden">
+                    <span
+                      v-if="subjectLabel(entry)"
+                      class="block truncate"
+                      :title="subjectLabel(entry) ?? undefined"
+                    >
+                      {{ subjectLabel(entry) }}
+                    </span>
                     <span v-else class="text-on-surface-variant/50">—</span>
                   </td>
 
-                  <td class="px-5 py-4 text-body-sm text-on-surface-variant max-lg:hidden">
-                    <span v-if="detailsText(entry)">{{ detailsText(entry) }}</span>
+                  <td class="px-4 py-3 text-sm text-on-surface-variant max-lg:hidden">
+                    <span
+                      v-if="detailsText(entry)"
+                      class="block truncate"
+                      :title="detailsText(entry)"
+                    >
+                      {{ detailsText(entry) }}
+                    </span>
                     <span v-else class="text-on-surface-variant/50">—</span>
                   </td>
 
-                  <td class="px-5 py-4 max-lg:hidden">
+                  <td class="px-4 py-3 max-lg:hidden">
                     <span
                       v-if="entry.ip_address"
-                      class="font-mono text-xs text-on-surface-variant/70"
+                      :title="entry.ip_address"
+                      class="block truncate font-mono text-[11px] text-on-surface-variant/70"
                     >
                       {{ entry.ip_address }}
                     </span>

@@ -20,10 +20,10 @@ class SignStorageService
         ?int $width,
         ?int $height
     ): string {
-        $variantSegment  = $variantId !== null ? "/{$variantId}" : '';
-        $directory       = sprintf('signs/%d/%d%s', $userId, $folderId, $variantSegment);
+        $variantSegment = $variantId !== null ? "/{$variantId}" : '';
+        $directory = sprintf('signs/%d/%d%s', $userId, $folderId, $variantSegment);
         $dimensionSuffix = $width !== null && $height !== null ? "-{$width}x{$height}" : '';
-        $filename        = sprintf(
+        $filename = sprintf(
             '%s%s.%s',
             Str::slug($name) ?: 'sign',
             $dimensionSuffix,
@@ -44,10 +44,10 @@ class SignStorageService
             );
         } catch (Throwable $throwable) {
             Log::error('Sign upload failed.', [
-                'disk'        => $disk,
+                'disk' => $disk,
                 'storage_key' => $storageKey,
-                'exception'   => $throwable::class,
-                'message'     => $throwable->getMessage(),
+                'exception' => $throwable::class,
+                'message' => $throwable->getMessage(),
             ]);
 
             throw $throwable;
@@ -55,9 +55,9 @@ class SignStorageService
 
         if ($result === false) {
             Log::error('Sign upload failed.', [
-                'disk'        => $disk,
+                'disk' => $disk,
                 'storage_key' => $storageKey,
-                'reason'      => 'filesystem returned false',
+                'reason' => 'filesystem returned false',
             ]);
 
             throw new RuntimeException('Failed to store sign upload.');

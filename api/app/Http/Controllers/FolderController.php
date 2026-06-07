@@ -37,19 +37,19 @@ class FolderController extends Controller
         $validated = $request->validated();
 
         $folder = $request->user()->folders()->create([
-            'name'                   => $validated['name'],
-            'slug'                   => Folder::generateSlugFor($request->user(), $validated['name']),
-            'public_slug'            => Folder::generatePublicSlugFor($validated['name']),
-            'visibility'             => $validated['visibility'],
-            'password_hash'          => $this->folderService->hashPassword($validated),
-            'attribution_name'       => $validated['attribution_name'] ?? null,
+            'name' => $validated['name'],
+            'slug' => Folder::generateSlugFor($request->user(), $validated['name']),
+            'public_slug' => Folder::generatePublicSlugFor($validated['name']),
+            'visibility' => $validated['visibility'],
+            'password_hash' => $this->folderService->hashPassword($validated),
+            'attribution_name' => $validated['attribution_name'] ?? null,
             'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
         $this->activityLog->log(ActivityLog::FOLDER_CREATED, $request->user()->id, [
             'subject_folder_id' => $folder->id,
-            'metadata'          => ['folder_name' => $folder->name, 'visibility' => $folder->visibility],
-            'ip'                => $request->ip(),
+            'metadata' => ['folder_name' => $folder->name, 'visibility' => $folder->visibility],
+            'ip' => $request->ip(),
         ]);
 
         return (new FolderResource($folder->refresh()))->response()->setStatusCode(201);
@@ -76,10 +76,10 @@ class FolderController extends Controller
         $publicSlug = $this->folderService->resolvePublicSlug($folder, $validated);
 
         $folder->fill([
-            'name'                   => $validated['name'],
-            'slug'                   => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
-            'visibility'             => $validated['visibility'],
-            'attribution_name'       => $validated['attribution_name'] ?? null,
+            'name' => $validated['name'],
+            'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
+            'visibility' => $validated['visibility'],
+            'attribution_name' => $validated['attribution_name'] ?? null,
             'attribution_source_url' => $validated['attribution_source_url'] ?? null,
         ]);
 
@@ -93,8 +93,8 @@ class FolderController extends Controller
         if ($oldVisibility !== $folder->visibility) {
             $this->activityLog->log(ActivityLog::FOLDER_VISIBILITY, $request->user()->id, [
                 'subject_folder_id' => $folder->id,
-                'metadata'          => ['folder_name' => $folder->name, 'from' => $oldVisibility, 'to' => $folder->visibility],
-                'ip'                => $request->ip(),
+                'metadata' => ['folder_name' => $folder->name, 'from' => $oldVisibility, 'to' => $folder->visibility],
+                'ip' => $request->ip(),
             ]);
         }
 
@@ -112,13 +112,13 @@ class FolderController extends Controller
         }
 
         $folderName = $folder->name;
-        $folderId   = $folder->id;
+        $folderId = $folder->id;
         $folder->delete();
 
         $this->activityLog->log(ActivityLog::FOLDER_DELETED, $request->user()->id, [
             'subject_folder_id' => $folderId,
-            'metadata'          => ['folder_name' => $folderName],
-            'ip'                => $request->ip(),
+            'metadata' => ['folder_name' => $folderName],
+            'ip' => $request->ip(),
         ]);
 
         return response()->json(['message' => 'Folder deleted.']);

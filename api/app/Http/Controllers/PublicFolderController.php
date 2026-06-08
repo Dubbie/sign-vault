@@ -48,10 +48,10 @@ class PublicFolderController extends Controller
             $query->where('name', 'like', '%'.$search.'%');
         }
 
-        if ($request->input('sort') === 'votes') {
-            $query->orderByDesc('votes_count');
-        } else {
+        if ($request->input('sort') === 'latest') {
             $query->latest();
+        } else {
+            $query->orderByDesc('votes_count');
         }
 
         $folders = $query->paginate(10);

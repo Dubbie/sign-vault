@@ -44,12 +44,27 @@ function fillFormFromFolder() {
 async function loadFolder() {
   const id = folderId.value
   if (!Number.isFinite(id)) {
-    foldersStore.error = 'Invalid folder id.'
+    await router.replace({
+      name: 'not-found',
+      query: { from: route.fullPath },
+    })
     return
   }
 
   const folder = await foldersStore.fetchFolder(id)
-  if (folder) fillFormFromFolder()
+  if (!folder) {
+    if (foldersStore.errorStatus !== 404) {
+      return
+    }
+
+    await router.replace({
+      name: 'not-found',
+      query: { from: route.fullPath },
+    })
+    return
+  }
+
+  fillFormFromFolder()
 }
 
 onMounted(async () => {

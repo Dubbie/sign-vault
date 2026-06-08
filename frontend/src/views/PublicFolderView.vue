@@ -9,6 +9,7 @@ import {
   unlockPublicFolder,
   voteFolder,
 } from '@/lib/public-folders'
+import { isNotFoundError } from '@/lib/http-errors'
 import type { PublicFolder, PublicSign } from '@/types/public-folder'
 import { useAuthStore } from '@/stores/auth'
 import { useFoldersStore } from '@/stores/folders'
@@ -289,13 +290,11 @@ async function loadPublicFolder() {
 
     void loadSignsPerColumn(null, validVariant ?? undefined)
   } catch (exception) {
-    const axiosError = exception as { response?: { status?: number } }
-
-    if (axiosError.response?.status === 404) {
-      error.value = 'Folder not found.'
-      folder.value = null
-      requiresPassword.value = false
-      isAuthor.value = false
+    if (isNotFoundError(exception)) {
+      await router.replace({
+        name: 'not-found',
+        query: { from: route.fullPath },
+      })
       return
     }
 
@@ -327,13 +326,11 @@ async function handleUnlock() {
     clearUnlockForm()
     void loadSignsPerColumn(unlockedPassword.value, selectedVariantId.value ?? undefined)
   } catch (exception) {
-    const axiosError = exception as { response?: { status?: number } }
-
-    if (axiosError.response?.status === 404) {
-      error.value = 'Folder not found.'
-      folder.value = null
-      requiresPassword.value = false
-      isAuthor.value = false
+    if (isNotFoundError(exception)) {
+      await router.replace({
+        name: 'not-found',
+        query: { from: route.fullPath },
+      })
       return
     }
 

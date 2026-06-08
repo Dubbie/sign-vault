@@ -113,10 +113,10 @@
           </p>
           <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
             When you take an action while signed in — such as uploading, editing, or deleting
-            content — we record an activity log entry that includes your account, the action
-            taken, and the IP address the request came from. This is kept for security and
-            moderation purposes, such as detecting compromised accounts or abuse, and is separate
-            from the anonymized, hashed engagement metrics described in
+            content — we record an activity log entry that includes your account, the action taken,
+            and the IP address the request came from. This is kept for security and moderation
+            purposes, such as detecting compromised accounts or abuse, and is separate from the
+            anonymized, hashed engagement metrics described in
             <a href="#storage" class="text-primary underline-offset-2 hover:underline"
               >Analytics, Cookies, and Local Storage</a
             >.
@@ -196,18 +196,20 @@
             advertisements.
           </p>
           <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
-            As described in <a href="#third-party" class="text-primary underline-offset-2 hover:underline">Third-Party Services</a>,
-            Cloudflare Web Analytics loads a small, cookieless script to report aggregate page-view
-            statistics. It does not set cookies or track you individually across sites.
+            As described in
+            <a href="#third-party" class="text-primary underline-offset-2 hover:underline"
+              >Third-Party Services</a
+            >, Cloudflare Web Analytics loads a small, cookieless script to report aggregate
+            page-view statistics. It does not set cookies or track you individually across sites.
           </p>
           <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
-            We also record limited first-party engagement metrics for public folders and signs —
-            for example, how often a folder's public page is viewed or previewed, and how often a
-            sign is copied. To avoid counting the same visitor multiple times, we derive a one-way
+            We also record limited first-party engagement metrics for public folders and signs — for
+            example, how often a folder's public page is viewed or previewed, and how often a sign
+            is copied. To avoid counting the same visitor multiple times, we derive a one-way
             HMAC-SHA256 hash of your IP address using a secret key that only our servers hold, and
-            store only that hash — never your raw IP address. This hash cannot be reversed to
-            reveal your IP and is not linked to your account; it is used solely to produce
-            aggregate usage statistics shown to administrators.
+            store only that hash — never your raw IP address. This hash cannot be reversed to reveal
+            your IP and is not linked to your account; it is used solely to produce aggregate usage
+            statistics shown to administrators.
           </p>
         </section>
 

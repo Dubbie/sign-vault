@@ -178,7 +178,11 @@ onMounted(() => {
         <div class="glass-card rounded-lg p-5">
           <h2 class="text-headline-md text-on-surface">Folder views over time</h2>
           <div class="mt-4 h-64">
-            <Line v-if="folderViewsChartData" :data="folderViewsChartData" :options="chartOptions" />
+            <Line
+              v-if="folderViewsChartData"
+              :data="folderViewsChartData"
+              :options="chartOptions"
+            />
           </div>
         </div>
         <div class="glass-card rounded-lg p-5">
@@ -210,7 +214,10 @@ onMounted(() => {
                   class="border-t border-outline-variant/60"
                 >
                   <td class="px-4 py-3 text-sm text-on-surface">
-                    <span class="block max-w-[16rem] truncate" :title="folder.folder_name ?? undefined">
+                    <span
+                      class="block max-w-[16rem] truncate"
+                      :title="folder.folder_name ?? undefined"
+                    >
                       {{ folder.folder_name ?? `Folder #${folder.folder_id}` }}
                     </span>
                   </td>
@@ -252,7 +259,10 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="px-4 py-3 text-sm text-on-surface-variant">
-                    <span class="block max-w-[12rem] truncate" :title="sign.folder_name ?? undefined">
+                    <span
+                      class="block max-w-[12rem] truncate"
+                      :title="sign.folder_name ?? undefined"
+                    >
                       {{ sign.folder_name ?? `Folder #${sign.folder_id}` }}
                     </span>
                   </td>

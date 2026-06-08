@@ -5,6 +5,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import logoUrl from '@/assets/logo.svg'
 import CookieDisclaimer from '@/components/ui/CookieDisclaimer.vue'
 import DiscordBanner from '@/components/ui/DiscordBanner.vue'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiDropdown from '@/components/ui/UiDropdown.vue'
 import UiModal from '@/components/ui/UiModal.vue'
@@ -175,14 +176,12 @@ function isExploreActive() {
                   aria-label="Open user menu"
                   @click="toggle"
                 >
-                  <div class="size-9 overflow-hidden rounded-lg bg-zinc-600">
-                    <img
-                      v-if="auth.user.avatar_url"
-                      :src="auth.user.avatar_url"
-                      :alt="auth.user.display_name"
-                      class="h-full w-full object-cover"
-                    />
-                  </div>
+                  <UiAvatar
+                    :name="auth.user.display_name"
+                    :src="auth.user.avatar_url"
+                    text-class="text-sm"
+                    class="size-9 rounded-lg"
+                  />
                 </button>
               </template>
 

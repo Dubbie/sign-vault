@@ -16,6 +16,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiModal from '@/components/ui/UiModal.vue'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 import AdminSignGrid from '@/components/admin/AdminSignGrid.vue'
 import type { AdminGridSign } from '@/components/admin/AdminSignGrid.vue'
 
@@ -247,10 +248,9 @@ onMounted(() => {
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-semibold text-zinc-100">{{ folder.name }}</p>
               <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
-                <img
-                  v-if="folder.owner.avatar_url"
+                <UiAvatar
+                  :name="folder.owner.display_name"
                   :src="folder.owner.avatar_url"
-                  :alt="folder.owner.display_name"
                   class="size-4 rounded-full"
                 />
                 <span class="truncate text-xs text-zinc-500">
@@ -285,10 +285,9 @@ onMounted(() => {
                   {{ selectedFolderName || selectedFolder.name }}
                 </h2>
                 <div v-if="selectedFolder.owner" class="mt-1 flex items-center gap-2">
-                  <img
-                    v-if="selectedFolder.owner.avatar_url"
+                  <UiAvatar
+                    :name="selectedFolder.owner.display_name"
                     :src="selectedFolder.owner.avatar_url"
-                    :alt="selectedFolder.owner.display_name"
                     class="size-5 rounded-full"
                   />
                   <span class="truncate text-sm text-zinc-400">
@@ -335,10 +334,9 @@ onMounted(() => {
           <div class="min-w-0 flex-1">
             <p class="truncate text-sm font-semibold text-zinc-100">{{ folder.name }}</p>
             <div v-if="folder.owner" class="mt-1 flex items-center gap-1.5">
-              <img
-                v-if="folder.owner.avatar_url"
+              <UiAvatar
+                :name="folder.owner.display_name"
                 :src="folder.owner.avatar_url"
-                :alt="folder.owner.display_name"
                 class="size-4 rounded-full"
               />
               <span class="truncate text-xs text-zinc-500">

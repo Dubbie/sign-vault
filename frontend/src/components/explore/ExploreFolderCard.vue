@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { voteFolder } from '@/lib/public-folders'
 import { useAuthStore } from '@/stores/auth'
 import type { PublicFolderListing } from '@/types/public-folder'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 import { ThumbsUp } from '@lucide/vue'
 
 const props = defineProps<{
@@ -73,11 +74,10 @@ async function handleVote(e: MouseEvent) {
 
     <div class="flex items-center gap-2 min-w-0">
       <div v-if="folder.owner" class="flex items-center gap-2 min-w-0 flex-1">
-        <img
-          v-if="folder.owner.avatar_url"
+        <UiAvatar
+          :name="folder.owner.display_name"
           :src="folder.owner.avatar_url"
-          :alt="folder.owner.display_name"
-          class="size-5 shrink-0 rounded"
+          class="size-5 rounded"
         />
         <span class="truncate text-xs text-secondary">
           {{ folder.owner.display_name }}

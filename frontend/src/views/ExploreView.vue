@@ -8,6 +8,7 @@ import type { PaginationMeta, PublicFolderListing } from '@/types/public-folder'
 type SortOption = 'latest' | 'votes'
 
 import UiInput from '@/components/ui/UiInput.vue'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import ExploreFolderCard from '@/components/explore/ExploreFolderCard.vue'
@@ -315,10 +316,9 @@ watch(folders, (nextFolders) => {
                 <div class="min-w-0 flex-1">
                   <h2 class="text-lg font-semibold text-on-surface">{{ hoveredFolder.name }}</h2>
                   <div v-if="hoveredFolder.owner" class="mt-1 flex items-center gap-2">
-                    <img
-                      v-if="hoveredFolder.owner.avatar_url"
+                    <UiAvatar
+                      :name="hoveredFolder.owner.display_name"
                       :src="hoveredFolder.owner.avatar_url"
-                      :alt="hoveredFolder.owner.display_name"
                       class="size-5 rounded"
                     />
                     <span class="truncate text-sm text-secondary">

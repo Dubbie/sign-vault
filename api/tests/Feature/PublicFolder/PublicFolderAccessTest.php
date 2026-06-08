@@ -257,6 +257,81 @@ class PublicFolderAccessTest extends TestCase
             ->assertJsonCount(0, 'data');
     }
 
+    public function test_public_folders_default_to_votes_sorting(): void
+    {
+        $user = User::factory()->create();
+
+        $mostVotedFolder = Folder::factory()->for($user)->create([
+            'name' => 'Most Voted',
+            'visibility' => FolderVisibility::Public,
+            'created_at' => now()->subDay(),
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $mostVotedFolder->id,
+            'variant_id' => $mostVotedFolder->defaultVariant->id,
+        ]);
+        $mostVotedFolder->votes()->createMany([
+            ['user_id' => User::factory()->create()->id],
+            ['user_id' => User::factory()->create()->id],
+        ]);
+
+        $latestFolder = Folder::factory()->for($user)->create([
+            'name' => 'Latest Folder',
+            'visibility' => FolderVisibility::Public,
+            'created_at' => now(),
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $latestFolder->id,
+            'variant_id' => $latestFolder->defaultVariant->id,
+        ]);
+        $latestFolder->votes()->create([
+            'user_id' => User::factory()->create()->id,
+        ]);
+
+        $this->getJson('/api/public/folders')
+            ->assertOk()
+            ->assertJsonPath('data.0.name', 'Most Voted')
+            ->assertJsonPath('data.1.name', 'Latest Folder');
+    }
+
+    public function test_public_folders_can_be_sorted_by_latest(): void
+    {
+        $user = User::factory()->create();
+
+        $olderFolder = Folder::factory()->for($user)->create([
+            'name' => 'Older Folder',
+            'visibility' => FolderVisibility::Public,
+            'created_at' => now()->subDay(),
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $olderFolder->id,
+            'variant_id' => $olderFolder->defaultVariant->id,
+        ]);
+        $olderFolder->votes()->createMany([
+            ['user_id' => User::factory()->create()->id],
+            ['user_id' => User::factory()->create()->id],
+        ]);
+
+        $newerFolder = Folder::factory()->for($user)->create([
+            'name' => 'Newer Folder',
+            'visibility' => FolderVisibility::Public,
+            'created_at' => now(),
+        ]);
+        Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $newerFolder->id,
+            'variant_id' => $newerFolder->defaultVariant->id,
+        ]);
+
+        $this->getJson('/api/public/folders?sort=latest')
+            ->assertOk()
+            ->assertJsonPath('data.0.name', 'Newer Folder')
+            ->assertJsonPath('data.1.name', 'Older Folder');
+    }
+
     public function test_is_paginated(): void
     {
         $user = User::factory()->create();

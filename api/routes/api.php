@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminBrowseController;
 use App\Http\Controllers\Admin\AdminContentController;
+use App\Http\Controllers\Admin\AdminEngagementController;
 use App\Http\Controllers\Admin\AdminLogsController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Auth\OauthAuthController;
@@ -25,6 +26,10 @@ Route::get('/public/folders/{slug}', [PublicFolderController::class, 'show']);
 Route::post('/public/folders/{slug}/unlock', [PublicFolderController::class, 'unlock'])
     ->middleware('throttle:folder-unlock');
 Route::post('/public/folders/{slug}/signs', [PublicFolderController::class, 'signs']);
+Route::post('/public/folders/{slug}/preview-view', [PublicFolderController::class, 'trackPreviewView'])
+    ->middleware('throttle:engagement-tracking');
+Route::post('/public/folders/{slug}/signs/{sign}/copy', [PublicFolderController::class, 'trackSignCopy'])
+    ->middleware('throttle:engagement-tracking');
 Route::middleware('auth:sanctum')->post('/public/folders/{slug}/vote', [PublicFolderController::class, 'vote']);
 
 Route::middleware('auth:sanctum')->group(function (): void {
@@ -68,4 +73,5 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::delete('/folders/{folder}', [AdminContentController::class, 'deleteFolder']);
     Route::delete('/signs/{sign}', [AdminContentController::class, 'deleteSign']);
     Route::get('/logs', [AdminLogsController::class, 'index']);
+    Route::get('/engagement', [AdminEngagementController::class, 'index']);
 });

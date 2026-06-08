@@ -32,5 +32,9 @@ class AppServiceProvider extends ServiceProvider
                 (string) $request->route('slug')
             ));
         });
+
+        RateLimiter::for('engagement-tracking', function (Request $request): Limit {
+            return Limit::perMinute(60)->by((string) $request->ip());
+        });
     }
 }

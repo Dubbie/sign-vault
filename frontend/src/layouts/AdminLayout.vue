@@ -17,6 +17,7 @@ import AdminNavLink from '@/components/admin/AdminNavLink.vue'
         <AdminNavLink to="/admin/users">Users</AdminNavLink>
         <AdminNavLink to="/admin/folders">All Folders</AdminNavLink>
         <AdminNavLink to="/admin/logs">Activity Log</AdminNavLink>
+        <AdminNavLink to="/admin/engagement">Engagement</AdminNavLink>
       </nav>
     </aside>
 

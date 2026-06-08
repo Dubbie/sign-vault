@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FolderViewType;
 use App\Enums\FolderVisibility;
 use App\Http\Resources\BrowseFolderResource;
 use App\Http\Resources\PublicFolderResource;
@@ -9,15 +10,19 @@ use App\Http\Resources\PublicSignResource;
 use App\Models\Folder;
 use App\Models\FolderVote;
 use App\Models\Sign;
+use App\Services\EngagementTrackingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class PublicFolderController extends Controller
 {
+    public function __construct(private EngagementTrackingService $engagementTracking) {}
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Folder::query()
@@ -85,13 +90,15 @@ class PublicFolderController extends Controller
         ]);
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(Request $request, string $slug): JsonResponse
     {
         $folder = $this->resolveFolder($slug);
 
         if ($folder === null || $folder->visibility === FolderVisibility::Private) {
             abort(404);
         }
+
+        $this->engagementTracking->recordFolderView($folder, FolderViewType::Full, $request->ip());
 
         if ($folder->visibility === FolderVisibility::Password) {
             return response()->json([
@@ -173,6 +180,32 @@ class PublicFolderController extends Controller
         }
 
         return PublicSignResource::collection($query->paginate($perPage))->response();
+    }
+
+    public function trackPreviewView(Request $request, string $slug): Response
+    {
+        $folder = $this->resolveFolder($slug);
+
+        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
+            abort(404);
+        }
+
+        $this->engagementTracking->recordFolderView($folder, FolderViewType::Preview, $request->ip());
+
+        return response()->noContent();
+    }
+
+    public function trackSignCopy(Request $request, string $slug, Sign $sign): Response
+    {
+        $folder = $this->resolveFolder($slug);
+
+        if ($folder === null || $folder->visibility === FolderVisibility::Private || $sign->folder_id !== $folder->id) {
+            abort(404);
+        }
+
+        $this->engagementTracking->recordSignCopy($sign, $request->ip());
+
+        return response()->noContent();
     }
 
     private function resolveFolder(string $slug): ?Folder

@@ -6,25 +6,28 @@ SignVault is a platform for Trackmania players to upload, organise, and share in
 
 ## Features
 
-- **Browse public folders** — Discover sign collections shared by the community
-- **Create and manage folders** — Organise your signs into custom collections
+- **Browse public folders** — Discover sign collections shared by the community, with sorting, attribution, `++` voting, and a sticky preview panel
+- **Create and manage folders** — Organise your signs into custom collections, including alternate variants with their own background presets
+- **Batch sign uploads** — Upload large selections in sequential batches with live progress, plus the ability to stop and retry mid-run
 - **Share folders** — Public or password-protected sharing options
-- **Discord authentication** — Sign in with your Discord account
-- **Admin tools** — Moderate content and manage users
+- **Multi-provider authentication** — Sign in with Discord or Trackmania/Ubisoft, and link multiple providers to one account
+- **Admin tools** — Moderate content, manage users, and review activity logs and engagement analytics dashboards with charts, fully usable on mobile
+- **Polished UX touches** — Avatar fallbacks, a catch-all not-found page, and social preview metadata for link sharing
 
 ## Tech Stack
 
-| Layer     | Technology                                                |
-| --------- | --------------------------------------------------------- |
-| Framework | [Vue 3](https://vuejs.org/) with Composition API          |
-| Language  | [TypeScript](https://www.typescriptlang.org/)             |
-| Routing   | [Vue Router](https://router.vuejs.org/)                   |
-| State     | [Pinia](https://pinia.vuejs.org/)                         |
-| Styling   | [Tailwind CSS 4](https://tailwindcss.com/)                |
-| HTTP      | [Axios](https://axios-http.com/)                          |
-| Build     | [Vite](https://vitejs.dev/)                               |
-| Lint      | [Oxlint](https://oxc.rs/) + [ESLint](https://eslint.org/) |
-| Test      | [Vitest](https://vitest.dev/)                             |
+| Layer     | Technology                                                                     |
+| --------- | ------------------------------------------------------------------------------ |
+| Framework | [Vue 3](https://vuejs.org/) with Composition API                               |
+| Language  | [TypeScript](https://www.typescriptlang.org/)                                  |
+| Routing   | [Vue Router](https://router.vuejs.org/)                                        |
+| State     | [Pinia](https://pinia.vuejs.org/)                                              |
+| Styling   | [Tailwind CSS 4](https://tailwindcss.com/)                                     |
+| HTTP      | [Axios](https://axios-http.com/)                                               |
+| Charts    | [Chart.js](https://www.chartjs.org/) + [vue-chartjs](https://vue-chartjs.org/) |
+| Build     | [Vite](https://vitejs.dev/)                                                    |
+| Lint      | [Oxlint](https://oxc.rs/) + [ESLint](https://eslint.org/)                      |
+| Test      | [Vitest](https://vitest.dev/)                                                  |
 
 ## Requirements
 

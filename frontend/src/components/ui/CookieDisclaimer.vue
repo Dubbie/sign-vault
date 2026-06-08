@@ -22,8 +22,9 @@ function dismiss() {
   >
     <div class="flex items-center justify-between gap-4">
       <p class="text-xs text-zinc-400">
-        This site stores a token in your browser's local storage to keep you signed in. No cookies
-        or tracking scripts are used.
+        This site stores a token in your browser's local storage to keep you signed in. We don't
+        use advertising cookies — only cookieless Cloudflare Web Analytics and hashed,
+        non-identifying usage stats.
         <RouterLink to="/privacy" class="text-emerald-400 underline-offset-2 hover:underline">
           Learn more
         </RouterLink>

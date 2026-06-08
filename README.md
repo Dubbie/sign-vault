@@ -16,9 +16,10 @@ The project is a monorepo with a Laravel API, a Vue application for the main pro
 
 - Multi-provider OAuth login with Discord and Trackmania / Ubisoft
 - Personal folders with `private`, `public`, and password-protected visibility
-- Public explore flow with preview grids, attribution, sorting, and folder voting
-- Folder variants for alternate sign sets without duplicating the folder
-- Admin moderation tools for users, folders, signs, and activity logs
+- Public explore flow with preview grids, attribution, sorting, sticky previews, and folder voting
+- Folder variants for alternate sign sets and background presets, without duplicating the folder
+- Batch sign uploads with live progress, stop/retry, and auto-generated WebP thumbnails for fast-loading previews
+- Admin moderation tools for users, folders, signs, activity logs, and engagement analytics
 - Utility pages for sign sizing and Trackmania name tag formatting
 - Repo-wide changelog and release tags managed through `release-please`
 
@@ -41,10 +42,11 @@ Current responsibilities include:
 
 - OAuth redirect/callback flows for `discord` and `trackmania`
 - Linked-provider account management
-- Sign uploads to S3-compatible object storage
+- Sign uploads to S3-compatible object storage, in batches grouped under shared upload sessions, with auto-generated WebP thumbnails
 - Public folder browsing, password unlock flow, and voting
-- Variant management for folder-specific sign sets
-- Admin browse/moderation endpoints and activity log retrieval
+- Variant management for folder-specific sign sets and background presets
+- Admin browse/moderation endpoints, activity log retrieval, and engagement analytics
+- Anonymized engagement tracking for public folder views/previews and sign copies, keyed to a one-way hash of the visitor's IP, kept separate from the raw IPs recorded in admin activity logs
 
 See [`api/README.md`](api/README.md) for API setup details.
 
@@ -55,11 +57,11 @@ The main Vue app handles the full authenticated product experience plus the publ
 Current product areas include:
 
 - Login and OAuth callback handling for both providers
-- Public explore and public folder views
-- Personal folder creation, editing, and sharing
-- Upload, move, delete, and variant assignment flows for signs
-- Settings, linked-provider management, and avatar/profile editing
-- Admin dashboards for users, content moderation, and activity logs
+- Public explore and public folder views with sticky previews and voting
+- Personal folder creation, editing, sharing, and variant management
+- Batch sign uploads with progress tracking, stop/retry, and move/delete/variant-assignment flows
+- Settings, linked-provider management, and avatar/profile editing with fallbacks
+- Admin dashboards for users, content moderation, activity logs, and engagement analytics with charts — usable on mobile
 - Utility tools for sign sizing and name tag formatting
 - Footer version badge with modal release notes sourced from `CHANGELOG.md`
 
@@ -117,11 +119,11 @@ Both Vue apps use HTTPS locally so they can talk to the API cleanly during devel
 
 Production deployments are driven from `main`.
 
-| Package | Platform | Notes |
-|---|---|---|
-| `api` | PHP host / container platform | Requires database + S3-compatible object storage |
-| `frontend` | Cloudflare Pages | Auto-deploys on merges to `main`; PR branches get preview deployments |
-| `landing` | Cloudflare Pages | Auto-deploys on merges to `main`; PR branches get preview deployments |
+| Package    | Platform                      | Notes                                                                 |
+| ---------- | ----------------------------- | --------------------------------------------------------------------- |
+| `api`      | PHP host / container platform | Requires database + S3-compatible object storage                      |
+| `frontend` | Cloudflare Pages              | Auto-deploys on merges to `main`; PR branches get preview deployments |
+| `landing`  | Cloudflare Pages              | Auto-deploys on merges to `main`; PR branches get preview deployments |
 
 For Cloudflare Pages projects in this monorepo:
 

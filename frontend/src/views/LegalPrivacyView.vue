@@ -32,7 +32,7 @@
             href="#storage"
             class="block text-sm text-on-surface-variant no-underline transition hover:text-on-surface"
           >
-            5. Cookies and Local Storage
+            5. Analytics, Cookies, and Local Storage
           </a>
           <a
             href="#sharing"
@@ -70,7 +70,7 @@
       <div class="space-y-8">
         <header class="space-y-3">
           <div class="space-y-3">
-            <p class="text-text-sm text-on-surface-variant">Last updated: June 3, 2026</p>
+            <p class="text-text-sm text-on-surface-variant">Last updated: June 8, 2026</p>
             <div class="space-y-2">
               <h1 class="text-headline-xl text-on-surface">Privacy Policy</h1>
 
@@ -110,6 +110,16 @@
           <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
             We also store content you upload (signs and folder metadata) and your folder visibility
             preferences.
+          </p>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            When you take an action while signed in — such as uploading, editing, or deleting
+            content — we record an activity log entry that includes your account, the action
+            taken, and the IP address the request came from. This is kept for security and
+            moderation purposes, such as detecting compromised accounts or abuse, and is separate
+            from the anonymized, hashed engagement metrics described in
+            <a href="#storage" class="text-primary underline-offset-2 hover:underline"
+              >Analytics, Cookies, and Local Storage</a
+            >.
           </p>
         </section>
 
@@ -163,14 +173,41 @@
             above. Discord's own privacy policy applies to their handling of your data during the
             authentication process.
           </p>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We use <strong class="text-on-surface">Cloudflare Web Analytics</strong> to measure
+            aggregate traffic to the Service. It is cookieless — it does not set any cookies, store
+            client-side state, or build cross-site profiles of visitors. See
+            <a
+              href="https://www.cloudflare.com/privacypolicy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary underline-offset-2 hover:underline"
+              >Cloudflare's privacy policy</a
+            >
+            for details on how they process this data.
+          </p>
         </section>
 
         <section id="storage" class="border-b border-outline-variant/60 pb-8">
-          <h2 class="text-headline-md text-on-surface">5. Cookies and Local Storage</h2>
+          <h2 class="text-headline-md text-on-surface">5. Analytics, Cookies, and Local Storage</h2>
           <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
             We use <strong class="text-on-surface">localStorage</strong> to store your
-            authentication token. We do not use third-party cookies or tracking scripts. The Service
-            does not serve advertisements.
+            authentication token. We do not use advertising cookies, and the Service does not serve
+            advertisements.
+          </p>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            As described in <a href="#third-party" class="text-primary underline-offset-2 hover:underline">Third-Party Services</a>,
+            Cloudflare Web Analytics loads a small, cookieless script to report aggregate page-view
+            statistics. It does not set cookies or track you individually across sites.
+          </p>
+          <p class="mt-4 text-body-md leading-relaxed text-on-surface-variant">
+            We also record limited first-party engagement metrics for public folders and signs —
+            for example, how often a folder's public page is viewed or previewed, and how often a
+            sign is copied. To avoid counting the same visitor multiple times, we derive a one-way
+            HMAC-SHA256 hash of your IP address using a secret key that only our servers hold, and
+            store only that hash — never your raw IP address. This hash cannot be reversed to
+            reveal your IP and is not linked to your account; it is used solely to produce
+            aggregate usage statistics shown to administrators.
           </p>
         </section>
 

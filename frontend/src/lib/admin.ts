@@ -2,6 +2,7 @@ import api from '@/lib/api'
 import type { PaginatedAdminUsers } from '@/types/auth'
 import type { PaginatedPublicFolderResponse, PublicSign } from '@/types/public-folder'
 import type { PaginatedActivityLogs } from '@/types/activity-log'
+import type { EngagementStats } from '@/types/engagement'
 
 export async function getUsers(page = 1, q?: string): Promise<PaginatedAdminUsers> {
   const { data } = await api.get<PaginatedAdminUsers>('/api/admin/users', {
@@ -39,6 +40,11 @@ export async function getAdminFolderSigns(folderId: number): Promise<{
   signs: PublicSign[]
 }> {
   const { data } = await api.get(`/api/admin/folders/${folderId}/signs`)
+  return data
+}
+
+export async function getEngagementStats(params?: { days?: number }): Promise<EngagementStats> {
+  const { data } = await api.get<EngagementStats>('/api/admin/engagement', { params })
   return data
 }
 

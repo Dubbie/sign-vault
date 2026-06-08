@@ -6,6 +6,7 @@ import {
   getPublicFolder,
   getPublicFolderErrorMessage,
   getPublicFolderSigns,
+  trackSignCopy,
   unlockPublicFolder,
   voteFolder,
 } from '@/lib/public-folders'
@@ -352,6 +353,7 @@ async function handleCopy(signId: number) {
     window.setTimeout(() => {
       if (copiedSignId.value === signId) copiedSignId.value = null
     }, 1000)
+    void trackSignCopy(folderSlug.value, signId)
   } catch {
     error.value = 'Could not copy the sign URL. Please copy it manually.'
   }

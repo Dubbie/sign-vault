@@ -171,7 +171,7 @@ function isExploreActive() {
             <UiDropdown v-model="showUserMenu" placement="bottom-end" trigger-class="inline-flex">
               <template #trigger="{ toggle }">
                 <button
-                  class="cursor-pointer ring-offset-2 ring-transparent rounded-lg transition-all ring-offset-background hover:ring-primary hover:ring-2"
+                  class="inline-flex size-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg ring-2 ring-transparent ring-offset-2 ring-offset-background transition-[box-shadow] hover:ring-primary focus-visible:outline-none focus-visible:ring-primary"
                   type="button"
                   aria-label="Open user menu"
                   @click="toggle"
@@ -180,7 +180,7 @@ function isExploreActive() {
                     :name="auth.user.display_name"
                     :src="auth.user.avatar_url"
                     text-class="text-sm"
-                    class="size-9 rounded-lg"
+                    class="size-full rounded-[inherit]"
                   />
                 </button>
               </template>

@@ -7,7 +7,6 @@ use App\Models\Folder;
 use App\Models\FolderView;
 use App\Models\Sign;
 use App\Models\SignCopy;
-use Illuminate\Support\Facades\DB;
 
 class EngagementTrackingService
 {
@@ -19,28 +18,19 @@ class EngagementTrackingService
             return;
         }
 
-        DB::transaction(function () use ($folder, $viewType, $ipHash): void {
-            $view = FolderView::query()
-                ->where('folder_id', $folder->id)
-                ->where('ip_hash', $ipHash)
-                ->where('view_type', $viewType)
-                ->lockForUpdate()
-                ->first();
+        $timestamp = now();
 
-            if ($view) {
-                $view->update(['last_seen_at' => now()]);
-
-                return;
-            }
-
-            FolderView::create([
+        FolderView::query()->upsert([
+            [
                 'folder_id' => $folder->id,
                 'ip_hash' => $ipHash,
                 'view_type' => $viewType,
-                'first_seen_at' => now(),
-                'last_seen_at' => now(),
-            ]);
-        });
+                'first_seen_at' => $timestamp,
+                'last_seen_at' => $timestamp,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ],
+        ], ['folder_id', 'ip_hash', 'view_type'], ['last_seen_at', 'updated_at']);
     }
 
     public function recordSignCopy(Sign $sign, ?string $ip): void
@@ -51,27 +41,19 @@ class EngagementTrackingService
             return;
         }
 
-        DB::transaction(function () use ($sign, $ipHash): void {
-            $copy = SignCopy::query()
-                ->where('sign_id', $sign->id)
-                ->where('ip_hash', $ipHash)
-                ->lockForUpdate()
-                ->first();
+        $timestamp = now();
 
-            if ($copy) {
-                $copy->update(['last_seen_at' => now()]);
-
-                return;
-            }
-
-            SignCopy::create([
+        SignCopy::query()->upsert([
+            [
                 'sign_id' => $sign->id,
                 'folder_id' => $sign->folder_id,
                 'ip_hash' => $ipHash,
-                'first_seen_at' => now(),
-                'last_seen_at' => now(),
-            ]);
-        });
+                'first_seen_at' => $timestamp,
+                'last_seen_at' => $timestamp,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ],
+        ], ['sign_id', 'ip_hash'], ['last_seen_at', 'updated_at']);
     }
 
     private function hashIp(?string $ip): ?string

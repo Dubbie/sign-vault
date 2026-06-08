@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import {
   createVariant as createVariantRequest,
@@ -31,6 +31,7 @@ import { EllipsisVertical, Link, Plus, Wrench } from '@lucide/vue'
 const foldersStore = useFoldersStore()
 const signsStore = useSignsStore()
 const route = useRoute()
+const router = useRouter()
 
 const folderId = computed(() => Number(route.params.id))
 const folder = computed(() => foldersStore.currentFolder)
@@ -148,26 +149,40 @@ function attributionDisplayName() {
 async function loadFolder() {
   const id = folderId.value
   if (!Number.isFinite(id)) {
-    foldersStore.error = 'Invalid folder id.'
+    await router.replace({
+      name: 'not-found',
+      query: { from: route.fullPath },
+    })
     return
   }
-  const loadedFolder = await foldersStore.fetchFolder(id)
-  if (loadedFolder) {
-    document.title = `SignVault - ${loadedFolder.name}`
 
-    const variantParam = route.query.variant
-    if (variantParam) {
-      const parsed = Number(variantParam)
-      const found = loadedFolder.variants.find((v) => v.id === parsed)
-      if (found) {
-        selectedVariantId.value = found.id
-        await signsStore.fetchFolderSigns(id, found.id)
-        return
-      }
+  const loadedFolder = await foldersStore.fetchFolder(id)
+  if (!loadedFolder) {
+    if (foldersStore.errorStatus !== 404) {
+      return
     }
 
-    await signsStore.fetchFolderSigns(id)
+    await router.replace({
+      name: 'not-found',
+      query: { from: route.fullPath },
+    })
+    return
   }
+
+  document.title = `SignVault - ${loadedFolder.name}`
+
+  const variantParam = route.query.variant
+  if (variantParam) {
+    const parsed = Number(variantParam)
+    const found = loadedFolder.variants.find((v) => v.id === parsed)
+    if (found) {
+      selectedVariantId.value = found.id
+      await signsStore.fetchFolderSigns(id, found.id)
+      return
+    }
+  }
+
+  await signsStore.fetchFolderSigns(id)
 }
 
 onMounted(loadFolder)

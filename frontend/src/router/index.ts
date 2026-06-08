@@ -17,6 +17,7 @@ import AdminExploreView from '../views/AdminExploreView.vue'
 import AdminLogsView from '../views/AdminLogsView.vue'
 import LegalTermsView from '../views/LegalTermsView.vue'
 import LegalPrivacyView from '../views/LegalPrivacyView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 import UtilitiesView from '../views/utilities/UtilitiesView.vue'
 import SignSizingView from '../views/utilities/SignSizingView.vue'
 import NameTagFormatterView from '../views/utilities/NameTagFormatterView.vue'
@@ -190,6 +191,21 @@ const router = createRouter({
       name: 'privacy',
       component: LegalPrivacyView,
       meta: { title: 'SignVault - Privacy Policy' },
+    },
+    {
+      path: '/404',
+      name: 'not-found',
+      component: NotFoundView,
+      meta: { title: 'SignVault - Page Not Found' },
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: (to) => ({
+        name: 'not-found',
+        query: {
+          from: to.path,
+        },
+      }),
     },
   ],
 })

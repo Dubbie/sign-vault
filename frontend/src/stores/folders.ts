@@ -9,6 +9,7 @@ import {
   getFolders as getFoldersRequest,
   updateFolder as updateFolderRequest,
 } from '@/lib/folders'
+import { getErrorStatus } from '@/lib/http-errors'
 import type { CreateFolderPayload, Folder, UpdateFolderPayload } from '@/types/folder'
 
 export const useFoldersStore = defineStore('folders', () => {
@@ -16,6 +17,7 @@ export const useFoldersStore = defineStore('folders', () => {
   const currentFolder = ref<Folder | null>(null)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const errorStatus = ref<number | null>(null)
 
   const folderCount = computed(() => folders.value.length)
 
@@ -25,10 +27,12 @@ export const useFoldersStore = defineStore('folders', () => {
 
   function clearError() {
     error.value = null
+    errorStatus.value = null
   }
 
   function setErrorFromUnknown(exception: unknown) {
     error.value = getFolderErrorMessage(exception)
+    errorStatus.value = getErrorStatus(exception) ?? null
   }
 
   function upsertFolder(folder: Folder) {
@@ -136,6 +140,7 @@ export const useFoldersStore = defineStore('folders', () => {
     currentFolder,
     isLoading,
     error,
+    errorStatus,
     folderCount,
     fetchFolders,
     fetchFolder,

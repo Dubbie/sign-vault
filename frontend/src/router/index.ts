@@ -15,6 +15,7 @@ import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminUsersView from '../views/AdminUsersView.vue'
 import AdminExploreView from '../views/AdminExploreView.vue'
 import AdminLogsView from '../views/AdminLogsView.vue'
+import AdminEngagementView from '../views/AdminEngagementView.vue'
 import LegalTermsView from '../views/LegalTermsView.vue'
 import LegalPrivacyView from '../views/LegalPrivacyView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
@@ -154,6 +155,12 @@ const router = createRouter({
           name: 'admin-logs',
           component: AdminLogsView,
           meta: { title: 'SignVault Admin - Activity Log' },
+        },
+        {
+          path: 'engagement',
+          name: 'admin-engagement',
+          component: AdminEngagementView,
+          meta: { title: 'SignVault Admin - Engagement' },
         },
       ],
     },

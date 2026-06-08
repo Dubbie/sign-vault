@@ -6,22 +6,24 @@ SignVault is a platform for Trackmania players to upload, organise, and share in
 
 ## Features
 
-- **Discord OAuth2 authentication** — One-click login with CSRF-protected state flow
-- **Folder management** — Create, edit, delete, and organise sign folders
-- **Sign uploads & hosting** — Upload Trackmania sign images with stable URLs
-- **Public sharing** — Share folders publicly or protect them with a password
-- **Admin moderation** — User management and content moderation tools
+- **Multi-provider OAuth2 authentication** — Discord and Trackmania/Ubisoft login with CSRF-protected state flow and account linking
+- **Folder management** — Create, edit, delete, and organise sign folders, including alternate variants of a folder's sign set
+- **Sign uploads & hosting** — Upload Trackmania sign images and WebM/AVIF animations to S3-compatible storage with stable URLs, in batches grouped under a shared upload session for cleaner activity-log entries
+- **WebP thumbnails** — Auto-generated, height-capped WebP previews for signs (plus a backfill command for pre-existing uploads) so preview grids load fast without serving full-resolution originals
+- **Public sharing & voting** — Share folders publicly or protect them with a password, with community `++` voting and sortable browsing
+- **Admin moderation** — User management, content moderation, and a persistent activity log
+- **Engagement analytics** — Anonymized tracking of public folder views/previews and sign copies, deduplicated per visitor via a one-way HMAC-SHA256 hash of their IP address, kept separate from the raw IPs recorded in admin activity logs
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | [Laravel 13](https://laravel.com/) |
-| Language | [PHP 8.4](https://www.php.net/) |
-| Auth | [Laravel Sanctum](https://laravel.com/docs/sanctum) + [Socialite](https://laravel.com/docs/socialite) |
-| Database | MySQL or PostgreSQL |
-| Object Storage | Cloudflare R2 (production) / MinIO (local) |
-| Local Dev | [DDEV](https://ddev.com/) |
+| Layer          | Technology                                                                                            |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| Framework      | [Laravel 13](https://laravel.com/)                                                                    |
+| Language       | [PHP 8.4](https://www.php.net/)                                                                       |
+| Auth           | [Laravel Sanctum](https://laravel.com/docs/sanctum) + [Socialite](https://laravel.com/docs/socialite) |
+| Database       | MySQL or PostgreSQL                                                                                   |
+| Object Storage | Cloudflare R2 (production) / MinIO (local)                                                            |
+| Local Dev      | [DDEV](https://ddev.com/)                                                                             |
 
 ## Requirements
 
@@ -98,9 +100,9 @@ Traditional email/password registration is not currently supported.
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `ddev artisan test` | Run the test suite |
-| `ddev artisan migrate` | Run database migrations |
-| `ddev artisan tinker` | Open an interactive shell |
-| `ddev npm run dev` | Start the Vite dev server for asset building |
+| Command                | Description                                  |
+| ---------------------- | -------------------------------------------- |
+| `ddev artisan test`    | Run the test suite                           |
+| `ddev artisan migrate` | Run database migrations                      |
+| `ddev artisan tinker`  | Open an interactive shell                    |
+| `ddev npm run dev`     | Start the Vite dev server for asset building |

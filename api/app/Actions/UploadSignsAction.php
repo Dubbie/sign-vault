@@ -7,6 +7,7 @@ use App\Models\Sign;
 use App\Models\User;
 use App\Services\MediaMetadataExtractor;
 use App\Services\SignStorageService;
+use App\Services\SignThumbnailService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 
@@ -15,6 +16,7 @@ class UploadSignsAction
     public function __construct(
         private MediaMetadataExtractor $mediaMetadata,
         private SignStorageService $signStorage,
+        private SignThumbnailService $signThumbnail,
     ) {}
 
     /**
@@ -67,6 +69,8 @@ class UploadSignsAction
         $publicUrl = $this->signStorage->url($disk, $storageKey);
         $storedKey = $this->signStorage->store($disk, $storageKey, $file);
 
+        $thumbnailUrl = $this->storeThumbnail($user, $folder, $file, $variantId, $name, $width, $height, $disk);
+
         $sign = $existing ?? $user->signs()->make([
             'folder_id' => $folder->id,
             'variant_id' => $variantId,
@@ -79,6 +83,7 @@ class UploadSignsAction
             'storage_disk' => $disk,
             'storage_key' => $storedKey,
             'public_url' => $publicUrl,
+            'thumbnail_url' => $thumbnailUrl ?? $sign->thumbnail_url,
             'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
             'size_bytes' => $file->getSize() ?? 0,
             'width' => $width,
@@ -94,6 +99,28 @@ class UploadSignsAction
         }
 
         return $sign->refresh();
+    }
+
+    private function storeThumbnail(
+        User $user,
+        Folder $folder,
+        UploadedFile $file,
+        ?int $variantId,
+        string $name,
+        ?int $width,
+        ?int $height,
+        string $disk
+    ): ?string {
+        $contents = $this->signThumbnail->generate($file);
+
+        if ($contents === null) {
+            return null;
+        }
+
+        $thumbnailKey = $this->signStorage->thumbnailKeyFor($user->id, $folder->id, $variantId, $name, $width, $height);
+        $this->signStorage->storeContents($disk, $thumbnailKey, $contents);
+
+        return $this->signStorage->url($disk, $thumbnailKey);
     }
 
     private function nameFor(UploadedFile $file): string

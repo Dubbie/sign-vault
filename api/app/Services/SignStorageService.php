@@ -33,6 +33,26 @@ class SignStorageService
         return $directory.'/'.$filename;
     }
 
+    public function thumbnailKeyFor(
+        int $userId,
+        int $folderId,
+        ?int $variantId,
+        string $name,
+        ?int $width,
+        ?int $height
+    ): string {
+        $variantSegment = $variantId !== null ? "/{$variantId}" : '';
+        $directory = sprintf('signs/%d/%d%s', $userId, $folderId, $variantSegment);
+        $dimensionSuffix = $width !== null && $height !== null ? "-{$width}x{$height}" : '';
+        $filename = sprintf(
+            '%s%s-thumb.webp',
+            Str::slug($name) ?: 'sign',
+            $dimensionSuffix,
+        );
+
+        return $directory.'/'.$filename;
+    }
+
     public function store(string $disk, string $storageKey, UploadedFile $file): string
     {
         try {
@@ -66,6 +86,36 @@ class SignStorageService
         Log::info('Sign upload stored.', ['disk' => $disk, 'storage_key' => $result]);
 
         return $result;
+    }
+
+    public function storeContents(string $disk, string $storageKey, string $contents): string
+    {
+        try {
+            $result = Storage::disk($disk)->put($storageKey, $contents, ['visibility' => 'public']);
+        } catch (Throwable $throwable) {
+            Log::error('Sign thumbnail storage failed.', [
+                'disk' => $disk,
+                'storage_key' => $storageKey,
+                'exception' => $throwable::class,
+                'message' => $throwable->getMessage(),
+            ]);
+
+            throw $throwable;
+        }
+
+        if ($result === false) {
+            Log::error('Sign thumbnail storage failed.', [
+                'disk' => $disk,
+                'storage_key' => $storageKey,
+                'reason' => 'filesystem returned false',
+            ]);
+
+            throw new RuntimeException('Failed to store sign thumbnail.');
+        }
+
+        Log::info('Sign thumbnail stored.', ['disk' => $disk, 'storage_key' => $storageKey]);
+
+        return $storageKey;
     }
 
     public function url(string $disk, string $storageKey): string

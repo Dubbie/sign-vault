@@ -828,6 +828,66 @@ class SignManagementTest extends TestCase
         $this->assertGreaterThan(0, $sign->size_bytes);
     }
 
+    public function test_uploading_a_static_image_generates_a_webp_thumbnail(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $disk = $this->fakeSignStorage();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [
+                UploadedFile::fake()->image('ice-warning.png', 1024, 256),
+            ],
+        ]);
+
+        $response->assertCreated();
+
+        $sign = Sign::query()->where('name', 'ice-warning')->firstOrFail();
+
+        $this->assertNotNull($sign->thumbnail_url);
+        $this->assertNotSame($sign->public_url, $sign->thumbnail_url);
+        $this->assertStringEndsWith('.webp', $sign->thumbnail_url);
+
+        $defaultVariant = $folder->defaultVariant;
+        $thumbnailKey = "signs/{$user->id}/{$folder->id}/{$defaultVariant->id}/ice-warning-1024x256-thumb.webp";
+
+        $this->assertSame(Storage::disk($disk)->url($thumbnailKey), $sign->thumbnail_url);
+        Storage::disk($disk)->assertExists($thumbnailKey);
+        $this->assertSame('public', Storage::disk($disk)->getVisibility($thumbnailKey));
+        $response->assertJsonPath('signs.0.thumbnail_url', $sign->thumbnail_url);
+    }
+
+    public function test_uploading_a_video_does_not_generate_a_thumbnail(): void
+    {
+        $disk = $this->fakeSignStorage();
+
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Animated Signs',
+            'slug' => 'animated-signs',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $file = $this->makeWebmUpload('wave-banner.webm', 320, 160);
+
+        $this->postJson("/api/folders/{$folder->id}/signs", [
+            'files' => [$file],
+        ])->assertCreated()
+            ->assertJsonPath('signs.0.thumbnail_url', null);
+
+        $sign = Sign::query()->where('name', 'wave-banner')->firstOrFail();
+
+        $this->assertNull($sign->thumbnail_url);
+        $this->assertSame($disk, $sign->storage_disk);
+    }
+
     private function fakeSignStorage(): string
     {
         $disk = config('filesystems.default');

@@ -18,6 +18,7 @@ class SignResource extends JsonResource
             'variant_id' => $this->variant_id,
             'name' => $this->name,
             'public_url' => $this->public_url,
+            'thumbnail_url' => $this->thumbnail_url,
             'mime_type' => $this->mime_type,
             'size_bytes' => $this->size_bytes,
             'width' => $this->width,

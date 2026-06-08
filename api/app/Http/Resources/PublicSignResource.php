@@ -17,6 +17,7 @@ class PublicSignResource extends JsonResource
             'name' => $this->name,
             'variant_id' => $this->variant_id,
             'public_url' => $this->public_url,
+            'thumbnail_url' => $this->thumbnail_url,
             'mime_type' => $this->mime_type,
             'width' => $this->width,
             'height' => $this->height,

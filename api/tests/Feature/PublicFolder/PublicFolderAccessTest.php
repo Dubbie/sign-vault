@@ -214,6 +214,34 @@ class PublicFolderAccessTest extends TestCase
         $this->assertSame(100, $previewSigns[4]['height']);
     }
 
+    public function test_preview_signs_include_thumbnail_url(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Folder With Thumbnails',
+            'slug' => 'folder-with-thumbnails',
+            'public_slug' => 'folder-with-thumbnails',
+            'visibility' => FolderVisibility::Public,
+        ]);
+
+        $sign = Sign::factory()->create([
+            'user_id' => $user->id,
+            'folder_id' => $folder->id,
+            'width' => 200,
+            'height' => 200,
+            'variant_id' => $folder->defaultVariant->id,
+            'thumbnail_url' => 'https://example.test/signs/thumb.webp',
+        ]);
+
+        $response = $this->getJson('/api/public/folders')
+            ->assertOk();
+
+        $previewSigns = $response->json('data.0.preview_signs');
+
+        $this->assertArrayHasKey('thumbnail_url', $previewSigns[0]);
+        $this->assertSame($sign->thumbnail_url, $previewSigns[0]['thumbnail_url']);
+    }
+
     public function test_can_search_by_folder_name(): void
     {
         $user = User::factory()->create();

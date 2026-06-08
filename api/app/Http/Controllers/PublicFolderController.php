@@ -33,6 +33,7 @@ class PublicFolderController extends Controller
                             'id',
                             'name',
                             'public_url',
+                            'thumbnail_url',
                             'mime_type',
                             'width',
                             'height',

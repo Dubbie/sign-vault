@@ -5,6 +5,7 @@ import { getActivityLogs } from '@/lib/admin'
 import type { ActivityLogEntry, PaginatedActivityLogs } from '@/types/activity-log'
 
 import UiButton from '@/components/ui/UiButton.vue'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
@@ -196,13 +197,11 @@ onMounted(() => {
 
                   <td class="px-4 py-3">
                     <div v-if="entry.actor" class="flex min-w-0 items-center gap-2">
-                      <img
-                        v-if="entry.actor.avatar_url"
+                      <UiAvatar
+                        :name="entry.actor.display_name"
                         :src="entry.actor.avatar_url"
-                        :alt="entry.actor.display_name"
-                        class="size-6 shrink-0 rounded-full"
+                        class="size-6 rounded-full"
                       />
-                      <div v-else class="size-6 shrink-0 rounded-full bg-surface-container-high" />
                       <span
                         class="block truncate text-sm text-on-surface"
                         :title="entry.actor.display_name"

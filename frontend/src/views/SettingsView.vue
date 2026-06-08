@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref, watch } from 'vue'
 import { useAuthStore, type Provider } from '@/stores/auth'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 import { Camera } from '@lucide/vue'
 
 const auth = useAuthStore()
@@ -140,11 +141,12 @@ onMounted(() => {
             aria-label="Upload avatar"
             @click="triggerAvatarPicker"
           >
-            <img
-              v-if="avatarPreview"
+            <UiAvatar
+              :name="displayName || auth.user?.display_name"
               :src="avatarPreview"
               alt="Your avatar"
-              class="h-full w-full object-cover"
+              text-class="text-xl"
+              class="size-20 rounded-xl"
             />
             <div
               class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100"

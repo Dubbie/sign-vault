@@ -12,6 +12,7 @@ import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import StatCard from '@/components/ui/StatCard.vue'
+import UiAvatar from '@/components/ui/UiAvatar.vue'
 
 const authStore = useAuthStore()
 
@@ -184,15 +185,10 @@ onMounted(() => {
                   >
                     <td class="px-5 py-4">
                       <div class="flex items-center gap-3">
-                        <img
-                          v-if="user.avatar_url"
+                        <UiAvatar
+                          :name="user.display_name"
                           :src="user.avatar_url"
-                          :alt="user.display_name"
-                          class="size-8 shrink-0 rounded-full"
-                        />
-                        <div
-                          v-else
-                          class="size-8 shrink-0 rounded-full bg-surface-container-high"
+                          class="size-8 rounded-full"
                         />
                         <div class="min-w-0">
                           <p class="truncate text-body-md font-semibold text-on-surface">
@@ -287,13 +283,12 @@ onMounted(() => {
           <div class="flex flex-col gap-3 sm:hidden">
             <div v-for="user in data.data" :key="user.id" class="glass-card rounded-lg p-4">
               <div class="flex items-center gap-3">
-                <img
-                  v-if="user.avatar_url"
+                <UiAvatar
+                  :name="user.display_name"
                   :src="user.avatar_url"
-                  :alt="user.display_name"
-                  class="size-10 shrink-0 rounded-full"
+                  text-class="text-sm"
+                  class="size-10 rounded-full"
                 />
-                <div v-else class="size-10 shrink-0 rounded-full bg-surface-container-high" />
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-body-md font-semibold text-on-surface">
                     {{ user.display_name }}

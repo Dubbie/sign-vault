@@ -4,6 +4,7 @@ export type Sign = {
   variant_id: number | null
   name: string
   public_url: string
+  thumbnail_url: string | null
   mime_type: string
   size_bytes: number
   width: number | null

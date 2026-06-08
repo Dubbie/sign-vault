@@ -11,6 +11,7 @@ interface PreviewSign {
   id: number
   name: string
   public_url: string
+  thumbnail_url: string | null
   mime_type: string
   width: number | null
   height: number | null

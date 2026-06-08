@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 type MediaSign = {
   name: string
   public_url: string
+  thumbnail_url: string | null
   mime_type: string
   width: number | null
   height: number | null
@@ -18,6 +19,7 @@ const isLoaded = ref(false)
 const videoRef = ref<HTMLVideoElement | null>(null)
 
 const isVideo = computed(() => props.sign.mime_type === 'video/webm')
+const imageSrc = computed(() => props.sign.thumbnail_url ?? props.sign.public_url)
 
 function aspectRatio(): string {
   if (props.sign.width && props.sign.height) return `${props.sign.width} / ${props.sign.height}`
@@ -74,7 +76,7 @@ function pauseVideo() {
 
     <img
       v-else
-      :src="sign.public_url"
+      :src="imageSrc"
       :alt="sign.name"
       loading="lazy"
       class="absolute inset-0 block h-full w-full object-contain transition-opacity duration-300 ease-in-out"

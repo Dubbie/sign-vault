@@ -38,8 +38,11 @@ export function getPublicFolderErrorMessage(error: unknown) {
   return getErrorMessage(error)
 }
 
-export async function getPublicFolder(slug: string): Promise<PublicFolderResponse> {
-  const { data } = await api.get<PublicFolderResponse>(`/api/public/folders/${slug}`)
+export async function getPublicFolder(
+  slug: string,
+  signal?: AbortSignal,
+): Promise<PublicFolderResponse> {
+  const { data } = await api.get<PublicFolderResponse>(`/api/public/folders/${slug}`, { signal })
   return data
 }
 
@@ -87,6 +90,7 @@ export async function getPublicFolderSigns(
   password?: string,
   columnRatio?: number,
   variantId?: number,
+  signal?: AbortSignal,
 ): Promise<{ data: PublicSign[]; meta: PaginationMeta }> {
   const payload: Record<string, number | string> = { page }
   if (password) payload.password = password
@@ -96,6 +100,7 @@ export async function getPublicFolderSigns(
   const { data } = await api.post<{ data: PublicSign[]; meta: PaginationMeta }>(
     `/api/public/folders/${slug}/signs`,
     payload,
+    { signal },
   )
   return data
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -33,6 +33,19 @@ const authStore = useAuthStore()
 const foldersStore = useFoldersStore()
 
 const folderSlug = computed(() => String(route.params.slug))
+
+let abortController: AbortController | null = null
+
+function abortPendingRequests() {
+  abortController?.abort()
+  abortController = null
+}
+
+function freshAbortController(): AbortController {
+  abortPendingRequests()
+  abortController = new AbortController()
+  return abortController
+}
 
 async function checkIsAuthor() {
   if (!authStore.isAuthenticated || !folder.value) return false
@@ -177,7 +190,11 @@ async function handleCopyPublicUrl() {
   }
 }
 
-async function loadSignsPerColumn(password: string | null, variantId?: number) {
+async function loadSignsPerColumn(
+  password: string | null,
+  variantId?: number,
+  signal?: AbortSignal,
+) {
   isLoadingSigns.value = true
   columnState.value = initialColumnState()
   signs.value = []
@@ -186,7 +203,7 @@ async function loadSignsPerColumn(password: string | null, variantId?: number) {
   try {
     const results = await Promise.all(
       COLUMN_RATIOS.map((ratio) =>
-        getPublicFolderSigns(folderSlug.value, 1, password ?? undefined, ratio, variantId),
+        getPublicFolderSigns(folderSlug.value, 1, password ?? undefined, ratio, variantId, signal),
       ),
     )
 
@@ -202,6 +219,7 @@ async function loadSignsPerColumn(password: string | null, variantId?: number) {
       }
     }
   } catch (exception) {
+    if (exception instanceof Error && exception.name === 'CanceledError') return
     error.value = getPublicFolderErrorMessage(exception)
   } finally {
     isLoadingSigns.value = false
@@ -256,12 +274,14 @@ async function handleVariantSwitch(variantId: number) {
 }
 
 async function loadPublicFolder() {
+  const signal = freshAbortController().signal
+
   isLoading.value = true
   error.value = null
   selectedVariantId.value = null
 
   try {
-    const response = await getPublicFolder(folderSlug.value)
+    const response = await getPublicFolder(folderSlug.value, signal)
 
     if ('requires_password' in response) {
       requiresPassword.value = true
@@ -286,8 +306,9 @@ async function loadPublicFolder() {
 
     selectedVariantId.value = validVariant
 
-    void loadSignsPerColumn(null, validVariant ?? undefined)
+    void loadSignsPerColumn(null, validVariant ?? undefined, signal)
   } catch (exception) {
+    if (exception instanceof Error && exception.name === 'CanceledError') return
     if (isNotFoundError(exception)) {
       await router.replace({
         name: 'not-found',
@@ -373,7 +394,10 @@ async function handleVote() {
 
 onMounted(loadPublicFolder)
 
+onUnmounted(abortPendingRequests)
+
 watch(folderSlug, () => {
+  abortPendingRequests()
   clearUnlockForm()
   folder.value = null
   signs.value = []

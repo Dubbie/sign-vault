@@ -100,10 +100,7 @@ class PublicFolderController extends Controller
             ]);
         }
 
-        return response()->json([
-            'folder' => new PublicFolderResource($folder),
-            'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
-        ]);
+        return $this->folderContentsResponse($folder);
     }
 
     public function unlock(Request $request, string $slug): JsonResponse
@@ -115,10 +112,7 @@ class PublicFolderController extends Controller
         }
 
         if ($folder->visibility === FolderVisibility::Public) {
-            return response()->json([
-                'folder' => new PublicFolderResource($folder),
-                'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
-            ]);
+            return $this->folderContentsResponse($folder);
         }
 
         $validated = $request->validate([
@@ -131,10 +125,7 @@ class PublicFolderController extends Controller
             ]);
         }
 
-        return response()->json([
-            'folder' => new PublicFolderResource($folder),
-            'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
-        ]);
+        return $this->folderContentsResponse($folder);
     }
 
     public function signs(Request $request, string $slug): JsonResponse
@@ -316,5 +307,13 @@ SQL;
         }
 
         return $query->get();
+    }
+
+    private function folderContentsResponse(Folder $folder): JsonResponse
+    {
+        return response()->json([
+            'folder' => new PublicFolderResource($folder),
+            'signs' => PublicSignResource::collection($this->publicSignsForFolder($folder)->values()),
+        ]);
     }
 }

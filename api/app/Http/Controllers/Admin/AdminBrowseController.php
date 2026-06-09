@@ -16,22 +16,7 @@ class AdminBrowseController extends Controller
     {
         $query = Folder::query()
             ->with([
-                'user',
-                'signs' => function ($query): void {
-                    $query->orderBy('id')
-                        ->select([
-                            'id',
-                            'name',
-                            'public_url',
-                            'thumbnail_url',
-                            'mime_type',
-                            'width',
-                            'height',
-                            'column_ratio',
-                            'folder_id',
-                            'variant_id',
-                        ]);
-                },
+                'user:id,display_name,avatar_url',
             ])
             ->withCount('signs');
 

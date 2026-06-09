@@ -35,7 +35,7 @@ class BrowseFolderResource extends JsonResource
                 'avatar_url' => $this->user->avatar_url,
             ],
             'preview_signs' => $this->selectPreviewSigns(),
-            'preview_grid_background_preset' => $this->defaultVariant()?->grid_background_preset,
+            'preview_grid_background_preset' => $this->defaultVariant?->grid_background_preset,
             'votes_count' => (int) ($this->votes_count ?? 0),
             'user_has_voted' => (bool) ($this->user_has_voted ?? false),
         ];
@@ -65,25 +65,11 @@ class BrowseFolderResource extends JsonResource
 
             for ($i = 0; $i < $take; $i++) {
                 $sign = $groups[$category][$i];
-                $selected[] = [
-                    'id' => $sign->id,
-                    'name' => $sign->name,
-                    'public_url' => $sign->public_url,
-                    'thumbnail_url' => $sign->thumbnail_url,
-                    'mime_type' => $sign->mime_type,
-                    'width' => $sign->width,
-                    'height' => $sign->height,
-                    'column_ratio' => $sign->column_ratio,
-                ];
+                $selected[] = $this->serializePreviewSign($sign);
             }
         }
 
         return $selected;
-    }
-
-    private function defaultVariant()
-    {
-        return $this->defaultVariant;
     }
 
     private function categorizeAspect(?int $width, ?int $height): string
@@ -107,5 +93,23 @@ class BrowseFolderResource extends JsonResource
         }
 
         return 'wide';
+    }
+
+    /**
+     * @param  object{id: mixed, name: mixed, public_url: mixed, thumbnail_url: mixed, mime_type: mixed, width: mixed, height: mixed, column_ratio: mixed}  $sign
+     * @return array<string, mixed>
+     */
+    private function serializePreviewSign(object $sign): array
+    {
+        return [
+            'id' => $sign->id,
+            'name' => $sign->name,
+            'public_url' => $sign->public_url,
+            'thumbnail_url' => $sign->thumbnail_url,
+            'mime_type' => $sign->mime_type,
+            'width' => $sign->width,
+            'height' => $sign->height,
+            'column_ratio' => $sign->column_ratio,
+        ];
     }
 }

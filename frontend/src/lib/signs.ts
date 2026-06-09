@@ -226,6 +226,7 @@ async function prepareSignUploads(
   files: PreparedUploadFile[],
   variantId: number | undefined,
   uploadSessionId: string,
+  signal?: AbortSignal,
 ): Promise<PreparedUpload[]> {
   const { data } = await api.post<{ uploads: PreparedUpload[] }>(
     `/api/folders/${folderId}/signs/uploads/prepare`,
@@ -234,9 +235,89 @@ async function prepareSignUploads(
       variant_id: variantId,
       upload_session_id: uploadSessionId,
     },
+    { signal },
   )
 
   return data.uploads
+}
+
+type BatchPreparation = {
+  descriptors: FileDescriptor[]
+  preparedUploads: PreparedUpload[]
+}
+
+async function describeAndPrepareBatch(
+  folderId: number,
+  files: File[],
+  variantId: number | undefined,
+  uploadSessionId: string,
+  signal?: AbortSignal,
+): Promise<BatchPreparation> {
+  const descriptors = await Promise.all(files.map((file) => describeFile(file)))
+  const preparedUploads = await prepareSignUploads(
+    folderId,
+    descriptors.map(({ metadata }) => metadata),
+    variantId,
+    uploadSessionId,
+    signal,
+  )
+  return { descriptors, preparedUploads }
+}
+
+async function uploadAndCompletePrepared(
+  folderId: number,
+  files: File[],
+  { descriptors, preparedUploads }: BatchPreparation,
+  variantId: number | undefined,
+  uploadSessionId: string,
+  onProgress?: (progress: BatchUploadProgress) => void,
+  signal?: AbortSignal,
+): Promise<BatchUploadResult> {
+  const fileLoadedBytes = Array.from({ length: files.length }, () => 0)
+  const successfulIntentIds = new Set<string>()
+  const failedFiles: File[] = []
+  let nextIndex = 0
+
+  emitProgress(fileLoadedBytes, files, onProgress)
+
+  async function worker() {
+    while (nextIndex < descriptors.length) {
+      const fileIndex = nextIndex++
+
+      const descriptor = descriptors[fileIndex]!
+      const preparedUpload = preparedUploads[fileIndex]!
+      const didUpload = await uploadPreparedFile(
+        preparedUpload,
+        descriptor.file,
+        fileIndex,
+        fileLoadedBytes,
+        files,
+        onProgress,
+        signal,
+      )
+
+      if (didUpload) {
+        successfulIntentIds.add(preparedUpload.id)
+        continue
+      }
+
+      failedFiles.push(descriptor.file)
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(8, descriptors.length) }, () => worker()))
+
+  const signs =
+    successfulIntentIds.size > 0
+      ? await completeSignUploads(
+          folderId,
+          Array.from(successfulIntentIds),
+          variantId,
+          uploadSessionId,
+        )
+      : []
+
+  return { signs, failedFiles }
 }
 
 async function completeSignUploads(
@@ -312,59 +393,22 @@ async function uploadPreparedBatch(
   onProgress?: (progress: BatchUploadProgress) => void,
   signal?: AbortSignal,
 ): Promise<BatchUploadResult> {
-  const descriptors = await Promise.all(files.map((file) => describeFile(file)))
-  const preparedUploads = await prepareSignUploads(
+  const prepared = await describeAndPrepareBatch(
     folderId,
-    descriptors.map(({ metadata }) => metadata),
+    files,
     variantId,
     uploadSessionId,
+    signal,
   )
-  const fileLoadedBytes = Array.from({ length: files.length }, () => 0)
-  const successfulIntentIds = new Set<string>()
-  const failedFiles: File[] = []
-  let nextIndex = 0
-
-  emitProgress(fileLoadedBytes, files, onProgress)
-
-  async function worker() {
-    while (nextIndex < descriptors.length) {
-      const fileIndex = nextIndex
-      nextIndex += 1
-
-      const descriptor = descriptors[fileIndex]!
-      const preparedUpload = preparedUploads[fileIndex]!
-      const didUpload = await uploadPreparedFile(
-        preparedUpload,
-        descriptor.file,
-        fileIndex,
-        fileLoadedBytes,
-        files,
-        onProgress,
-        signal,
-      )
-
-      if (didUpload) {
-        successfulIntentIds.add(preparedUpload.id)
-        continue
-      }
-
-      failedFiles.push(descriptor.file)
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(4, descriptors.length) }, () => worker()))
-
-  const signs =
-    successfulIntentIds.size > 0
-      ? await completeSignUploads(
-          folderId,
-          Array.from(successfulIntentIds),
-          variantId,
-          uploadSessionId,
-        )
-      : []
-
-  return { signs, failedFiles }
+  return uploadAndCompletePrepared(
+    folderId,
+    files,
+    prepared,
+    variantId,
+    uploadSessionId,
+    onProgress,
+    signal,
+  )
 }
 
 async function uploadSinglePreparedFile(
@@ -414,33 +458,58 @@ export async function createSignsInBatches(
 
   let batchOffset = 0
 
-  for (const batch of batches) {
+  // Start preparing the first batch immediately so describe+prepare
+  // overlaps with any work before the loop begins.
+  let pendingPreparation: Promise<BatchPreparation> | null =
+    batches.length > 0
+      ? describeAndPrepareBatch(folderId, batches[0]!, variantId, uploadSessionId, signal)
+      : null
+
+  for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+    const batch = batches[batchIndex]!
+
     if (signal?.aborted) {
       break
     }
 
     try {
-      const { signs: createdSigns, failedFiles: batchFailedFiles } = await uploadPreparedBatch(
-        folderId,
-        batch,
-        variantId,
-        uploadSessionId,
-        (progress) => {
-          const totalBatchBytes = getTotalBytes(batch)
-          let remainingBytes = progress.uploadedBytes
+      const prepared = await pendingPreparation!
 
-          for (let index = 0; index < batch.length; index++) {
-            const file = batch[index]!
-            const uploaded = totalBatchBytes === 0 ? 0 : Math.min(file.size, remainingBytes)
+      // Kick off preparation of the next batch while this one uploads to S3.
+      pendingPreparation =
+        batchIndex + 1 < batches.length
+          ? describeAndPrepareBatch(
+              folderId,
+              batches[batchIndex + 1]!,
+              variantId,
+              uploadSessionId,
+              signal,
+            )
+          : null
 
-            fileLoadedBytes[batchOffset + index] = uploaded
-            remainingBytes = Math.max(0, remainingBytes - file.size)
-          }
+      const { signs: createdSigns, failedFiles: batchFailedFiles } =
+        await uploadAndCompletePrepared(
+          folderId,
+          batch,
+          prepared,
+          variantId,
+          uploadSessionId,
+          (progress) => {
+            const totalBatchBytes = getTotalBytes(batch)
+            let remainingBytes = progress.uploadedBytes
 
-          emitProgress(fileLoadedBytes, files, onProgress)
-        },
-        signal,
-      )
+            for (let index = 0; index < batch.length; index++) {
+              const file = batch[index]!
+              const uploaded = totalBatchBytes === 0 ? 0 : Math.min(file.size, remainingBytes)
+
+              fileLoadedBytes[batchOffset + index] = uploaded
+              remainingBytes = Math.max(0, remainingBytes - file.size)
+            }
+
+            emitProgress(fileLoadedBytes, files, onProgress)
+          },
+          signal,
+        )
 
       signs.push(...createdSigns)
       failedFiles.push(...batchFailedFiles)

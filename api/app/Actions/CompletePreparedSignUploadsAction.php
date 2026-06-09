@@ -42,12 +42,6 @@ class CompletePreparedSignUploadsAction
 
             $this->ensureUploadMatchesRequest($upload, $user, $folder, $variantId);
 
-            if (! $this->signStorage->exists($upload->disk, $upload->storageKey)) {
-                throw ValidationException::withMessages([
-                    'intent_ids' => ["Upload {$upload->originalName} is not available in storage yet."],
-                ]);
-            }
-
             $signs->push($this->upsertSign($user, $folder, $upload));
             $this->preparedUploads->forget($upload->id);
         }
@@ -114,6 +108,6 @@ class CompletePreparedSignUploadsAction
             GenerateSignThumbnail::dispatch($sign->id);
         }
 
-        return $sign->refresh();
+        return $sign;
     }
 }

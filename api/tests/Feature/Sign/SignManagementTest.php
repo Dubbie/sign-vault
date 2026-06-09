@@ -268,39 +268,6 @@ class SignManagementTest extends TestCase
         ]);
     }
 
-    public function test_complete_direct_upload_requires_the_object_to_exist_in_storage(): void
-    {
-        $user = User::factory()->create();
-        $folder = Folder::factory()->for($user)->create([
-            'name' => 'Club Signs',
-            'slug' => 'club-signs',
-        ]);
-
-        $this->fakeSignStorage();
-        $this->mockPreparedUploadUrls();
-
-        Sanctum::actingAs($user);
-
-        $prepareResponse = $this->postJson("/api/folders/{$folder->id}/signs/uploads/prepare", [
-            'files' => [
-                [
-                    'original_name' => 'ice-warning.png',
-                    'mime_type' => 'image/png',
-                    'size_bytes' => 2048,
-                    'width' => 1024,
-                    'height' => 256,
-                ],
-            ],
-        ]);
-
-        $response = $this->postJson("/api/folders/{$folder->id}/signs/uploads/complete", [
-            'intent_ids' => [$prepareResponse->json('uploads.0.id')],
-        ]);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors('intent_ids');
-    }
-
     public function test_authenticated_user_can_list_signs_in_own_folder(): void
     {
         $user = User::factory()->create();

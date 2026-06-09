@@ -9,6 +9,7 @@ import {
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
   getSignErrorMessage,
+  getSignThumbnailStatuses,
   moveSigns as moveSignsRequest,
 } from '@/lib/signs'
 import type { BatchUploadProgress } from '@/lib/signs'
@@ -76,33 +77,29 @@ export const useSignsStore = defineStore('signs', () => {
     let pendingIds = [...new Set(signIds)]
 
     while (pendingIds.length > 0 && Date.now() - startedAt < THUMBNAIL_POLL_TIMEOUT_MS) {
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, THUMBNAIL_POLL_INTERVAL_MS)
-      })
+      try {
+        const statuses = await getSignThumbnailStatuses(pendingIds)
+        pendingIds = []
 
-      const refreshedSigns = await Promise.all(
-        pendingIds.map(async (id) => {
-          try {
-            return await getSignRequest(id)
-          } catch {
-            return null
+        const signMap = new Map(signs.value.map((s) => [s.id, s]))
+        statuses.forEach((status) => {
+          const existing = signMap.get(status.id)
+          if (existing) {
+            upsertSign({ ...existing, ...status })
           }
-        }),
-      )
+          if (status.thumbnail_status === 'pending') {
+            pendingIds.push(status.id)
+          }
+        })
+      } catch {
+        // transient error — retry after sleep
+      }
 
-      pendingIds = []
-
-      refreshedSigns.forEach((sign) => {
-        if (!sign) {
-          return
-        }
-
-        upsertSign(sign)
-
-        if (sign.thumbnail_status === 'pending') {
-          pendingIds.push(sign.id)
-        }
-      })
+      if (pendingIds.length > 0) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, THUMBNAIL_POLL_INTERVAL_MS)
+        })
+      }
     }
   }
 

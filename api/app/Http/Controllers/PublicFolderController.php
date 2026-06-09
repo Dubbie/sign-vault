@@ -31,6 +31,7 @@ class PublicFolderController extends Controller
             ->where('visibility', FolderVisibility::Public)
             ->has('signs')
             ->with([
+                'authors',
                 'user:id,display_name,avatar_url',
                 'defaultVariant:id,folder_id,grid_background_preset',
             ])
@@ -196,6 +197,7 @@ class PublicFolderController extends Controller
         $query = Folder::query()
             ->where('public_slug', $slug)
             ->with([
+                'authors',
                 'user:id,display_name,avatar_url',
                 'defaultVariant:id,folder_id,grid_background_preset',
                 'variants:id,folder_id,name,is_default,grid_background_preset',

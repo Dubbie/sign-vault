@@ -20,8 +20,14 @@ class PublicFolderResource extends JsonResource
             'visibility' => $this->visibility instanceof FolderVisibility
                 ? $this->visibility->value
                 : $this->visibility,
-            'attribution_name' => $this->attribution_name,
-            'attribution_source_url' => $this->attribution_source_url,
+            'authors' => $this->whenLoaded('authors', fn (): array => $this->authors->map(
+                fn ($author): array => [
+                    'id' => $author->id,
+                    'name' => $author->name,
+                    'source_url' => $author->source_url,
+                    'sort_order' => $author->sort_order,
+                ],
+            )->values()->all(), []),
             'user_id' => $this->user_id,
             'owner' => [
                 'display_name' => $this->user->display_name,

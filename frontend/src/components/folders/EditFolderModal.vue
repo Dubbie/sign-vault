@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 
+import {
+  emptyEditableFolderAuthor,
+  toEditableFolderAuthors,
+  toFolderAuthorPayload,
+} from '@/lib/folder-authors'
 import { useFoldersStore } from '@/stores/folders'
 import type { FolderVisibility, UpdateFolderPayload } from '@/types/folder'
 
+import FolderAuthorsFields from '@/components/folders/FolderAuthorsFields.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiFormField from '@/components/ui/UiFormField.vue'
@@ -28,8 +34,7 @@ const form = reactive({
   name: '',
   visibility: 'private' as FolderVisibility,
   password: '',
-  attributionName: '',
-  attributionSourceUrl: '',
+  authors: [emptyEditableFolderAuthor()],
 })
 
 const requiresPassword = computed(() => form.visibility === 'password')
@@ -47,8 +52,7 @@ function fillFormFromFolder() {
   form.name = folder.name
   form.visibility = folder.visibility
   form.password = ''
-  form.attributionName = folder.attribution_name ?? ''
-  form.attributionSourceUrl = folder.attribution_source_url ?? ''
+  form.authors = toEditableFolderAuthors(folder.authors)
 }
 
 async function loadFolder(folderId: number) {
@@ -104,8 +108,7 @@ async function handleSubmit() {
   const payload: UpdateFolderPayload = {
     name: form.name.trim(),
     visibility: form.visibility,
-    attribution_name: form.attributionName.trim() || undefined,
-    attribution_source_url: form.attributionSourceUrl.trim() || undefined,
+    authors: toFolderAuthorPayload(form.authors),
   }
 
   if (requiresPassword.value && form.password.trim()) {
@@ -147,23 +150,7 @@ async function handleSubmit() {
         />
       </UiFormField>
 
-      <UiFormField label="Original author" name="attribution_name">
-        <UiInput
-          v-model="form.attributionName"
-          type="text"
-          name="attribution_name"
-          placeholder="e.g. Buried, xXTrackMakerXx"
-        />
-      </UiFormField>
-
-      <UiFormField label="Source URL" name="attribution_source_url">
-        <UiInput
-          v-model="form.attributionSourceUrl"
-          type="url"
-          name="attribution_source_url"
-          placeholder="https://..."
-        />
-      </UiFormField>
+      <FolderAuthorsFields v-model="form.authors" />
 
       <div class="flex gap-3">
         <UiButton variant="primary" type="submit" :disabled="foldersStore.isLoading">

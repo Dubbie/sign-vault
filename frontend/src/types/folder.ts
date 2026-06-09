@@ -2,6 +2,13 @@ import type { GridBackgroundPreset } from '@/types/grid-background'
 
 export type FolderVisibility = 'private' | 'public' | 'password'
 
+export type FolderAuthor = {
+  id?: number
+  name: string
+  source_url: string | null
+  sort_order?: number
+}
+
 export type Variant = {
   id: number
   name: string | null
@@ -18,8 +25,7 @@ export type Folder = {
   slug: string
   public_slug: string
   visibility: FolderVisibility
-  attribution_name: string | null
-  attribution_source_url: string | null
+  authors: FolderAuthor[]
   variants: Variant[]
   created_at: string
   updated_at: string
@@ -29,20 +35,18 @@ export type CreateFolderPayload = {
   name: string
   visibility: FolderVisibility
   password?: string
-  attribution_name?: string
-  attribution_source_url?: string
+  authors?: FolderAuthor[]
 }
 
 export type UpdateFolderPayload = {
   name: string
   visibility: FolderVisibility
   password?: string
-  attribution_name?: string
-  attribution_source_url?: string
+  authors?: FolderAuthor[]
 }
 
 export type FolderValidationErrors = Partial<
-  Record<'name' | 'visibility' | 'password' | 'attribution_name' | 'attribution_source_url', string>
+  Record<'name' | 'visibility' | 'password' | 'authors', string>
 >
 
 export type CreateVariantPayload = {

@@ -32,8 +32,7 @@ class FolderManagementTest extends TestCase
                 'slug',
                 'public_slug',
                 'visibility',
-                'attribution_name',
-                'attribution_source_url',
+                'authors',
                 'created_at',
                 'updated_at',
             ])
@@ -41,8 +40,7 @@ class FolderManagementTest extends TestCase
             ->assertJsonPath('slug', 'club-signs')
             ->assertJsonPath('public_slug', 'club-signs')
             ->assertJsonPath('visibility', FolderVisibility::Private->value)
-            ->assertJsonPath('attribution_name', null)
-            ->assertJsonPath('attribution_source_url', null)
+            ->assertJsonPath('authors', [])
             ->assertJsonMissingPath('password_hash');
 
         $this->assertDatabaseHas('folders', [
@@ -145,39 +143,67 @@ class FolderManagementTest extends TestCase
         $createResponse = $this->postJson('/api/folders', [
             'name' => 'Forum Archive',
             'visibility' => FolderVisibility::Public->value,
-            'attribution_name' => 'Buried',
-            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+            'authors' => [
+                [
+                    'name' => 'Buried',
+                    'source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+                ],
+                [
+                    'name' => 'Coauthor',
+                ],
+            ],
         ]);
 
         $createResponse->assertCreated()
-            ->assertJsonPath('attribution_name', 'Buried')
-            ->assertJsonPath('attribution_source_url', 'https://forum.trackmania.com/viewtopic.php?t=123');
+            ->assertJsonPath('authors.0.name', 'Buried')
+            ->assertJsonPath('authors.0.source_url', 'https://forum.trackmania.com/viewtopic.php?t=123')
+            ->assertJsonPath('authors.1.name', 'Coauthor')
+            ->assertJsonPath('authors.1.source_url', null);
 
         $folderId = $createResponse->json('id');
 
-        $this->assertDatabaseHas('folders', [
-            'id' => $folderId,
-            'attribution_name' => 'Buried',
-            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+        $this->assertDatabaseHas('folder_authors', [
+            'folder_id' => $folderId,
+            'name' => 'Buried',
+            'source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+            'sort_order' => 0,
+        ]);
+
+        $this->assertDatabaseHas('folder_authors', [
+            'folder_id' => $folderId,
+            'name' => 'Coauthor',
+            'source_url' => null,
+            'sort_order' => 1,
         ]);
 
         $this->patchJson("/api/folders/{$folderId}", [
             'name' => 'Forum Archive',
             'visibility' => FolderVisibility::Public->value,
-            'attribution_name' => 'Buried Team',
+            'authors' => [
+                [
+                    'name' => 'Buried Team',
+                ],
+            ],
         ])
             ->assertOk()
-            ->assertJsonPath('attribution_name', 'Buried Team')
-            ->assertJsonPath('attribution_source_url', null);
+            ->assertJsonCount(1, 'authors')
+            ->assertJsonPath('authors.0.name', 'Buried Team')
+            ->assertJsonPath('authors.0.source_url', null);
 
-        $this->assertDatabaseHas('folders', [
-            'id' => $folderId,
-            'attribution_name' => 'Buried Team',
-            'attribution_source_url' => null,
+        $this->assertDatabaseHas('folder_authors', [
+            'folder_id' => $folderId,
+            'name' => 'Buried Team',
+            'source_url' => null,
+            'sort_order' => 0,
+        ]);
+
+        $this->assertDatabaseMissing('folder_authors', [
+            'folder_id' => $folderId,
+            'name' => 'Coauthor',
         ]);
     }
 
-    public function test_folder_attribution_source_requires_author_name(): void
+    public function test_folder_authors_require_names(): void
     {
         $user = User::factory()->create();
 
@@ -186,13 +212,17 @@ class FolderManagementTest extends TestCase
         $this->postJson('/api/folders', [
             'name' => 'Forum Archive',
             'visibility' => FolderVisibility::Public->value,
-            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+            'authors' => [
+                [
+                    'source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+                ],
+            ],
         ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['attribution_name']);
+            ->assertJsonValidationErrors(['authors.0.name']);
     }
 
-    public function test_folder_attribution_source_must_be_valid_url(): void
+    public function test_folder_author_source_url_must_be_valid(): void
     {
         $user = User::factory()->create();
 
@@ -201,11 +231,15 @@ class FolderManagementTest extends TestCase
         $this->postJson('/api/folders', [
             'name' => 'Forum Archive',
             'visibility' => FolderVisibility::Public->value,
-            'attribution_name' => 'Buried',
-            'attribution_source_url' => 'not-a-url',
+            'authors' => [
+                [
+                    'name' => 'Buried',
+                    'source_url' => 'not-a-url',
+                ],
+            ],
         ])
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['attribution_source_url']);
+            ->assertJsonValidationErrors(['authors.0.source_url']);
     }
 
     public function test_private_folder_gets_new_public_slug_when_made_public(): void

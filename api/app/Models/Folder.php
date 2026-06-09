@@ -19,8 +19,6 @@ use Illuminate\Support\Str;
     'public_slug',
     'visibility',
     'password_hash',
-    'attribution_name',
-    'attribution_source_url',
 ])]
 class Folder extends Model
 {
@@ -47,6 +45,11 @@ class Folder extends Model
     public function signs(): HasMany
     {
         return $this->hasMany(Sign::class);
+    }
+
+    public function authors(): HasMany
+    {
+        return $this->hasMany(FolderAuthor::class)->orderBy('sort_order');
     }
 
     public function variants(): HasMany

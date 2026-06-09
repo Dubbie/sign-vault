@@ -11,6 +11,7 @@ use App\Services\ActivityLogService;
 use App\Services\FolderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FolderController extends Controller
 {
@@ -23,7 +24,7 @@ class FolderController extends Controller
     {
         $folders = $request->user()
             ->folders()
-            ->with('variants')
+            ->with(['authors', 'variants'])
             ->latest()
             ->get();
 
@@ -36,15 +37,19 @@ class FolderController extends Controller
 
         $validated = $request->validated();
 
-        $folder = $request->user()->folders()->create([
-            'name' => $validated['name'],
-            'slug' => Folder::generateSlugFor($request->user(), $validated['name']),
-            'public_slug' => Folder::generatePublicSlugFor($validated['name']),
-            'visibility' => $validated['visibility'],
-            'password_hash' => $this->folderService->hashPassword($validated),
-            'attribution_name' => $validated['attribution_name'] ?? null,
-            'attribution_source_url' => $validated['attribution_source_url'] ?? null,
-        ]);
+        $folder = DB::transaction(function () use ($request, $validated): Folder {
+            $folder = $request->user()->folders()->create([
+                'name' => $validated['name'],
+                'slug' => Folder::generateSlugFor($request->user(), $validated['name']),
+                'public_slug' => Folder::generatePublicSlugFor($validated['name']),
+                'visibility' => $validated['visibility'],
+                'password_hash' => $this->folderService->hashPassword($validated),
+            ]);
+
+            $this->syncAuthors($folder, $validated['authors'] ?? []);
+
+            return $folder;
+        });
 
         $this->activityLog->log(ActivityLog::FOLDER_CREATED, $request->user()->id, [
             'subject_folder_id' => $folder->id,
@@ -52,14 +57,14 @@ class FolderController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        return (new FolderResource($folder->refresh()))->response()->setStatusCode(201);
+        return (new FolderResource($folder->fresh(['authors', 'variants'])))->response()->setStatusCode(201);
     }
 
     public function show(Folder $folder): JsonResponse
     {
         $this->authorize('view', $folder);
 
-        $folder->load('variants');
+        $folder->load(['authors', 'variants']);
 
         return (new FolderResource($folder))->response();
     }
@@ -75,20 +80,22 @@ class FolderController extends Controller
         // Resolve public slug BEFORE fill() changes the current visibility on the model.
         $publicSlug = $this->folderService->resolvePublicSlug($folder, $validated);
 
-        $folder->fill([
-            'name' => $validated['name'],
-            'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
-            'visibility' => $validated['visibility'],
-            'attribution_name' => $validated['attribution_name'] ?? null,
-            'attribution_source_url' => $validated['attribution_source_url'] ?? null,
-        ]);
+        DB::transaction(function () use ($request, $validated, $folder, $publicSlug): void {
+            $folder->fill([
+                'name' => $validated['name'],
+                'slug' => Folder::generateSlugFor($request->user(), $validated['name'], $folder->id),
+                'visibility' => $validated['visibility'],
+            ]);
 
-        if ($publicSlug !== null) {
-            $folder->public_slug = $publicSlug;
-        }
+            if ($publicSlug !== null) {
+                $folder->public_slug = $publicSlug;
+            }
 
-        $folder->password_hash = $this->folderService->hashPassword($validated);
-        $folder->save();
+            $folder->password_hash = $this->folderService->hashPassword($validated);
+            $folder->save();
+
+            $this->syncAuthors($folder, $validated['authors'] ?? []);
+        });
 
         if ($oldVisibility !== $folder->visibility) {
             $this->activityLog->log(ActivityLog::FOLDER_VISIBILITY, $request->user()->id, [
@@ -98,7 +105,7 @@ class FolderController extends Controller
             ]);
         }
 
-        return (new FolderResource($folder->refresh()))->response();
+        return (new FolderResource($folder->fresh(['authors', 'variants'])))->response();
     }
 
     public function destroy(Request $request, Folder $folder): JsonResponse
@@ -122,5 +129,34 @@ class FolderController extends Controller
         ]);
 
         return response()->json(['message' => 'Folder deleted.']);
+    }
+
+    /**
+     * @param  array<int, array{name: string, source_url?: string|null}>  $authors
+     */
+    private function syncAuthors(Folder $folder, array $authors): void
+    {
+        $folder->authors()->delete();
+
+        $rows = collect($authors)
+            ->map(function (array $author, int $index) use ($folder): array {
+                return [
+                    'folder_id' => $folder->id,
+                    'name' => trim($author['name']),
+                    'source_url' => filled($author['source_url'] ?? null) ? $author['source_url'] : null,
+                    'sort_order' => $index,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            })
+            ->filter(fn (array $author): bool => $author['name'] !== '')
+            ->values()
+            ->all();
+
+        if ($rows === []) {
+            return;
+        }
+
+        $folder->authors()->insert($rows);
     }
 }

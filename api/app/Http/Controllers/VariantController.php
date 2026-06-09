@@ -49,10 +49,7 @@ class VariantController extends Controller
     public function update(UpdateVariantRequest $request, Folder $folder, Variant $variant): JsonResponse
     {
         $this->authorize('update', $folder);
-
-        if ($folder->id !== $variant->folder_id) {
-            abort(404);
-        }
+        $this->ensureVariantBelongsToFolder($folder, $variant);
 
         $validated = $request->validated();
 
@@ -80,10 +77,7 @@ class VariantController extends Controller
     public function destroy(Folder $folder, Variant $variant): JsonResponse
     {
         $this->authorize('update', $folder);
-
-        if ($folder->id !== $variant->folder_id) {
-            abort(404);
-        }
+        $this->ensureVariantBelongsToFolder($folder, $variant);
 
         if ($variant->is_default) {
             return response()->json([
@@ -101,5 +95,12 @@ class VariantController extends Controller
         $variant->delete();
 
         return response()->json(['message' => 'Variant deleted.']);
+    }
+
+    private function ensureVariantBelongsToFolder(Folder $folder, Variant $variant): void
+    {
+        if ($folder->id !== $variant->folder_id) {
+            abort(404);
+        }
     }
 }

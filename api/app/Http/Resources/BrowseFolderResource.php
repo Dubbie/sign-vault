@@ -2,12 +2,14 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\FolderVisibility;
+use App\Http\Resources\Concerns\SerializesFolderData;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class BrowseFolderResource extends JsonResource
 {
+    use SerializesFolderData;
+
     /**
      * @return array<string, mixed>
      */
@@ -17,23 +19,11 @@ class BrowseFolderResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->public_slug,
-            'visibility' => $this->visibility instanceof FolderVisibility
-                ? $this->visibility->value
-                : $this->visibility,
+            'visibility' => $this->serializeVisibility($this->visibility),
             'signs_count' => $this->signs_count,
             'variants_count' => $this->variants_count,
-            'authors' => $this->whenLoaded('authors', fn (): array => $this->authors->map(
-                fn ($author): array => [
-                    'id' => $author->id,
-                    'name' => $author->name,
-                    'source_url' => $author->source_url,
-                    'sort_order' => $author->sort_order,
-                ],
-            )->values()->all(), []),
-            'owner' => [
-                'display_name' => $this->user->display_name,
-                'avatar_url' => $this->user->avatar_url,
-            ],
+            'authors' => $this->whenLoaded('authors', fn (): array => $this->serializeAuthors($this->authors), []),
+            'owner' => $this->serializeOwner($this->user),
             'preview_signs' => $this->selectPreviewSigns(),
             'preview_grid_background_preset' => $this->defaultVariant?->grid_background_preset,
             'votes_count' => (int) ($this->votes_count ?? 0),

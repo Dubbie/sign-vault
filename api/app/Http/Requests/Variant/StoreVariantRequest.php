@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Variant;
 
 use App\Enums\VariantGridBackgroundPreset;
-use App\Models\Folder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,10 +10,7 @@ class StoreVariantRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        /** @var Folder $folder */
-        $folder = $this->route('folder');
-
-        return $this->user() !== null && $folder->user_id === $this->user()->id;
+        return true;
     }
 
     /**
@@ -22,7 +18,6 @@ class StoreVariantRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Folder $folder */
         $folder = $this->route('folder');
 
         return [

@@ -12,6 +12,7 @@ use App\Models\FolderVote;
 use App\Models\Sign;
 use App\Services\EngagementTrackingService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -27,21 +28,7 @@ class PublicFolderController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Folder::query()
-            ->where('visibility', FolderVisibility::Public)
-            ->has('signs')
-            ->with([
-                'authors',
-                'user:id,display_name,avatar_url',
-                'defaultVariant:id,folder_id,grid_background_preset',
-            ])
-            ->withCount(['signs', 'variants', 'votes']);
-
-        if ($user = $request->user('sanctum')) {
-            $query->withExists([
-                'votes as user_has_voted' => fn (Builder $query): Builder => $query->where('user_id', $user->id),
-            ]);
-        }
+        $query = $this->publicFolderIndexQuery($request);
 
         if ($search = $request->string('q', '')) {
             $query->where('name', 'like', '%'.$search.'%');
@@ -62,10 +49,7 @@ class PublicFolderController extends Controller
     public function vote(Request $request, string $slug): JsonResponse
     {
         $folder = $this->resolveFolder($slug);
-
-        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
-            abort(404);
-        }
+        $this->ensureFolderIsVisible($folder);
 
         $userId = $request->user()->id;
         $existing = FolderVote::where('folder_id', $folder->id)->where('user_id', $userId)->first();
@@ -87,10 +71,7 @@ class PublicFolderController extends Controller
     public function show(Request $request, string $slug): JsonResponse
     {
         $folder = $this->resolveFolderForContents($slug, $request);
-
-        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
-            abort(404);
-        }
+        $this->ensureFolderIsVisible($folder);
 
         $this->engagementTracking->recordFolderView($folder, FolderViewType::Full, $request->ip());
 
@@ -106,24 +87,13 @@ class PublicFolderController extends Controller
     public function unlock(Request $request, string $slug): JsonResponse
     {
         $folder = $this->resolveFolderForContents($slug, $request);
-
-        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
-            abort(404);
-        }
+        $this->ensureFolderIsVisible($folder);
 
         if ($folder->visibility === FolderVisibility::Public) {
             return $this->folderContentsResponse($folder);
         }
 
-        $validated = $request->validate([
-            'password' => ['required', 'string', 'max:255'],
-        ]);
-
-        if (! Hash::check($validated['password'], (string) $folder->password_hash)) {
-            throw ValidationException::withMessages([
-                'password' => ['The provided password is incorrect.'],
-            ]);
-        }
+        $this->validateFolderPassword($request, $folder);
 
         return $this->folderContentsResponse($folder);
     }
@@ -131,34 +101,11 @@ class PublicFolderController extends Controller
     public function signs(Request $request, string $slug): JsonResponse
     {
         $folder = $this->resolveFolderForSigns($slug);
-
-        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
-            abort(404);
-        }
-
-        if ($folder->visibility === FolderVisibility::Password) {
-            $password = (string) $request->input('password', '');
-            if (! Hash::check($password, (string) $folder->password_hash)) {
-                abort(403);
-            }
-        }
+        $this->ensureFolderIsVisible($folder);
+        $this->ensureSignsAccessAllowed($request, $folder);
 
         $perPage = min((int) $request->input('per_page', 10), 100);
-        $defaultVariantId = $folder->defaultVariant?->id;
-
-        $query = $folder->signs()
-            ->orderBy('sort_key')
-            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'column_ratio', 'variant_id']);
-
-        if ($variantId = $request->integer('variant_id')) {
-            $query->where('variant_id', $variantId);
-        } elseif ($defaultVariantId !== null) {
-            $query->where('variant_id', $defaultVariantId);
-        }
-
-        if ($columnRatio = $request->integer('column_ratio')) {
-            $query->where('column_ratio', $columnRatio);
-        }
+        $query = $this->publicSignsQuery($folder, $request);
 
         return PublicSignResource::collection($query->paginate($perPage))->response();
     }
@@ -166,7 +113,6 @@ class PublicFolderController extends Controller
     public function trackSignCopy(Request $request, string $slug, Sign $sign): Response
     {
         $folder = $this->resolveFolder($slug);
-
         if ($folder === null || $folder->visibility === FolderVisibility::Private || $sign->folder_id !== $folder->id) {
             abort(404);
         }
@@ -183,23 +129,36 @@ class PublicFolderController extends Controller
             ->first();
     }
 
+    private function publicFolderIndexQuery(Request $request): Builder
+    {
+        return $this->withUserVoteState(
+            Folder::query()
+                ->where('visibility', FolderVisibility::Public)
+                ->has('signs')
+                ->with([
+                    'authors',
+                    'user:id,display_name,avatar_url',
+                    'defaultVariant:id,folder_id,grid_background_preset',
+                ])
+                ->withCount(['signs', 'variants', 'votes']),
+            $request
+        );
+    }
+
     private function resolveFolderForContents(string $slug, Request $request): ?Folder
     {
-        $query = Folder::query()
-            ->where('public_slug', $slug)
-            ->with([
-                'authors',
-                'user:id,display_name,avatar_url',
-                'defaultVariant:id,folder_id,grid_background_preset',
-                'variants:id,folder_id,name,is_default,grid_background_preset',
-            ])
-            ->withCount('votes');
-
-        if ($user = $request->user('sanctum')) {
-            $query->withExists([
-                'votes as user_has_voted' => fn (Builder $query): Builder => $query->where('user_id', $user->id),
-            ]);
-        }
+        $query = $this->withUserVoteState(
+            Folder::query()
+                ->where('public_slug', $slug)
+                ->with([
+                    'authors',
+                    'user:id,display_name,avatar_url',
+                    'defaultVariant:id,folder_id,grid_background_preset',
+                    'variants:id,folder_id,name,is_default,grid_background_preset',
+                ])
+                ->withCount('votes'),
+            $request
+        );
 
         return $query->first();
     }
@@ -210,6 +169,73 @@ class PublicFolderController extends Controller
             ->where('public_slug', $slug)
             ->with('defaultVariant:id,folder_id')
             ->first();
+    }
+
+    private function withUserVoteState(Builder $query, Request $request): Builder
+    {
+        if ($user = $request->user('sanctum')) {
+            $query->withExists([
+                'votes as user_has_voted' => fn (Builder $voteQuery): Builder => $voteQuery->where('user_id', $user->id),
+            ]);
+        }
+
+        return $query;
+    }
+
+    private function ensureFolderIsVisible(?Folder $folder): Folder
+    {
+        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
+            abort(404);
+        }
+
+        return $folder;
+    }
+
+    private function validateFolderPassword(Request $request, Folder $folder): void
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'max:255'],
+        ]);
+
+        if (! Hash::check($validated['password'], (string) $folder->password_hash)) {
+            throw ValidationException::withMessages([
+                'password' => ['The provided password is incorrect.'],
+            ]);
+        }
+    }
+
+    private function ensureSignsAccessAllowed(Request $request, Folder $folder): void
+    {
+        if ($folder->visibility !== FolderVisibility::Password) {
+            return;
+        }
+
+        $password = (string) $request->input('password', '');
+
+        if (! Hash::check($password, (string) $folder->password_hash)) {
+            abort(403);
+        }
+    }
+
+    private function publicSignsQuery(Folder $folder, Request $request): HasMany
+    {
+        $defaultVariantId = $folder->defaultVariant?->id;
+
+        $query = $folder->signs()
+            ->orderBy('sort_key')
+            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'column_ratio', 'variant_id']);
+
+        if ($variantId = $request->integer('variant_id')) {
+            $query->where('variant_id', $variantId);
+        } elseif ($defaultVariantId !== null) {
+            $query->where('variant_id', $defaultVariantId);
+        }
+
+        if ($columnRatio = $request->integer('column_ratio')) {
+            $query->where('column_ratio', $columnRatio);
+        }
+
+        return $query;
     }
 
     private function loadPreviewSigns(Collection $folders): void

@@ -77,11 +77,17 @@ export async function getSign(id: number): Promise<Sign> {
 
 export async function getSignThumbnailStatuses(
   ids: number[],
-): Promise<{ id: number; thumbnail_status: Sign['thumbnail_status']; thumbnail_url: string | null }[]> {
+): Promise<
+  { id: number; thumbnail_status: Sign['thumbnail_status']; thumbnail_url: string | null }[]
+> {
   const params = new URLSearchParams()
   ids.forEach((id) => params.append('ids[]', String(id)))
   const { data } = await api.get<{
-    signs: { id: number; thumbnail_status: Sign['thumbnail_status']; thumbnail_url: string | null }[]
+    signs: {
+      id: number
+      thumbnail_status: Sign['thumbnail_status']
+      thumbnail_url: string | null
+    }[]
   }>(`/api/signs/status?${params}`)
   return data.signs
 }

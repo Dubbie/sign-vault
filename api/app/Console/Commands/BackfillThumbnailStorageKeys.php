@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Sign;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BackfillThumbnailStorageKeys extends Command
@@ -72,7 +73,7 @@ class BackfillThumbnailStorageKeys extends Command
                 }
 
                 if (! $dryRun && $rows !== []) {
-                    Sign::upsert($rows, uniqueBy: ['id'], update: ['thumbnail_storage_key']);
+                    $this->updateThumbnailStorageKeys($rows);
                 }
             });
 
@@ -83,5 +84,34 @@ class BackfillThumbnailStorageKeys extends Command
         $this->info("{$verb}: {$updated}, skipped: {$skipped}.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @param  array<int, array{id: int, thumbnail_storage_key: string}>  $rows
+     */
+    private function updateThumbnailStorageKeys(array $rows): void
+    {
+        $timestamp = now();
+        $caseClauses = [];
+        $caseBindings = [];
+        $idBindings = [];
+
+        foreach ($rows as $row) {
+            $caseClauses[] = 'WHEN ? THEN ?';
+            $caseBindings[] = $row['id'];
+            $caseBindings[] = $row['thumbnail_storage_key'];
+            $idBindings[] = $row['id'];
+        }
+
+        $inClause = implode(', ', array_fill(0, count($idBindings), '?'));
+        $caseSql = implode(' ', $caseClauses);
+
+        DB::update(
+            "UPDATE signs
+            SET thumbnail_storage_key = CASE id {$caseSql} END,
+                updated_at = ?
+            WHERE id IN ({$inClause})",
+            [...$caseBindings, $timestamp, ...$idBindings],
+        );
     }
 }

@@ -20,16 +20,19 @@ class AdminEngagementController extends Controller
         $folderFullViews = FolderView::query()
             ->where('view_type', FolderViewType::Full)
             ->where('first_seen_at', '>=', $since)
-            ->count();
+            ->distinct('ip_hash')
+            ->count('ip_hash');
 
         $folderPreviews = FolderView::query()
             ->where('view_type', FolderViewType::Preview)
             ->where('first_seen_at', '>=', $since)
-            ->count();
+            ->distinct('ip_hash')
+            ->count('ip_hash');
 
         $signCopies = SignCopy::query()
             ->where('first_seen_at', '>=', $since)
-            ->count();
+            ->distinct('ip_hash')
+            ->count('ip_hash');
 
         return response()->json([
             'summary' => [

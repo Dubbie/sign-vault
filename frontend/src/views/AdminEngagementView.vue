@@ -156,21 +156,21 @@ onMounted(() => {
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.folder_full_views.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors per folder page</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who opened a folder</p>
         </div>
         <div class="glass-card rounded-lg p-5">
           <p class="text-label-sm text-on-surface-variant">Folder previews</p>
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.folder_previews.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors hovering in explore</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who hovered in explore</p>
         </div>
         <div class="glass-card rounded-lg p-5">
           <p class="text-label-sm text-on-surface-variant">Sign copies</p>
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.sign_copies.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors copying a sign URL</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who copied a sign URL</p>
         </div>
       </div>
 

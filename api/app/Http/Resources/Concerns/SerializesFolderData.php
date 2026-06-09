@@ -9,11 +9,9 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 trait SerializesFolderData
 {
-    protected function serializeVisibility(FolderVisibility|string $visibility): string
+    protected function serializeVisibility(FolderVisibility $visibility): string
     {
-        return $visibility instanceof FolderVisibility
-            ? $visibility->value
-            : $visibility;
+        return $visibility->value;
     }
 
     /**
@@ -45,21 +43,21 @@ trait SerializesFolderData
      * @param  EloquentCollection<int, Variant>  $variants
      * @return array<int, array<string, mixed>>
      */
-    protected function serializeVariants(EloquentCollection $variants, bool $includeSortOrder = false): array
+    protected function serializeVariants(EloquentCollection $variants, bool $withSortOrder = false): array
     {
-        return $variants->map(function (Variant $variant) use ($includeSortOrder): array {
-            $payload = [
+        return $variants->map(function (Variant $variant) use ($withSortOrder): array {
+            $data = [
                 'id' => $variant->id,
                 'name' => $variant->name,
                 'is_default' => $variant->is_default,
                 'grid_background_preset' => $variant->grid_background_preset,
             ];
 
-            if ($includeSortOrder) {
-                $payload['sort_order'] = $variant->sort_order;
+            if ($withSortOrder) {
+                $data['sort_order'] = $variant->sort_order;
             }
 
-            return $payload;
+            return $data;
         })->values()->all();
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\Concerns\SerializesFolderData;
+use App\Services\FolderPreviewService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -70,36 +71,23 @@ class BrowseFolderResource extends JsonResource
 
         $ratio = $width / $height;
 
-        if ($ratio < 1.5) {
+        if ($ratio < FolderPreviewService::ASPECT_1_1_MAX) {
             return '1:1';
         }
 
-        if ($ratio < 3) {
+        if ($ratio < FolderPreviewService::ASPECT_2_1_MAX) {
             return '2:1';
         }
 
-        if ($ratio < 5) {
+        if ($ratio < FolderPreviewService::ASPECT_4_1_MAX) {
             return '4:1';
         }
 
         return 'wide';
     }
 
-    /**
-     * @param  object{id: mixed, name: mixed, public_url: mixed, thumbnail_url: mixed, mime_type: mixed, width: mixed, height: mixed, column_ratio: mixed}  $sign
-     * @return array<string, mixed>
-     */
     private function serializePreviewSign(object $sign): array
     {
-        return [
-            'id' => $sign->id,
-            'name' => $sign->name,
-            'public_url' => $sign->public_url,
-            'thumbnail_url' => $sign->thumbnail_url,
-            'mime_type' => $sign->mime_type,
-            'width' => $sign->width,
-            'height' => $sign->height,
-            'column_ratio' => $sign->column_ratio,
-        ];
+        return (new PublicSignResource($sign))->toArray(request());
     }
 }

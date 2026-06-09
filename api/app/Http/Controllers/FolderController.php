@@ -94,7 +94,9 @@ class FolderController extends Controller
             $folder->password_hash = $this->hashPassword($validated);
             $folder->save();
 
-            $this->syncAuthors($folder, $validated['authors'] ?? []);
+            if (array_key_exists('authors', $validated)) {
+                $this->syncAuthors($folder, $validated['authors'] ?? []);
+            }
         });
 
         if ($oldVisibility !== $folder->visibility) {

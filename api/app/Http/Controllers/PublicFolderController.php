@@ -11,6 +11,7 @@ use App\Models\Folder;
 use App\Models\FolderVote;
 use App\Models\Sign;
 use App\Services\EngagementTrackingService;
+use App\Services\FolderPreviewService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -18,13 +19,15 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class PublicFolderController extends Controller
 {
-    public function __construct(private EngagementTrackingService $engagementTracking) {}
+    public function __construct(
+        private EngagementTrackingService $engagementTracking,
+        private FolderPreviewService $folderPreview,
+    ) {}
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -41,15 +44,14 @@ class PublicFolderController extends Controller
         }
 
         $folders = $query->paginate(10);
-        $this->loadPreviewSigns($folders->getCollection());
+        $this->folderPreview->loadPreviewSigns($folders->getCollection());
 
         return BrowseFolderResource::collection($folders);
     }
 
     public function vote(Request $request, string $slug): JsonResponse
     {
-        $folder = $this->resolveFolder($slug);
-        $this->ensureFolderIsVisible($folder);
+        $folder = $this->ensureFolderIsVisible($this->resolveFolder($slug));
 
         $userId = $request->user()->id;
         $existing = FolderVote::where('folder_id', $folder->id)->where('user_id', $userId)->first();
@@ -63,15 +65,14 @@ class PublicFolderController extends Controller
         }
 
         return response()->json([
-            'votes_count' => FolderVote::query()->where('folder_id', $folder->id)->count(),
+            'votes_count' => $folder->votes()->count(),
             'user_has_voted' => $userHasVoted,
         ]);
     }
 
     public function show(Request $request, string $slug): JsonResponse
     {
-        $folder = $this->resolveFolderForContents($slug, $request);
-        $this->ensureFolderIsVisible($folder);
+        $folder = $this->ensureFolderIsVisible($this->resolveFolderForContents($slug, $request));
 
         $this->engagementTracking->recordFolderView($folder, FolderViewType::Full, $request->ip());
 
@@ -86,8 +87,7 @@ class PublicFolderController extends Controller
 
     public function unlock(Request $request, string $slug): JsonResponse
     {
-        $folder = $this->resolveFolderForContents($slug, $request);
-        $this->ensureFolderIsVisible($folder);
+        $folder = $this->ensureFolderIsVisible($this->resolveFolderForContents($slug, $request));
 
         if ($folder->visibility === FolderVisibility::Public) {
             return $this->folderContentsResponse($folder);
@@ -100,8 +100,7 @@ class PublicFolderController extends Controller
 
     public function signs(Request $request, string $slug): JsonResponse
     {
-        $folder = $this->resolveFolderForSigns($slug);
-        $this->ensureFolderIsVisible($folder);
+        $folder = $this->ensureFolderIsVisible($this->resolveFolderForSigns($slug));
         $this->ensureSignsAccessAllowed($request, $folder);
 
         $perPage = min((int) $request->input('per_page', 10), 100);
@@ -112,10 +111,13 @@ class PublicFolderController extends Controller
 
     public function trackSignCopy(Request $request, string $slug, Sign $sign): Response
     {
-        $folder = $this->resolveFolder($slug);
-        if ($folder === null || $folder->visibility === FolderVisibility::Private || $sign->folder_id !== $folder->id) {
+        $folder = $this->ensureFolderIsVisible($this->resolveFolder($slug));
+
+        if ($sign->folder_id !== $folder->id) {
             abort(404);
         }
+
+        $this->ensureSignsAccessAllowed($request, $folder);
 
         $this->engagementTracking->recordSignCopy($sign, $request->ip());
 
@@ -154,7 +156,7 @@ class PublicFolderController extends Controller
                     'authors',
                     'user:id,display_name,avatar_url',
                     'defaultVariant:id,folder_id,grid_background_preset',
-                    'variants:id,folder_id,name,is_default,grid_background_preset',
+                    'variants:id,folder_id,name,is_default,sort_order,grid_background_preset',
                 ])
                 ->withCount('votes'),
             $request
@@ -223,7 +225,7 @@ class PublicFolderController extends Controller
 
         $query = $folder->signs()
             ->orderBy('sort_key')
-            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'column_ratio', 'variant_id']);
+            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'column_ratio', 'variant_id', 'folder_id']);
 
         if ($variantId = $request->integer('variant_id')) {
             $query->where('variant_id', $variantId);
@@ -238,85 +240,6 @@ class PublicFolderController extends Controller
         return $query;
     }
 
-    private function loadPreviewSigns(Collection $folders): void
-    {
-        if ($folders->isEmpty()) {
-            return;
-        }
-
-        $foldersByVariant = $folders
-            ->filter(fn (Folder $folder): bool => $folder->defaultVariant !== null)
-            ->map(fn (Folder $folder): array => [
-                'folder_id' => $folder->id,
-                'variant_id' => $folder->defaultVariant->id,
-            ])
-            ->values();
-
-        if ($foldersByVariant->isEmpty()) {
-            foreach ($folders as $folder) {
-                $folder->setRelation('previewSigns', collect());
-            }
-
-            return;
-        }
-
-        $aspectBucket = <<<'SQL'
-CASE
-    WHEN width IS NULL OR height IS NULL OR height = 0 THEN 'unknown'
-    WHEN width / height < 1.5 THEN '1:1'
-    WHEN width / height < 3 THEN '2:1'
-    WHEN width / height < 5 THEN '4:1'
-    ELSE 'wide'
-END
-SQL;
-
-        $rankedSigns = DB::table('signs')
-            ->select([
-                'id',
-                'name',
-                'public_url',
-                'thumbnail_url',
-                'mime_type',
-                'width',
-                'height',
-                'column_ratio',
-                'folder_id',
-                'variant_id',
-            ])
-            ->selectRaw("{$aspectBucket} as aspect_bucket")
-            ->selectRaw("ROW_NUMBER() OVER (PARTITION BY folder_id, {$aspectBucket} ORDER BY id) as bucket_rank")
-            ->where(function ($query) use ($foldersByVariant): void {
-                foreach ($foldersByVariant as $folder) {
-                    $query->orWhere(function ($query) use ($folder): void {
-                        $query
-                            ->where('folder_id', $folder['folder_id'])
-                            ->where('variant_id', $folder['variant_id']);
-                    });
-                }
-            });
-
-        $previewSigns = DB::query()
-            ->fromSub($rankedSigns, 'ranked_signs')
-            ->where('bucket_rank', '<=', 6)
-            ->orderBy('folder_id')
-            ->orderByRaw("
-                CASE aspect_bucket
-                    WHEN '1:1' THEN 1
-                    WHEN '2:1' THEN 2
-                    WHEN '4:1' THEN 3
-                    WHEN 'wide' THEN 4
-                    ELSE 5
-                END
-            ")
-            ->orderBy('id')
-            ->get()
-            ->groupBy('folder_id');
-
-        foreach ($folders as $folder) {
-            $folder->setRelation('previewSigns', $previewSigns->get($folder->id, collect()));
-        }
-    }
-
     /**
      * @return Collection<int, Sign>
      */
@@ -325,8 +248,8 @@ SQL;
         $defaultVariantId = $folder->defaultVariant?->id;
 
         $query = $folder->signs()
-            ->latest()
-            ->select(['id', 'name', 'public_url', 'mime_type', 'width', 'height', 'folder_id', 'variant_id', 'column_ratio']);
+            ->orderBy('sort_key')
+            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'folder_id', 'variant_id', 'column_ratio']);
 
         if ($defaultVariantId !== null) {
             $query->where('variant_id', $defaultVariantId);

@@ -537,8 +537,8 @@ class PublicFolderAccessTest extends TestCase
         $this->getJson('/api/public/folders/'.$folder->public_slug)
             ->assertOk()
             ->assertJsonCount(2, 'signs')
-            ->assertJsonPath('signs.0.name', 'Road Closed')
-            ->assertJsonPath('signs.1.name', 'Ice Warning');
+            ->assertJsonPath('signs.0.name', 'Ice Warning')
+            ->assertJsonPath('signs.1.name', 'Road Closed');
     }
 
     public function test_public_folder_includes_attribution_metadata(): void

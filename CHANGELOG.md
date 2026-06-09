@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.4.0](https://github.com/Dubbie/sign-vault/compare/v1.3.0...v1.4.0) (2026-06-09)
+
+
+### Features
+
+* **engagement:** improve admin dashboard accuracy and tracking quality ([ae221b9](https://github.com/Dubbie/sign-vault/commit/ae221b9153ddab92fed4c84235825a111c79744a))
+* **folders:** support multiple authors ([d95657d](https://github.com/Dubbie/sign-vault/commit/d95657dac318e1f4e87686ff2408c78a73217700))
+* **signs:** add direct uploads with async thumbnails ([201a654](https://github.com/Dubbie/sign-vault/commit/201a654ea6c719c617be3e0f1ecc146af35355fc))
+
+
+### Bug Fixes
+
+* **api:** avoid insert validation in thumbnail key backfill ([d3aec5d](https://github.com/Dubbie/sign-vault/commit/d3aec5dc2ba9551356aeb7ebc07b7583568f262b))
+* **explore:** cancel in-flight requests on folder navigation ([71ff131](https://github.com/Dubbie/sign-vault/commit/71ff131c9c29353ea2c2aeed91936ad428815895))
+
+
+### Performance Improvements
+
+* **uploads:** batch DB and cache operations in complete endpoint ([84a22a1](https://github.com/Dubbie/sign-vault/commit/84a22a15df3861c59688c5a0e871aca9a16f1756))
+* **uploads:** pipeline batch preparation and increase S3 concurrency ([975bce7](https://github.com/Dubbie/sign-vault/commit/975bce7661f86fe069668681ae797666eb346219))
+* **uploads:** reduce complete endpoint latency and fix thumbnail polling ([57f64ba](https://github.com/Dubbie/sign-vault/commit/57f64ba75f44ee23e33cba8bb60f156342ec9416))
+
 ## [1.3.0](https://github.com/Dubbie/sign-vault/compare/v1.2.0...v1.3.0) (2026-06-08)
 
 

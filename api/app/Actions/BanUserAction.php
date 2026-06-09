@@ -12,10 +12,11 @@ class BanUserAction
 
     public function handle(User $user, string $reason): void
     {
-        $user->tokens()->delete();
         $user->loadMissing('folders.signs');
 
         DB::transaction(function () use ($user, $reason): void {
+            $user->tokens()->delete();
+
             foreach ($user->folders as $folder) {
                 $this->signDeletion->deleteFolder($folder);
             }

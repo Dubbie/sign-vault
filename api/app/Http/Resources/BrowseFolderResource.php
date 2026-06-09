@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\Concerns\SerializesFolderData;
-use App\Services\FolderPreviewService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -42,10 +41,10 @@ class BrowseFolderResource extends JsonResource
         $groups = ['1:1' => [], '2:1' => [], '4:1' => [], 'wide' => [], 'unknown' => []];
 
         foreach ($folderSigns as $sign) {
-            $category = $this->categorizeAspect($sign->width, $sign->height);
+            $bucket = $sign->aspect_bucket ?? 'unknown';
 
-            if (isset($groups[$category])) {
-                $groups[$category][] = $sign;
+            if (isset($groups[$bucket])) {
+                $groups[$bucket][] = $sign;
             }
         }
 
@@ -61,29 +60,6 @@ class BrowseFolderResource extends JsonResource
         }
 
         return $selected;
-    }
-
-    private function categorizeAspect(?int $width, ?int $height): string
-    {
-        if (! $width || ! $height) {
-            return 'unknown';
-        }
-
-        $ratio = $width / $height;
-
-        if ($ratio < FolderPreviewService::ASPECT_1_1_MAX) {
-            return '1:1';
-        }
-
-        if ($ratio < FolderPreviewService::ASPECT_2_1_MAX) {
-            return '2:1';
-        }
-
-        if ($ratio < FolderPreviewService::ASPECT_4_1_MAX) {
-            return '4:1';
-        }
-
-        return 'wide';
     }
 
     private function serializePreviewSign(object $sign): array

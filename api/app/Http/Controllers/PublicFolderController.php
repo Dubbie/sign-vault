@@ -10,6 +10,7 @@ use App\Http\Resources\PublicSignResource;
 use App\Models\Folder;
 use App\Models\FolderVote;
 use App\Models\Sign;
+use Illuminate\Database\UniqueConstraintViolationException;
 use App\Services\EngagementTrackingService;
 use App\Services\FolderPreviewService;
 use Illuminate\Database\Eloquent\Builder;
@@ -60,7 +61,11 @@ class PublicFolderController extends Controller
             $existing->delete();
             $userHasVoted = false;
         } else {
-            FolderVote::create(['folder_id' => $folder->id, 'user_id' => $userId]);
+            try {
+                FolderVote::create(['folder_id' => $folder->id, 'user_id' => $userId]);
+            } catch (UniqueConstraintViolationException) {
+                // concurrent request won the race — vote exists, treat as voted
+            }
             $userHasVoted = true;
         }
 
@@ -243,7 +248,7 @@ class PublicFolderController extends Controller
     /**
      * @return Collection<int, Sign>
      */
-    private function publicSignsForFolder(Folder $folder)
+    private function publicSignsForFolder(Folder $folder): Collection
     {
         $defaultVariantId = $folder->defaultVariant?->id;
 

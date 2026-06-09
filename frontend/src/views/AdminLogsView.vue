@@ -108,9 +108,7 @@ onMounted(() => {
 
 <template>
   <div class="space-y-gutter">
-    <div class="flex items-end justify-between gap-4">
-      <h1 class="text-headline-xl text-on-surface">Activity Log</h1>
-    </div>
+    <h1 class="text-headline-xl text-on-surface">Activity Log</h1>
 
     <UiErrorBanner v-if="error">
       {{ error }}

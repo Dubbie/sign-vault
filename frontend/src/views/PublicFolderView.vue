@@ -482,13 +482,9 @@ watch(folderSlug, () => {
 
           <div class="flex items-center gap-4">
             <h1 class="text-headline-xl text-on-surface">{{ folder.name }}</h1>
-            <div>
-              <span
-                class="block mr-2 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary"
-              >
-                {{ visibilityLabel(folder.visibility) }}
-              </span>
-            </div>
+            <span class="px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary">
+              {{ visibilityLabel(folder.visibility) }}
+            </span>
           </div>
 
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -550,22 +546,20 @@ watch(folderSlug, () => {
         </UiFormField>
       </div>
 
-      <div>
-        <p v-if="isLoadingSigns" class="text-zinc-400">Loading signs...</p>
-        <p v-else-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
+      <p v-if="isLoadingSigns" class="text-zinc-400">Loading signs...</p>
+      <p v-else-if="signs.length === 0" class="mt-4 text-zinc-400">No signs available.</p>
 
-        <SignGrid
-          v-else
-          :signs="signs"
-          :copied-sign-id="copiedSignId"
-          :selectable="false"
-          :has-more="signsHasMore"
-          :is-loading-more="isLoadingMore"
-          :background-preset="activeVariantRecord?.grid_background_preset ?? null"
-          @copy="handleCopy"
-          @load-more="loadMoreSigns"
-        />
-      </div>
+      <SignGrid
+        v-else
+        :signs="signs"
+        :copied-sign-id="copiedSignId"
+        :selectable="false"
+        :has-more="signsHasMore"
+        :is-loading-more="isLoadingMore"
+        :background-preset="activeVariantRecord?.grid_background_preset ?? null"
+        @copy="handleCopy"
+        @load-more="loadMoreSigns"
+      />
     </div>
 
     <UiModal

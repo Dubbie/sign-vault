@@ -178,11 +178,7 @@ watch(folders, (nextFolders) => {
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <h1 class="text-headline-xl text-on-surface">Explore</h1>
-      </div>
-    </div>
+    <h1 class="text-headline-xl text-on-surface">Explore</h1>
 
     <div class="mt-6 flex gap-3">
       <UiInput

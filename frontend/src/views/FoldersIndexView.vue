@@ -89,9 +89,7 @@ function handleCreateSaved(folderId: number) {
 <template>
   <div class="mx-auto max-w-7xl space-y-gutter">
     <div class="flex items-end justify-between gap-4">
-      <div>
-        <h1 class="text-headline-xl text-on-surface">My folders</h1>
-      </div>
+      <h1 class="text-headline-xl text-on-surface">My folders</h1>
 
       <UiButton type="button" @click="showCreateModal = true">
         <Plus class="size-5" />

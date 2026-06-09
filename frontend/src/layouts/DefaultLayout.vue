@@ -186,24 +186,22 @@ function isExploreActive() {
               </template>
 
               <template #default="{ close }">
-                <div>
-                  <RouterLink
-                    to="/settings"
-                    class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-zinc-300 transition hover:bg-zinc-500/10"
-                    @click="close()"
-                  >
-                    <Settings class="size-4" />
-                    Settings
-                  </RouterLink>
-                  <button
-                    type="button"
-                    class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10"
-                    @click="(close(), void handleLogout())"
-                  >
-                    <LogOut class="size-4" />
-                    Logout
-                  </button>
-                </div>
+                <RouterLink
+                  to="/settings"
+                  class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-zinc-300 transition hover:bg-zinc-500/10"
+                  @click="close()"
+                >
+                  <Settings class="size-4" />
+                  Settings
+                </RouterLink>
+                <button
+                  type="button"
+                  class="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10"
+                  @click="(close(), void handleLogout())"
+                >
+                  <LogOut class="size-4" />
+                  Logout
+                </button>
               </template>
             </UiDropdown>
           </div>

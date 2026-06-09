@@ -59,7 +59,7 @@ class VariantController extends Controller
 
         $updates = [];
 
-        if (isset($validated['name']) && ! ($validated['is_default'] ?? false)) {
+        if (isset($validated['name'])) {
             $updates['name'] = $validated['name'];
         }
 
@@ -91,7 +91,7 @@ class VariantController extends Controller
             ], 409);
         }
 
-        $variant->signs()->update(['variant_id' => null]);
+        $variant->signs()->update(['variant_id' => $folder->defaultVariant?->id]);
         $variant->delete();
 
         return response()->json(['message' => 'Variant deleted.']);

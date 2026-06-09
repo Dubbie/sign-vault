@@ -204,7 +204,7 @@ class VariantManagementTest extends TestCase
         $defaultVariant = $folder->defaultVariant;
 
         $this->assertTrue($variant->is_default);
-        $this->assertNull($variant->name);
+        $this->assertSame('Blue', $variant->name);
         $this->assertNotNull($defaultVariant);
         $this->assertEquals($variant->id, $defaultVariant->id);
 

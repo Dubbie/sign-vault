@@ -118,7 +118,7 @@ class UploadSignsAction
         }
 
         $thumbnailKey = $this->signStorage->thumbnailKeyFor($user->id, $folder->id, $variantId, $name, $width, $height);
-        $this->signStorage->storeContents($disk, $thumbnailKey, $contents);
+        $this->signStorage->storeThumbnail($disk, $thumbnailKey, $contents);
 
         return $this->signStorage->url($disk, $thumbnailKey);
     }

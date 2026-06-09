@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AdminUserController extends Controller
@@ -28,7 +29,7 @@ class AdminUserController extends Controller
 
         $users = $query->with('oauthProviders')->latest()->paginate(20);
 
-        $users->through(function (User $user) {
+        $users = $users->through(function (User $user) {
             return [
                 'id' => $user->id,
                 'display_name' => $user->display_name,
@@ -45,12 +46,16 @@ class AdminUserController extends Controller
             ];
         });
 
+        $stats = DB::table('users')
+            ->selectRaw('COUNT(*) as total, SUM(is_admin) as admins, SUM(banned_at IS NOT NULL) as banned')
+            ->first();
+
         return response()->json([
             ...$users->toArray(),
             'stats' => [
-                'total' => User::count(),
-                'admins' => User::where('is_admin', true)->count(),
-                'banned' => User::whereNotNull('banned_at')->count(),
+                'total' => (int) $stats->total,
+                'admins' => (int) $stats->admins,
+                'banned' => (int) $stats->banned,
             ],
         ]);
     }

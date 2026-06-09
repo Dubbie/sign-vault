@@ -9,6 +9,7 @@ import {
   getFolderSigns as getFolderSignsRequest,
   getSign as getSignRequest,
   getSignErrorMessage,
+  getSignThumbnailStatuses,
   moveSigns as moveSignsRequest,
 } from '@/lib/signs'
 import type { BatchUploadProgress } from '@/lib/signs'
@@ -80,29 +81,22 @@ export const useSignsStore = defineStore('signs', () => {
         window.setTimeout(resolve, THUMBNAIL_POLL_INTERVAL_MS)
       })
 
-      const refreshedSigns = await Promise.all(
-        pendingIds.map(async (id) => {
-          try {
-            return await getSignRequest(id)
-          } catch {
-            return null
+      try {
+        const statuses = await getSignThumbnailStatuses(pendingIds)
+        pendingIds = []
+
+        statuses.forEach((status) => {
+          const existing = signs.value.find((s) => s.id === status.id)
+          if (existing && status.thumbnail_status !== existing.thumbnail_status) {
+            upsertSign({ ...existing, ...status })
           }
-        }),
-      )
-
-      pendingIds = []
-
-      refreshedSigns.forEach((sign) => {
-        if (!sign) {
-          return
-        }
-
-        upsertSign(sign)
-
-        if (sign.thumbnail_status === 'pending') {
-          pendingIds.push(sign.id)
-        }
-      })
+          if (status.thumbnail_status === 'pending') {
+            pendingIds.push(status.id)
+          }
+        })
+      } catch {
+        break
+      }
     }
   }
 

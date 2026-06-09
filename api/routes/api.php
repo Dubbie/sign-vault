@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/folders/{folder}/signs', [SignController::class, 'store']);
     Route::post('/folders/{folder}/signs/uploads/prepare', [SignUploadController::class, 'prepare']);
     Route::post('/folders/{folder}/signs/uploads/complete', [SignUploadController::class, 'complete']);
+    Route::get('/signs/status', [SignController::class, 'status']);
     Route::get('/signs/{sign}', [SignController::class, 'show']);
     Route::patch('/signs/move', [SignController::class, 'move']);
     Route::patch('/signs/variant', [SignController::class, 'changeVariant']);

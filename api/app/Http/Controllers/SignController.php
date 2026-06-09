@@ -77,6 +77,27 @@ class SignController extends Controller
         ], 201);
     }
 
+    public function status(Request $request): JsonResponse
+    {
+        $ids = array_map('intval', (array) $request->query('ids', []));
+        $ids = array_filter($ids);
+
+        if (empty($ids)) {
+            return response()->json(['signs' => []]);
+        }
+
+        $signs = Sign::whereIn('id', $ids)
+            ->where('user_id', $request->user()->id)
+            ->get(['id', 'thumbnail_status', 'thumbnail_url'])
+            ->map(fn (Sign $sign) => [
+                'id' => $sign->id,
+                'thumbnail_status' => $sign->thumbnail_status,
+                'thumbnail_url' => $sign->thumbnail_url,
+            ]);
+
+        return response()->json(['signs' => $signs]);
+    }
+
     public function show(Sign $sign): JsonResponse
     {
         $this->authorize('view', $sign);

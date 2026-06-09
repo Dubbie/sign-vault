@@ -73,14 +73,6 @@ export async function voteFolder(
   return data
 }
 
-export async function trackFolderPreview(slug: string): Promise<void> {
-  try {
-    await api.post(`/api/public/folders/${slug}/preview-view`)
-  } catch {
-    // Tracking is best-effort and must never disrupt the browsing experience.
-  }
-}
-
 export async function trackSignCopy(slug: string, signId: number): Promise<void> {
   try {
     await api.post(`/api/public/folders/${slug}/signs/${signId}/copy`)

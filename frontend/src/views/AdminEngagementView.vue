@@ -4,12 +4,13 @@ import { Line } from 'vue-chartjs'
 import {
   CategoryScale,
   Chart as ChartJS,
-  Legend,
+  Filler,
   LinearScale,
   LineElement,
   PointElement,
   Tooltip,
 } from 'chart.js'
+import type { ScriptableContext } from 'chart.js'
 
 import { getEngagementStats } from '@/lib/admin'
 import type { EngagementStats, EngagementTimeseriesPoint } from '@/types/engagement'
@@ -17,7 +18,7 @@ import type { EngagementStats, EngagementTimeseriesPoint } from '@/types/engagem
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
 const RANGE_OPTIONS = [
   { value: '7', label: 'Last 7 days' },
@@ -50,17 +51,64 @@ function applyRange() {
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: { mode: 'index' as const, intersect: false },
   scales: {
-    x: { ticks: { color: 'rgb(196 199 197)' }, grid: { color: 'rgba(196, 199, 197, 0.1)' } },
+    x: {
+      border: { display: false },
+      ticks: { color: '#bbcac0', font: { size: 11 }, maxRotation: 0 },
+      grid: { display: false },
+    },
     y: {
+      border: { display: false },
       beginAtZero: true,
-      ticks: { color: 'rgb(196 199 197)', precision: 0 },
-      grid: { color: 'rgba(196, 199, 197, 0.1)' },
+      ticks: { color: '#bbcac0', precision: 0, font: { size: 11 } },
+      grid: { color: 'rgba(60, 74, 66, 0.6)' },
     },
   },
   plugins: {
-    legend: { labels: { color: 'rgb(196 199 197)' } },
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: 'rgba(22, 27, 27, 0.95)',
+      borderColor: 'rgba(133, 148, 139, 0.3)',
+      borderWidth: 1,
+      titleColor: '#dfe3e3',
+      bodyColor: '#bbcac0',
+      padding: 10,
+      cornerRadius: 8,
+    },
   },
+}
+
+function makeGradient(ctx: CanvasRenderingContext2D, top: number, bottom: number, hex: string) {
+  const gradient = ctx.createLinearGradient(0, top, 0, bottom)
+  gradient.addColorStop(0, hex + '40')
+  gradient.addColorStop(1, hex + '00')
+  return gradient
+}
+
+function gradientFill(hex: string) {
+  return (context: ScriptableContext<'line'>) => {
+    const { ctx, chartArea } = context.chart
+    if (!chartArea) return 'transparent'
+    return makeGradient(ctx, chartArea.top, chartArea.bottom, hex)
+  }
+}
+
+function lineDataset(label: string, data: number[], hex: string) {
+  return {
+    label,
+    data,
+    borderColor: hex,
+    backgroundColor: gradientFill(hex),
+    borderWidth: 2,
+    tension: 0.4,
+    fill: true,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    pointHoverBackgroundColor: hex,
+    pointHoverBorderColor: '#0f1414',
+    pointHoverBorderWidth: 2,
+  }
 }
 
 function buildDateLabels(...series: EngagementTimeseriesPoint[][]): string[] {
@@ -80,25 +128,12 @@ const folderViewsChartData = computed(() => {
   const timeseries = data.value?.timeseries
   if (!timeseries) return null
 
-  const labels = buildDateLabels(timeseries.folder_full_views, timeseries.folder_previews)
+  const labels = buildDateLabels(timeseries.folder_full_views)
 
   return {
     labels,
     datasets: [
-      {
-        label: 'Full views',
-        data: alignToLabels(labels, timeseries.folder_full_views),
-        borderColor: 'rgb(96 165 250)',
-        backgroundColor: 'rgba(96, 165, 250, 0.2)',
-        tension: 0.3,
-      },
-      {
-        label: 'Previews',
-        data: alignToLabels(labels, timeseries.folder_previews),
-        borderColor: 'rgb(167 139 250)',
-        backgroundColor: 'rgba(167, 139, 250, 0.2)',
-        tension: 0.3,
-      },
+      lineDataset('Folder opens', alignToLabels(labels, timeseries.folder_full_views), '#00d492'),
     ],
   }
 })
@@ -112,13 +147,7 @@ const signCopiesChartData = computed(() => {
   return {
     labels,
     datasets: [
-      {
-        label: 'Sign copies',
-        data: alignToLabels(labels, timeseries.sign_copies),
-        borderColor: 'rgb(74 222 128)',
-        backgroundColor: 'rgba(74, 222, 128, 0.2)',
-        tension: 0.3,
-      },
+      lineDataset('Sign copies', alignToLabels(labels, timeseries.sign_copies), '#45dfa4'),
     ],
   }
 })
@@ -156,27 +185,29 @@ onMounted(() => {
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.folder_full_views.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors per folder page</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who opened a folder</p>
         </div>
         <div class="glass-card rounded-lg p-5">
-          <p class="text-label-sm text-on-surface-variant">Folder previews</p>
+          <p class="text-label-sm text-on-surface-variant">Returning visitors</p>
           <p class="mt-1 text-headline-lg text-on-surface">
-            {{ data.summary.folder_previews.toLocaleString() }}
+            {{ data.summary.returning_visitors.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors hovering in explore</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors active on 2+ days</p>
         </div>
         <div class="glass-card rounded-lg p-5">
           <p class="text-label-sm text-on-surface-variant">Sign copies</p>
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.sign_copies.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors copying a sign URL</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">
+            Unique visitors who copied a sign URL
+          </p>
         </div>
       </div>
 
       <div class="grid gap-4 lg:grid-cols-2">
         <div class="glass-card rounded-lg p-5">
-          <h2 class="text-headline-md text-on-surface">Folder views over time</h2>
+          <h2 class="text-headline-md text-on-surface">Folder opens over time</h2>
           <div class="mt-4 h-64">
             <Line
               v-if="folderViewsChartData"
@@ -203,8 +234,7 @@ onMounted(() => {
               <thead class="bg-surface-container-low">
                 <tr class="text-left">
                   <th class="px-4 py-3 text-xs text-on-surface-variant">Folder</th>
-                  <th class="px-4 py-3 text-xs text-on-surface-variant">Full views</th>
-                  <th class="px-4 py-3 text-xs text-on-surface-variant">Previews</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant">Views</th>
                 </tr>
               </thead>
               <tbody>
@@ -222,10 +252,9 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="px-4 py-3 text-sm text-on-surface-variant">{{ folder.full_views }}</td>
-                  <td class="px-4 py-3 text-sm text-on-surface-variant">{{ folder.previews }}</td>
                 </tr>
                 <tr v-if="data.top_folders.length === 0">
-                  <td colspan="3" class="px-4 py-6 text-center text-sm text-on-surface-variant">
+                  <td colspan="2" class="px-4 py-6 text-center text-sm text-on-surface-variant">
                     No folder views recorded in this range.
                   </td>
                 </tr>

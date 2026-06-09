@@ -2,7 +2,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getPublicFolders, trackFolderPreview } from '@/lib/public-folders'
+import { getPublicFolders } from '@/lib/public-folders'
 import type { PaginationMeta, PublicFolderListing } from '@/types/public-folder'
 
 type SortOption = 'latest' | 'votes'
@@ -27,7 +27,6 @@ const storedSort = localStorage.getItem(SORT_STORAGE_KEY) as SortOption | null
 const sort = ref<SortOption>((route.query.sort as SortOption) || storedSort || 'votes')
 const meta = ref<PaginationMeta | null>(null)
 const hoveredFolder = ref<PublicFolderListing | null>(null)
-const trackedPreviewFolderIds = new Set<number>()
 const activeFolderIndex = ref(0)
 const activeFolderId = computed(() => {
   const folder = folders.value[activeFolderIndex.value]
@@ -54,16 +53,6 @@ async function focusActiveFolderCard() {
   const activeElement = document.getElementById(activeFolderId.value)
   if (activeElement instanceof HTMLElement) {
     activeElement.focus()
-  }
-}
-
-function handleFolderHover(index: number) {
-  setActiveFolder(index)
-
-  const folder = folders.value[index]
-  if (folder && !trackedPreviewFolderIds.has(folder.id)) {
-    trackedPreviewFolderIds.add(folder.id)
-    void trackFolderPreview(folder.slug)
   }
 }
 
@@ -260,7 +249,7 @@ watch(folders, (nextFolders) => {
               :folder="folder"
               :active="hoveredFolder === folder"
               :tabindex="hoveredFolder === folder ? 0 : -1"
-              @mouseenter="handleFolderHover(index)"
+              @mouseenter="setActiveFolder(index)"
               @focus="setActiveFolder(index)"
             />
           </div>

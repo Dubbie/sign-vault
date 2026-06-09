@@ -7,6 +7,7 @@ use App\Models\Folder;
 use App\Models\FolderView;
 use App\Models\Sign;
 use App\Models\SignCopy;
+use App\Models\VisitorSession;
 
 class EngagementTrackingService
 {
@@ -17,6 +18,8 @@ class EngagementTrackingService
         if ($ipHash === null) {
             return;
         }
+
+        $this->recordSession($ipHash);
 
         $timestamp = now();
 
@@ -41,6 +44,8 @@ class EngagementTrackingService
             return;
         }
 
+        $this->recordSession($ipHash);
+
         $timestamp = now();
 
         SignCopy::query()->upsert([
@@ -54,6 +59,22 @@ class EngagementTrackingService
                 'updated_at' => $timestamp,
             ],
         ], ['sign_id', 'ip_hash'], ['last_seen_at', 'updated_at']);
+    }
+
+    private function recordSession(string $ipHash): void
+    {
+        $now = now();
+
+        VisitorSession::query()->upsert(
+            [[
+                'ip_hash' => $ipHash,
+                'session_date' => today()->toDateString(),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]],
+            ['ip_hash', 'session_date'],
+            ['updated_at']
+        );
     }
 
     private function hashIp(?string $ip): ?string

@@ -6,6 +6,7 @@ use App\Enums\FolderViewType;
 use App\Http\Controllers\Controller;
 use App\Models\FolderView;
 use App\Models\SignCopy;
+use App\Models\VisitorSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -20,28 +21,31 @@ class AdminEngagementController extends Controller
         $folderFullViews = FolderView::query()
             ->where('view_type', FolderViewType::Full)
             ->where('first_seen_at', '>=', $since)
-            ->count();
+            ->distinct('ip_hash')
+            ->count('ip_hash');
 
-        $folderPreviews = FolderView::query()
-            ->where('view_type', FolderViewType::Preview)
-            ->where('first_seen_at', '>=', $since)
-            ->count();
+        $returningVisitors = VisitorSession::query()
+            ->where('session_date', '>=', $since->toDateString())
+            ->groupBy('ip_hash')
+            ->havingRaw('COUNT(DISTINCT session_date) >= 2')
+            ->distinct()
+            ->count('ip_hash');
 
         $signCopies = SignCopy::query()
             ->where('first_seen_at', '>=', $since)
-            ->count();
+            ->distinct('ip_hash')
+            ->count('ip_hash');
 
         return response()->json([
             'summary' => [
                 'folder_full_views' => $folderFullViews,
-                'folder_previews' => $folderPreviews,
+                'returning_visitors' => $returningVisitors,
                 'sign_copies' => $signCopies,
             ],
             'top_folders' => $this->topFolders($since),
             'top_signs' => $this->topSigns($since),
             'timeseries' => [
-                'folder_full_views' => $this->folderViewsTimeseries($since, FolderViewType::Full),
-                'folder_previews' => $this->folderViewsTimeseries($since, FolderViewType::Preview),
+                'folder_full_views' => $this->folderViewsTimeseries($since),
                 'sign_copies' => $this->signCopiesTimeseries($since),
             ],
         ]);
@@ -51,8 +55,8 @@ class AdminEngagementController extends Controller
     {
         return FolderView::query()
             ->select('folder_id')
-            ->selectRaw('SUM(CASE WHEN view_type = ? THEN 1 ELSE 0 END) as full_views', [FolderViewType::Full->value])
-            ->selectRaw('SUM(CASE WHEN view_type = ? THEN 1 ELSE 0 END) as previews', [FolderViewType::Preview->value])
+            ->selectRaw('COUNT(*) as full_views')
+            ->where('view_type', FolderViewType::Full)
             ->where('first_seen_at', '>=', $since)
             ->groupBy('folder_id')
             ->orderByDesc('full_views')
@@ -63,7 +67,6 @@ class AdminEngagementController extends Controller
                 'folder_id' => $row->folder_id,
                 'folder_name' => $row->folder?->name,
                 'full_views' => (int) $row->full_views,
-                'previews' => (int) $row->previews,
             ])
             ->all();
     }
@@ -89,12 +92,12 @@ class AdminEngagementController extends Controller
             ->all();
     }
 
-    private function folderViewsTimeseries(Carbon $since, FolderViewType $viewType): array
+    private function folderViewsTimeseries(Carbon $since): array
     {
         return FolderView::query()
             ->selectRaw('DATE(first_seen_at) as date')
             ->selectRaw('COUNT(*) as count')
-            ->where('view_type', $viewType)
+            ->where('view_type', FolderViewType::Full)
             ->where('first_seen_at', '>=', $since)
             ->groupBy('date')
             ->orderBy('date')

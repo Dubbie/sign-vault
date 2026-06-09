@@ -19,6 +19,7 @@ class SignResource extends JsonResource
             'name' => $this->name,
             'public_url' => $this->public_url,
             'thumbnail_url' => $this->thumbnail_url,
+            'thumbnail_status' => $this->thumbnail_status,
             'mime_type' => $this->mime_type,
             'size_bytes' => $this->size_bytes,
             'width' => $this->width,

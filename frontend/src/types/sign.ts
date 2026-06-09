@@ -5,6 +5,7 @@ export type Sign = {
   name: string
   public_url: string
   thumbnail_url: string | null
+  thumbnail_status: 'pending' | 'ready' | 'failed'
   mime_type: string
   size_bytes: number
   width: number | null

@@ -45,8 +45,8 @@ const selectedUploadVariantValue = computed({
 const uploadProgress = computed(() => signsStore.uploadProgress)
 const uploadPercentage = computed(() => {
   const progress = uploadProgress.value
-  if (!progress || progress.total === 0) return 0
-  return Math.round((progress.uploaded / progress.total) * 100)
+  if (!progress || progress.totalBytes === 0) return 0
+  return Math.round((progress.uploadedBytes / progress.totalBytes) * 100)
 })
 
 const showVariantSelector = computed(() => (props.variants?.length ?? 0) > 1)
@@ -218,7 +218,7 @@ async function handleRetryFailed() {
 
       <div v-if="signsStore.isUploading && uploadProgress" class="mt-3">
         <p class="text-sm text-on-surface-variant">
-          Uploading {{ uploadProgress.uploaded }} / {{ uploadProgress.total }}…
+          Uploading {{ uploadProgress.completedFiles }} / {{ uploadProgress.totalFiles }} files...
         </p>
         <div class="mt-1 h-2 w-full overflow-hidden rounded bg-surface">
           <div

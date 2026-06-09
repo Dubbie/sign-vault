@@ -18,7 +18,7 @@ The project is a monorepo with a Laravel API, a Vue application for the main pro
 - Personal folders with `private`, `public`, and password-protected visibility
 - Public explore flow with preview grids, attribution, sorting, sticky previews, and folder voting
 - Folder variants for alternate sign sets and background presets, without duplicating the folder
-- Batch sign uploads with live progress, stop/retry, and auto-generated WebP thumbnails for fast-loading previews
+- Batch sign uploads with live progress, stop/retry, direct browser uploads to object storage, and async WebP thumbnails for fast-loading previews
 - Admin moderation tools for users, folders, signs, activity logs, and engagement analytics
 - Utility pages for sign sizing and Trackmania name tag formatting
 - Repo-wide changelog and release tags managed through `release-please`
@@ -42,7 +42,7 @@ Current responsibilities include:
 
 - OAuth redirect/callback flows for `discord` and `trackmania`
 - Linked-provider account management
-- Sign uploads to S3-compatible object storage, in batches grouped under shared upload sessions, with auto-generated WebP thumbnails
+- Sign uploads to S3-compatible object storage with presigned browser uploads, shared upload sessions, and async WebP thumbnail generation
 - Public folder browsing, password unlock flow, and voting
 - Variant management for folder-specific sign sets and background presets
 - Admin browse/moderation endpoints, activity log retrieval, and engagement analytics
@@ -115,6 +115,13 @@ Each package has its own setup guide:
 
 Both Vue apps use HTTPS locally so they can talk to the API cleanly during development.
 
+Local sign uploads use MinIO with:
+
+- browser-facing object URLs on `http://localhost:9000`
+- backend-only object access from DDEV via `http://host.docker.internal:9000`
+
+See [`api/README.md`](api/README.md) for the required MinIO environment variables.
+
 ## Deployment
 
 Production deployments are driven from `main`.
@@ -124,6 +131,15 @@ Production deployments are driven from `main`.
 | `api`      | PHP host / container platform | Requires database + S3-compatible object storage                      |
 | `frontend` | Cloudflare Pages              | Auto-deploys on merges to `main`; PR branches get preview deployments |
 | `landing`  | Cloudflare Pages              | Auto-deploys on merges to `main`; PR branches get preview deployments |
+
+For the API deployment, the upload system now depends on:
+
+- S3-compatible object storage that supports presigned upload URLs
+- bucket CORS that allows the frontend origin to `PUT` with `Content-Type`
+- an async queue worker listening to `sign-thumbnails`
+- the latest database migration adding `thumbnail_status` to `signs`
+
+Cloudflare R2 is the intended production storage target. See [`api/README.md`](api/README.md) for the required environment variables, example CORS policy, and queue worker command.
 
 For Cloudflare Pages projects in this monorepo:
 

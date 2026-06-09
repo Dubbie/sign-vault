@@ -18,6 +18,8 @@ const COLUMN_RATIOS = [6, 4, 2, 1] as const
 type ColumnRatio = (typeof COLUMN_RATIOS)[number]
 const PER_COLUMN = 10
 const UPLOAD_BATCH_SIZE = 20
+const THUMBNAIL_POLL_INTERVAL_MS = 2000
+const THUMBNAIL_POLL_TIMEOUT_MS = 30000
 
 type ColumnState = { currentPage: number; hasMore: boolean }
 
@@ -67,6 +69,41 @@ export const useSignsStore = defineStore('signs', () => {
     }
 
     signs.value = signs.value.map((item) => (item.id === sign.id ? sign : item))
+  }
+
+  async function refreshPendingThumbnails(signIds: number[]) {
+    const startedAt = Date.now()
+    let pendingIds = [...new Set(signIds)]
+
+    while (pendingIds.length > 0 && Date.now() - startedAt < THUMBNAIL_POLL_TIMEOUT_MS) {
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, THUMBNAIL_POLL_INTERVAL_MS)
+      })
+
+      const refreshedSigns = await Promise.all(
+        pendingIds.map(async (id) => {
+          try {
+            return await getSignRequest(id)
+          } catch {
+            return null
+          }
+        }),
+      )
+
+      pendingIds = []
+
+      refreshedSigns.forEach((sign) => {
+        if (!sign) {
+          return
+        }
+
+        upsertSign(sign)
+
+        if (sign.thumbnail_status === 'pending') {
+          pendingIds.push(sign.id)
+        }
+      })
+    }
   }
 
   function removeSign(id: number) {
@@ -167,7 +204,12 @@ export const useSignsStore = defineStore('signs', () => {
 
   async function uploadSign(folderId: number, payload: CreateSignPayload, batchSize?: number) {
     isUploading.value = true
-    uploadProgress.value = { uploaded: 0, total: payload.files.length }
+    uploadProgress.value = {
+      completedFiles: 0,
+      totalFiles: payload.files.length,
+      uploadedBytes: 0,
+      totalBytes: payload.files.reduce((sum, file) => sum + file.size, 0),
+    }
     uploadFailedFiles.value = []
     uploadCancelled.value = false
     clearError()
@@ -191,6 +233,14 @@ export const useSignsStore = defineStore('signs', () => {
 
       createdSigns.forEach(upsertSign)
       uploadFailedFiles.value = failedFiles
+
+      const pendingThumbnailSignIds = createdSigns
+        .filter((sign) => sign.thumbnail_status === 'pending')
+        .map((sign) => sign.id)
+
+      if (pendingThumbnailSignIds.length > 0) {
+        void refreshPendingThumbnails(pendingThumbnailSignIds)
+      }
 
       if (failedFiles.length > 0 && createdSigns.length === 0) {
         error.value = 'Upload failed for all files. Please try again.'

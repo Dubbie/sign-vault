@@ -32,6 +32,11 @@ class SignThumbnailService
         'image/avif',
     ];
 
+    public function supportsMimeType(string $mimeType): bool
+    {
+        return in_array($mimeType, self::SUPPORTED_MIME_TYPES, true);
+    }
+
     public function generate(UploadedFile $file): ?string
     {
         $mimeType = $file->getMimeType() ?? $file->getClientMimeType();
@@ -41,7 +46,7 @@ class SignThumbnailService
             return null;
         }
 
-        if (! in_array($mimeType, self::SUPPORTED_MIME_TYPES, true)) {
+        if (! $this->supportsMimeType($mimeType)) {
             return null;
         }
 
@@ -65,7 +70,7 @@ class SignThumbnailService
 
     public function generateFromContents(string $contents, string $mimeType): ?string
     {
-        if (! in_array($mimeType, self::SUPPORTED_MIME_TYPES, true)) {
+        if (! $this->supportsMimeType($mimeType)) {
             return null;
         }
 

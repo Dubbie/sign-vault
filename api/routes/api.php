@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\OauthAuthController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\PublicFolderController;
 use App\Http\Controllers\SignController;
+use App\Http\Controllers\SignUploadController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VariantController;
@@ -51,6 +52,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     ]);
     Route::get('/folders/{folder}/signs', [SignController::class, 'index']);
     Route::post('/folders/{folder}/signs', [SignController::class, 'store']);
+    Route::post('/folders/{folder}/signs/uploads/prepare', [SignUploadController::class, 'prepare']);
+    Route::post('/folders/{folder}/signs/uploads/complete', [SignUploadController::class, 'complete']);
     Route::get('/signs/{sign}', [SignController::class, 'show']);
     Route::patch('/signs/move', [SignController::class, 'move']);
     Route::patch('/signs/variant', [SignController::class, 'changeVariant']);

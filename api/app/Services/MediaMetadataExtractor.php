@@ -77,4 +77,25 @@ class MediaMetadataExtractor
 
         return [$width, $height];
     }
+
+    /**
+     * @return array{0:int|null,1:int|null}
+     */
+    public function imageDimensionsFromContents(string $contents, string $mimeType): array
+    {
+        if (! str_starts_with($mimeType, 'image/')) {
+            return [null, null];
+        }
+
+        $dimensions = @getimagesizefromstring($contents);
+
+        if ($dimensions === false) {
+            return [null, null];
+        }
+
+        return [
+            isset($dimensions[0]) ? (int) $dimensions[0] : null,
+            isset($dimensions[1]) ? (int) $dimensions[1] : null,
+        ];
+    }
 }

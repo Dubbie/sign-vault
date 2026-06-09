@@ -62,12 +62,10 @@ function handleCreateSaved(folderId: number) {
         {{ auth.user?.display_name ?? 'there' }}
       </h1>
 
-      <div>
-        <UiButton @click="showCreateModal = true">
-          <Plus class="size-5" />
-          Create folder
-        </UiButton>
-      </div>
+      <UiButton @click="showCreateModal = true">
+        <Plus class="size-5" />
+        Create folder
+      </UiButton>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-4">

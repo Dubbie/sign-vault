@@ -212,9 +212,7 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto max-w-7xl">
-    <div class="flex items-end justify-between gap-4">
-      <h1 class="text-headline-xl text-on-surface">All Folders</h1>
-    </div>
+    <h1 class="text-headline-xl text-on-surface">All Folders</h1>
 
     <div class="mt-6">
       <UiInput

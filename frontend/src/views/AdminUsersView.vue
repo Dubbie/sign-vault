@@ -94,9 +94,7 @@ onMounted(() => {
 
 <template>
   <div class="space-y-gutter">
-    <div class="flex items-end justify-between gap-4">
-      <h1 class="text-headline-xl text-on-surface">Users</h1>
-    </div>
+    <h1 class="text-headline-xl text-on-surface">Users</h1>
 
     <div class="grid gap-6 sm:grid-cols-3">
       <StatCard

@@ -12,6 +12,7 @@ class BanUserAction
     public function handle(User $user, string $reason): void
     {
         $user->tokens()->delete();
+        $user->loadMissing('folders.signs');
 
         foreach ($user->folders as $folder) {
             $this->signDeletion->deleteFolder($folder);

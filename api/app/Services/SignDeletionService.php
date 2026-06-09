@@ -16,6 +16,8 @@ class SignDeletionService
 
     public function deleteFolder(Folder $folder): void
     {
+        $folder->loadMissing('signs');
+
         foreach ($folder->signs as $sign) {
             $this->deleteSign($sign);
         }

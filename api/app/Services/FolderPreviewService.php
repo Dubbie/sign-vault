@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\DB;
 class FolderPreviewService
 {
     public const ASPECT_1_1_MAX = 1.5;
+
     public const ASPECT_2_1_MAX = 3;
+
     public const ASPECT_4_1_MAX = 5;
 
     public function loadPreviewSigns(Collection $folders): void
@@ -64,7 +66,7 @@ SQL;
             ->selectRaw("{$aspectBucket} as aspect_bucket")
             ->selectRaw("ROW_NUMBER() OVER (PARTITION BY folder_id, {$aspectBucket} ORDER BY id) as bucket_rank")
             ->whereRaw(
-                '(folder_id, variant_id) IN (' . $foldersByVariant->map(fn (): string => '(?, ?)')->join(', ') . ')',
+                '(folder_id, variant_id) IN ('.$foldersByVariant->map(fn (): string => '(?, ?)')->join(', ').')',
                 $foldersByVariant->flatMap(fn ($f): array => [$f['folder_id'], $f['variant_id']])->toArray()
             );
 

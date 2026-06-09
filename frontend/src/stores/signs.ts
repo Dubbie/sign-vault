@@ -77,17 +77,14 @@ export const useSignsStore = defineStore('signs', () => {
     let pendingIds = [...new Set(signIds)]
 
     while (pendingIds.length > 0 && Date.now() - startedAt < THUMBNAIL_POLL_TIMEOUT_MS) {
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, THUMBNAIL_POLL_INTERVAL_MS)
-      })
-
       try {
         const statuses = await getSignThumbnailStatuses(pendingIds)
         pendingIds = []
 
+        const signMap = new Map(signs.value.map((s) => [s.id, s]))
         statuses.forEach((status) => {
-          const existing = signs.value.find((s) => s.id === status.id)
-          if (existing && status.thumbnail_status !== existing.thumbnail_status) {
+          const existing = signMap.get(status.id)
+          if (existing) {
             upsertSign({ ...existing, ...status })
           }
           if (status.thumbnail_status === 'pending') {
@@ -95,7 +92,13 @@ export const useSignsStore = defineStore('signs', () => {
           }
         })
       } catch {
-        break
+        // transient error — retry after sleep
+      }
+
+      if (pendingIds.length > 0) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, THUMBNAIL_POLL_INTERVAL_MS)
+        })
       }
     }
   }

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('signs', function (Blueprint $table): void {
             $table->index(
-                ['folder_id', 'user_id', 'name', 'variant_id'],
+                ['folder_id', 'user_id', 'name', 'variant_id', 'width', 'height'],
                 'signs_find_existing_index'
             );
         });

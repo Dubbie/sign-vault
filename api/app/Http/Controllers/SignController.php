@@ -80,7 +80,7 @@ class SignController extends Controller
     public function status(Request $request): JsonResponse
     {
         $ids = array_map('intval', (array) $request->query('ids', []));
-        $ids = array_filter($ids);
+        $ids = array_slice(array_filter($ids), 0, 100);
 
         if (empty($ids)) {
             return response()->json(['signs' => []]);
@@ -88,12 +88,7 @@ class SignController extends Controller
 
         $signs = Sign::whereIn('id', $ids)
             ->where('user_id', $request->user()->id)
-            ->get(['id', 'thumbnail_status', 'thumbnail_url'])
-            ->map(fn (Sign $sign) => [
-                'id' => $sign->id,
-                'thumbnail_status' => $sign->thumbnail_status,
-                'thumbnail_url' => $sign->thumbnail_url,
-            ]);
+            ->get(['id', 'thumbnail_status', 'thumbnail_url']);
 
         return response()->json(['signs' => $signs]);
     }

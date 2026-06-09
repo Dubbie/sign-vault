@@ -80,23 +80,16 @@ const folderViewsChartData = computed(() => {
   const timeseries = data.value?.timeseries
   if (!timeseries) return null
 
-  const labels = buildDateLabels(timeseries.folder_full_views, timeseries.folder_previews)
+  const labels = buildDateLabels(timeseries.folder_full_views)
 
   return {
     labels,
     datasets: [
       {
-        label: 'Full views',
+        label: 'Folder opens',
         data: alignToLabels(labels, timeseries.folder_full_views),
         borderColor: 'rgb(96 165 250)',
         backgroundColor: 'rgba(96, 165, 250, 0.2)',
-        tension: 0.3,
-      },
-      {
-        label: 'Previews',
-        data: alignToLabels(labels, timeseries.folder_previews),
-        borderColor: 'rgb(167 139 250)',
-        backgroundColor: 'rgba(167, 139, 250, 0.2)',
         tension: 0.3,
       },
     ],
@@ -159,11 +152,11 @@ onMounted(() => {
           <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who opened a folder</p>
         </div>
         <div class="glass-card rounded-lg p-5">
-          <p class="text-label-sm text-on-surface-variant">Folder previews</p>
+          <p class="text-label-sm text-on-surface-variant">Returning visitors</p>
           <p class="mt-1 text-headline-lg text-on-surface">
-            {{ data.summary.folder_previews.toLocaleString() }}
+            {{ data.summary.returning_visitors.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who hovered in explore</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors active on 2+ days</p>
         </div>
         <div class="glass-card rounded-lg p-5">
           <p class="text-label-sm text-on-surface-variant">Sign copies</p>
@@ -176,7 +169,7 @@ onMounted(() => {
 
       <div class="grid gap-4 lg:grid-cols-2">
         <div class="glass-card rounded-lg p-5">
-          <h2 class="text-headline-md text-on-surface">Folder views over time</h2>
+          <h2 class="text-headline-md text-on-surface">Folder opens over time</h2>
           <div class="mt-4 h-64">
             <Line
               v-if="folderViewsChartData"
@@ -203,8 +196,7 @@ onMounted(() => {
               <thead class="bg-surface-container-low">
                 <tr class="text-left">
                   <th class="px-4 py-3 text-xs text-on-surface-variant">Folder</th>
-                  <th class="px-4 py-3 text-xs text-on-surface-variant">Full views</th>
-                  <th class="px-4 py-3 text-xs text-on-surface-variant">Previews</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant">Views</th>
                 </tr>
               </thead>
               <tbody>
@@ -222,10 +214,9 @@ onMounted(() => {
                     </span>
                   </td>
                   <td class="px-4 py-3 text-sm text-on-surface-variant">{{ folder.full_views }}</td>
-                  <td class="px-4 py-3 text-sm text-on-surface-variant">{{ folder.previews }}</td>
                 </tr>
                 <tr v-if="data.top_folders.length === 0">
-                  <td colspan="3" class="px-4 py-6 text-center text-sm text-on-surface-variant">
+                  <td colspan="2" class="px-4 py-6 text-center text-sm text-on-surface-variant">
                     No folder views recorded in this range.
                   </td>
                 </tr>

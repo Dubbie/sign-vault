@@ -171,19 +171,6 @@ class PublicFolderController extends Controller
         return PublicSignResource::collection($query->paginate($perPage))->response();
     }
 
-    public function trackPreviewView(Request $request, string $slug): Response
-    {
-        $folder = $this->resolveFolder($slug);
-
-        if ($folder === null || $folder->visibility === FolderVisibility::Private) {
-            abort(404);
-        }
-
-        $this->engagementTracking->recordFolderView($folder, FolderViewType::Preview, $request->ip());
-
-        return response()->noContent();
-    }
-
     public function trackSignCopy(Request $request, string $slug, Sign $sign): Response
     {
         $folder = $this->resolveFolder($slug);

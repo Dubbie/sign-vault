@@ -55,6 +55,6 @@ class VariantService
             $oldDefault->update($updates);
         }
 
-        $newDefault->update(['is_default' => true, 'name' => null]);
+        $newDefault->update(['is_default' => true]);
     }
 }

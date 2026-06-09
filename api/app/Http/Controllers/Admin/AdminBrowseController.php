@@ -6,40 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\BrowseFolderResource;
 use App\Http\Resources\PublicSignResource;
 use App\Models\Folder;
+use App\Services\FolderPreviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AdminBrowseController extends Controller
 {
+    public function __construct(private FolderPreviewService $folderPreview) {}
+
     public function folders(Request $request): AnonymousResourceCollection
     {
         $query = Folder::query()
             ->with([
-                'user',
-                'signs' => function ($query): void {
-                    $query->orderBy('id')
-                        ->select([
-                            'id',
-                            'name',
-                            'public_url',
-                            'thumbnail_url',
-                            'mime_type',
-                            'width',
-                            'height',
-                            'column_ratio',
-                            'folder_id',
-                            'variant_id',
-                        ]);
-                },
+                'user:id,display_name,avatar_url',
+                'defaultVariant:id,folder_id,grid_background_preset',
             ])
-            ->withCount('signs');
+            ->withCount(['signs', 'variants']);
 
         if ($search = $request->string('q', '')) {
             $query->where('name', 'like', '%'.$search.'%');
         }
 
         $folders = $query->latest()->paginate(20);
+        $this->folderPreview->loadPreviewSigns($folders->getCollection());
 
         return BrowseFolderResource::collection($folders);
     }

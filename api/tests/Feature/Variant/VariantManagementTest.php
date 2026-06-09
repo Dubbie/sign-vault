@@ -125,6 +125,34 @@ class VariantManagementTest extends TestCase
         ]);
     }
 
+    public function test_user_cannot_update_variant_in_another_users_folder(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $folder = Folder::factory()->create(['user_id' => $owner->id]);
+        $variant = $folder->variants()->create(['name' => 'Blue', 'is_default' => false, 'sort_order' => 1]);
+
+        Sanctum::actingAs($other);
+
+        $this->patchJson("/api/folders/{$folder->id}/variants/{$variant->id}", [
+            'name' => 'Cyan',
+        ])->assertStatus(403);
+    }
+
+    public function test_updating_variant_with_mismatched_folder_returns_not_found(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->create(['user_id' => $user->id]);
+        $otherFolder = Folder::factory()->create(['user_id' => $user->id]);
+        $variant = $otherFolder->variants()->create(['name' => 'Blue', 'is_default' => false, 'sort_order' => 1]);
+
+        Sanctum::actingAs($user);
+
+        $this->patchJson("/api/folders/{$folder->id}/variants/{$variant->id}", [
+            'name' => 'Cyan',
+        ])->assertNotFound();
+    }
+
     public function test_user_can_update_variant_grid_background_preset(): void
     {
         $user = User::factory()->create();
@@ -176,7 +204,7 @@ class VariantManagementTest extends TestCase
         $defaultVariant = $folder->defaultVariant;
 
         $this->assertTrue($variant->is_default);
-        $this->assertNull($variant->name);
+        $this->assertSame('Blue', $variant->name);
         $this->assertNotNull($defaultVariant);
         $this->assertEquals($variant->id, $defaultVariant->id);
 
@@ -225,6 +253,32 @@ class VariantManagementTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('variants', ['id' => $variant->id]);
+    }
+
+    public function test_user_cannot_delete_variant_in_another_users_folder(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $folder = Folder::factory()->create(['user_id' => $owner->id]);
+        $variant = $folder->variants()->create(['name' => 'Blue', 'is_default' => false, 'sort_order' => 1]);
+
+        Sanctum::actingAs($other);
+
+        $this->deleteJson("/api/folders/{$folder->id}/variants/{$variant->id}")
+            ->assertStatus(403);
+    }
+
+    public function test_deleting_variant_with_mismatched_folder_returns_not_found(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->create(['user_id' => $user->id]);
+        $otherFolder = Folder::factory()->create(['user_id' => $user->id]);
+        $variant = $otherFolder->variants()->create(['name' => 'Blue', 'is_default' => false, 'sort_order' => 1]);
+
+        Sanctum::actingAs($user);
+
+        $this->deleteJson("/api/folders/{$folder->id}/variants/{$variant->id}")
+            ->assertNotFound();
     }
 
     public function test_uploading_sign_assigns_to_variant(): void

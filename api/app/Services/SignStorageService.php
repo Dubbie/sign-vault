@@ -88,7 +88,7 @@ class SignStorageService
         return $result;
     }
 
-    public function storeContents(string $disk, string $storageKey, string $contents): string
+    public function storeThumbnail(string $disk, string $storageKey, string $contents): string
     {
         try {
             $result = Storage::disk($disk)->put($storageKey, $contents, ['visibility' => 'public']);

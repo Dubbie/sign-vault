@@ -69,7 +69,7 @@ class UploadSignsAction
         $publicUrl = $this->signStorage->url($disk, $storageKey);
         $storedKey = $this->signStorage->store($disk, $storageKey, $file);
 
-        $thumbnailUrl = $this->storeThumbnail($user, $folder, $file, $variantId, $name, $width, $height, $disk);
+        $thumbnailKey = $this->storeThumbnail($user, $folder, $file, $variantId, $name, $width, $height, $disk);
 
         $sign = $existing ?? $user->signs()->make([
             'folder_id' => $folder->id,
@@ -83,7 +83,8 @@ class UploadSignsAction
             'storage_disk' => $disk,
             'storage_key' => $storedKey,
             'public_url' => $publicUrl,
-            'thumbnail_url' => $thumbnailUrl ?? $sign->thumbnail_url,
+            'thumbnail_url' => $thumbnailKey !== null ? $this->signStorage->url($disk, $thumbnailKey) : $sign->thumbnail_url,
+            'thumbnail_storage_key' => $thumbnailKey ?? $sign->thumbnail_storage_key,
             'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
             'size_bytes' => $file->getSize() ?? 0,
             'width' => $width,
@@ -118,9 +119,9 @@ class UploadSignsAction
         }
 
         $thumbnailKey = $this->signStorage->thumbnailKeyFor($user->id, $folder->id, $variantId, $name, $width, $height);
-        $this->signStorage->storeContents($disk, $thumbnailKey, $contents);
+        $this->signStorage->storeThumbnail($disk, $thumbnailKey, $contents);
 
-        return $this->signStorage->url($disk, $thumbnailKey);
+        return $thumbnailKey;
     }
 
     private function nameFor(UploadedFile $file): string

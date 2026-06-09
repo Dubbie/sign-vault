@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\User;
 use App\Services\SignDeletionService;
+use Illuminate\Support\Facades\DB;
 
 class BanUserAction
 {
@@ -11,14 +12,18 @@ class BanUserAction
 
     public function handle(User $user, string $reason): void
     {
-        $user->tokens()->delete();
+        $user->loadMissing('folders.signs');
 
-        foreach ($user->folders as $folder) {
-            $this->signDeletion->deleteFolder($folder);
-        }
+        DB::transaction(function () use ($user, $reason): void {
+            $user->tokens()->delete();
 
-        $user->banned_at = now();
-        $user->ban_reason = $reason;
-        $user->save();
+            foreach ($user->folders as $folder) {
+                $this->signDeletion->deleteFolder($folder);
+            }
+
+            $user->banned_at = now();
+            $user->ban_reason = $reason;
+            $user->save();
+        });
     }
 }

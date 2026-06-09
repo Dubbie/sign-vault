@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\FolderVisibility;
 use App\Http\Requests\Folder\StoreFolderRequest;
 use App\Http\Requests\Folder\UpdateFolderRequest;
 use App\Http\Resources\FolderResource;
 use App\Models\ActivityLog;
 use App\Models\Folder;
 use App\Services\ActivityLogService;
-use App\Services\FolderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class FolderController extends Controller
 {
     public function __construct(
-        private FolderService $folderService,
         private ActivityLogService $activityLog,
     ) {}
 
@@ -43,7 +43,7 @@ class FolderController extends Controller
                 'slug' => Folder::generateSlugFor($request->user(), $validated['name']),
                 'public_slug' => Folder::generatePublicSlugFor($validated['name']),
                 'visibility' => $validated['visibility'],
-                'password_hash' => $this->folderService->hashPassword($validated),
+                'password_hash' => $this->hashPassword($validated),
             ]);
 
             $this->syncAuthors($folder, $validated['authors'] ?? []);
@@ -78,7 +78,7 @@ class FolderController extends Controller
         $oldVisibility = $folder->visibility;
 
         // Resolve public slug BEFORE fill() changes the current visibility on the model.
-        $publicSlug = $this->folderService->resolvePublicSlug($folder, $validated);
+        $publicSlug = $this->resolvePublicSlug($folder, $validated);
 
         DB::transaction(function () use ($request, $validated, $folder, $publicSlug): void {
             $folder->fill([
@@ -91,10 +91,12 @@ class FolderController extends Controller
                 $folder->public_slug = $publicSlug;
             }
 
-            $folder->password_hash = $this->folderService->hashPassword($validated);
+            $folder->password_hash = $this->hashPassword($validated);
             $folder->save();
 
-            $this->syncAuthors($folder, $validated['authors'] ?? []);
+            if (array_key_exists('authors', $validated)) {
+                $this->syncAuthors($folder, $validated['authors'] ?? []);
+            }
         });
 
         if ($oldVisibility !== $folder->visibility) {
@@ -158,5 +160,32 @@ class FolderController extends Controller
         }
 
         $folder->authors()->insert($rows);
+    }
+
+    /**
+     * @param  array{visibility: string, password?: string|null}  $validated
+     */
+    private function hashPassword(array $validated): ?string
+    {
+        if ($validated['visibility'] !== FolderVisibility::Password->value) {
+            return null;
+        }
+
+        return Hash::make($validated['password']);
+    }
+
+    /**
+     * @param  array{name: string, visibility: string}  $validated
+     */
+    private function resolvePublicSlug(Folder $folder, array $validated): ?string
+    {
+        $wasPrivate = $folder->visibility === FolderVisibility::Private;
+        $isBecomingPublicFacing = $validated['visibility'] !== FolderVisibility::Private->value;
+
+        if ($wasPrivate && $isBecomingPublicFacing) {
+            return Folder::generatePublicSlugFor($validated['name'], $folder->id);
+        }
+
+        return null;
     }
 }

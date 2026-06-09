@@ -57,6 +57,7 @@ class BackfillSignThumbnails extends Command
 
                         $sign->forceFill([
                             'thumbnail_url' => $signStorage->url($sign->storage_disk, $thumbnailKey),
+                            'thumbnail_storage_key' => $thumbnailKey,
                         ])->save();
 
                         $generated++;

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'storage_key',
     'public_url',
     'thumbnail_url',
+    'thumbnail_storage_key',
     'mime_type',
     'size_bytes',
     'width',

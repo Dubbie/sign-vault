@@ -4,12 +4,13 @@ import { Line } from 'vue-chartjs'
 import {
   CategoryScale,
   Chart as ChartJS,
-  Legend,
+  Filler,
   LinearScale,
   LineElement,
   PointElement,
   Tooltip,
 } from 'chart.js'
+import type { ScriptableContext } from 'chart.js'
 
 import { getEngagementStats } from '@/lib/admin'
 import type { EngagementStats, EngagementTimeseriesPoint } from '@/types/engagement'
@@ -17,7 +18,7 @@ import type { EngagementStats, EngagementTimeseriesPoint } from '@/types/engagem
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
 const RANGE_OPTIONS = [
   { value: '7', label: 'Last 7 days' },
@@ -50,17 +51,64 @@ function applyRange() {
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  interaction: { mode: 'index' as const, intersect: false },
   scales: {
-    x: { ticks: { color: 'rgb(196 199 197)' }, grid: { color: 'rgba(196, 199, 197, 0.1)' } },
+    x: {
+      border: { display: false },
+      ticks: { color: '#bbcac0', font: { size: 11 }, maxRotation: 0 },
+      grid: { display: false },
+    },
     y: {
+      border: { display: false },
       beginAtZero: true,
-      ticks: { color: 'rgb(196 199 197)', precision: 0 },
-      grid: { color: 'rgba(196, 199, 197, 0.1)' },
+      ticks: { color: '#bbcac0', precision: 0, font: { size: 11 } },
+      grid: { color: 'rgba(60, 74, 66, 0.6)' },
     },
   },
   plugins: {
-    legend: { labels: { color: 'rgb(196 199 197)' } },
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: 'rgba(22, 27, 27, 0.95)',
+      borderColor: 'rgba(133, 148, 139, 0.3)',
+      borderWidth: 1,
+      titleColor: '#dfe3e3',
+      bodyColor: '#bbcac0',
+      padding: 10,
+      cornerRadius: 8,
+    },
   },
+}
+
+function makeGradient(ctx: CanvasRenderingContext2D, top: number, bottom: number, hex: string) {
+  const gradient = ctx.createLinearGradient(0, top, 0, bottom)
+  gradient.addColorStop(0, hex + '40')
+  gradient.addColorStop(1, hex + '00')
+  return gradient
+}
+
+function gradientFill(hex: string) {
+  return (context: ScriptableContext<'line'>) => {
+    const { ctx, chartArea } = context.chart
+    if (!chartArea) return 'transparent'
+    return makeGradient(ctx, chartArea.top, chartArea.bottom, hex)
+  }
+}
+
+function lineDataset(label: string, data: number[], hex: string) {
+  return {
+    label,
+    data,
+    borderColor: hex,
+    backgroundColor: gradientFill(hex),
+    borderWidth: 2,
+    tension: 0.4,
+    fill: true,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    pointHoverBackgroundColor: hex,
+    pointHoverBorderColor: '#0f1414',
+    pointHoverBorderWidth: 2,
+  }
 }
 
 function buildDateLabels(...series: EngagementTimeseriesPoint[][]): string[] {
@@ -84,15 +132,7 @@ const folderViewsChartData = computed(() => {
 
   return {
     labels,
-    datasets: [
-      {
-        label: 'Folder opens',
-        data: alignToLabels(labels, timeseries.folder_full_views),
-        borderColor: 'rgb(96 165 250)',
-        backgroundColor: 'rgba(96, 165, 250, 0.2)',
-        tension: 0.3,
-      },
-    ],
+    datasets: [lineDataset('Folder opens', alignToLabels(labels, timeseries.folder_full_views), '#00d492')],
   }
 })
 
@@ -104,15 +144,7 @@ const signCopiesChartData = computed(() => {
 
   return {
     labels,
-    datasets: [
-      {
-        label: 'Sign copies',
-        data: alignToLabels(labels, timeseries.sign_copies),
-        borderColor: 'rgb(74 222 128)',
-        backgroundColor: 'rgba(74, 222, 128, 0.2)',
-        tension: 0.3,
-      },
-    ],
+    datasets: [lineDataset('Sign copies', alignToLabels(labels, timeseries.sign_copies), '#45dfa4')],
   }
 })
 

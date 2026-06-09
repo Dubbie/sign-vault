@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useFoldersStore } from '@/stores/folders'
 import { banUser } from '@/lib/admin'
 
+import FolderAuthorsInline from '@/components/folders/FolderAuthorsInline.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiBreadcrumbs from '@/components/ui/UiBreadcrumbs.vue'
@@ -121,10 +122,6 @@ function activeVariantId(): number | null {
 function variantDisplayLabel(v: { name: string | null; is_default: boolean }) {
   if (v.is_default) return v.name ?? folder.value?.name ?? 'Default'
   return v.name ?? 'Unnamed'
-}
-
-function attributionDisplayName() {
-  return folder.value?.attribution_name?.trim() ?? ''
 }
 
 const showBanModal = ref(false)
@@ -471,20 +468,10 @@ watch(folderSlug, () => {
           </div>
 
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p v-if="folder.attribution_name" class="text-body-lg text-on-surface-variant">
-              Original author:
-              <a
-                v-if="folder.attribution_source_url"
-                :href="folder.attribution_source_url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-primary hover:text-primary/80"
-              >
-                {{ attributionDisplayName() }}
-              </a>
-              <span v-else class="text-on-surface">{{ attributionDisplayName() }}</span>
+            <p v-if="folder.authors.length" class="text-body-lg text-on-surface-variant">
+              <FolderAuthorsInline :authors="folder.authors" />
             </p>
-            <span v-if="folder.attribution_name" class="text-outline/50">•</span>
+            <span v-if="folder.authors.length" class="text-outline/50">•</span>
             <p class="text-on-surface-variant text-body-lg">
               Curated by <span class="text-on-surface">{{ ownerDisplayName }}</span>
             </p>

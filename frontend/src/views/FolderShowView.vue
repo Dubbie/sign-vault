@@ -13,6 +13,7 @@ import { useSignsStore } from '@/stores/signs'
 import type { GridBackgroundPreset } from '@/types/grid-background'
 import type { Variant } from '@/types/folder'
 
+import FolderAuthorsInline from '@/components/folders/FolderAuthorsInline.vue'
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiAlert from '@/components/ui/UiAlert.vue'
 import UiButton from '@/components/ui/UiButton.vue'
@@ -140,10 +141,6 @@ const publicFolderPath = computed(() => `/public/folders/${folder.value?.public_
 
 function canShareFolder() {
   return folder.value?.visibility !== 'private'
-}
-
-function attributionDisplayName() {
-  return folder.value?.attribution_name?.trim() ?? ''
 }
 
 async function loadFolder() {
@@ -413,18 +410,8 @@ watch(
             </template>
           </p>
 
-          <p v-if="folder.attribution_name" class="mt-2 text-sm text-on-surface-variant">
-            Original author:
-            <a
-              v-if="folder.attribution_source_url"
-              :href="folder.attribution_source_url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-primary hover:text-primary/80"
-            >
-              {{ attributionDisplayName() }}
-            </a>
-            <span v-else class="text-on-surface">{{ attributionDisplayName() }}</span>
+          <p v-if="folder.authors.length" class="mt-2 text-sm text-on-surface-variant">
+            <FolderAuthorsInline :authors="folder.authors" />
           </p>
         </div>
 

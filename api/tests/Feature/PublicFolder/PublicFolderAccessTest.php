@@ -549,8 +549,18 @@ class PublicFolderAccessTest extends TestCase
             'slug' => 'forum-archive',
             'public_slug' => 'forum-archive',
             'visibility' => FolderVisibility::Public,
-            'attribution_name' => 'Buried',
-            'attribution_source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+        ]);
+        $folder->authors()->createMany([
+            [
+                'name' => 'Buried',
+                'source_url' => 'https://forum.trackmania.com/viewtopic.php?t=123',
+                'sort_order' => 0,
+            ],
+            [
+                'name' => 'Coauthor',
+                'source_url' => null,
+                'sort_order' => 1,
+            ],
         ]);
 
         Sign::factory()->create([
@@ -561,8 +571,10 @@ class PublicFolderAccessTest extends TestCase
 
         $this->getJson('/api/public/folders/'.$folder->public_slug)
             ->assertOk()
-            ->assertJsonPath('folder.attribution_name', 'Buried')
-            ->assertJsonPath('folder.attribution_source_url', 'https://forum.trackmania.com/viewtopic.php?t=123');
+            ->assertJsonPath('folder.authors.0.name', 'Buried')
+            ->assertJsonPath('folder.authors.0.source_url', 'https://forum.trackmania.com/viewtopic.php?t=123')
+            ->assertJsonPath('folder.authors.1.name', 'Coauthor')
+            ->assertJsonPath('folder.authors.1.source_url', null);
     }
 
     private function makeFolder(FolderVisibility $visibility, array $attributes = []): Folder

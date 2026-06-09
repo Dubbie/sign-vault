@@ -1,4 +1,5 @@
 import type { GridBackgroundPreset } from '@/types/grid-background'
+import type { FolderAuthor } from '@/types/folder'
 
 export type PublicFolderVisibility = 'public' | 'password'
 
@@ -14,8 +15,7 @@ export type PublicFolder = {
   name: string
   slug: string
   visibility: PublicFolderVisibility
-  attribution_name: string | null
-  attribution_source_url: string | null
+  authors: FolderAuthor[]
   user_id: number
   votes_count: number
   user_has_voted: boolean
@@ -48,8 +48,7 @@ export type PublicFolderListing = {
   name: string
   slug: string
   visibility: 'public'
-  attribution_name: string | null
-  attribution_source_url: string | null
+  authors: FolderAuthor[]
   signs_count: number
   variants_count: number
   votes_count: number

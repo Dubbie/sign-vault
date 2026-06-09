@@ -22,8 +22,14 @@ class BrowseFolderResource extends JsonResource
                 : $this->visibility,
             'signs_count' => $this->signs_count,
             'variants_count' => $this->variants_count,
-            'attribution_name' => $this->attribution_name,
-            'attribution_source_url' => $this->attribution_source_url,
+            'authors' => $this->whenLoaded('authors', fn (): array => $this->authors->map(
+                fn ($author): array => [
+                    'id' => $author->id,
+                    'name' => $author->name,
+                    'source_url' => $author->source_url,
+                    'sort_order' => $author->sort_order,
+                ],
+            )->values()->all(), []),
             'owner' => [
                 'display_name' => $this->user->display_name,
                 'avatar_url' => $this->user->avatar_url,

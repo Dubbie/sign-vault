@@ -21,8 +21,14 @@ class FolderResource extends JsonResource
             'slug' => $this->slug,
             'public_slug' => $this->public_slug,
             'visibility' => $visibility instanceof FolderVisibility ? $visibility->value : $visibility,
-            'attribution_name' => $this->attribution_name,
-            'attribution_source_url' => $this->attribution_source_url,
+            'authors' => $this->whenLoaded('authors', fn (): array => $this->authors->map(
+                fn ($author): array => [
+                    'id' => $author->id,
+                    'name' => $author->name,
+                    'source_url' => $author->source_url,
+                    'sort_order' => $author->sort_order,
+                ],
+            )->values()->all(), []),
             'created_at' => $this->created_at?->toIso8601ZuluString(),
             'updated_at' => $this->updated_at?->toIso8601ZuluString(),
             'variants' => $this->whenLoaded('variants', function (): array {

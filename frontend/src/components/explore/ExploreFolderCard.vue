@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { voteFolder } from '@/lib/public-folders'
 import { useAuthStore } from '@/stores/auth'
 import type { PublicFolderListing } from '@/types/public-folder'
+import FolderAuthorsInline from '@/components/folders/FolderAuthorsInline.vue'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import { ThumbsUp } from '@lucide/vue'
 
@@ -57,18 +58,8 @@ async function handleVote(e: MouseEvent) {
   >
     <div class="flex items-center gap-1.5 min-w-0">
       <p class="min-w-0 truncate py-0.5 text-label-md leading-[1.2]">{{ folder.name }}</p>
-      <span v-if="folder.attribution_name" class="shrink-0 text-xs text-secondary">
-        by
-        <a
-          v-if="folder.attribution_source_url"
-          :href="folder.attribution_source_url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-primary hover:underline"
-          @click.stop
-          >{{ folder.attribution_name }}</a
-        >
-        <span v-else>{{ folder.attribution_name }}</span>
+      <span v-if="folder.authors.length" class="shrink-0 text-xs text-secondary">
+        <FolderAuthorsInline :authors="folder.authors" prefix="by" compact />
       </span>
     </div>
 

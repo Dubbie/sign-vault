@@ -230,7 +230,7 @@ class PublicFolderController extends Controller
 
         $query = $folder->signs()
             ->orderBy('sort_key')
-            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'column_ratio', 'variant_id', 'folder_id']);
+            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'thumbnail_status', 'mime_type', 'width', 'height', 'column_ratio', 'variant_id', 'folder_id']);
 
         if ($variantId = $request->integer('variant_id')) {
             $query->where('variant_id', $variantId);
@@ -254,7 +254,7 @@ class PublicFolderController extends Controller
 
         $query = $folder->signs()
             ->orderBy('sort_key')
-            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'mime_type', 'width', 'height', 'folder_id', 'variant_id', 'column_ratio']);
+            ->select(['id', 'name', 'public_url', 'thumbnail_url', 'thumbnail_status', 'mime_type', 'width', 'height', 'folder_id', 'variant_id', 'column_ratio']);
 
         if ($defaultVariantId !== null) {
             $query->where('variant_id', $defaultVariantId);

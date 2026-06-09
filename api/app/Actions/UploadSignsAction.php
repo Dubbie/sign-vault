@@ -6,6 +6,7 @@ use App\Models\Folder;
 use App\Models\Sign;
 use App\Models\User;
 use App\Services\MediaMetadataExtractor;
+use App\Services\SignRecordService;
 use App\Services\SignStorageService;
 use App\Services\SignThumbnailService;
 use Illuminate\Http\UploadedFile;
@@ -15,6 +16,7 @@ class UploadSignsAction
 {
     public function __construct(
         private MediaMetadataExtractor $mediaMetadata,
+        private SignRecordService $signRecord,
         private SignStorageService $signStorage,
         private SignThumbnailService $signThumbnail,
     ) {}
@@ -49,7 +51,7 @@ class UploadSignsAction
         ?int $variantId,
         string $disk
     ): Sign {
-        $name = $this->nameFor($file);
+        $name = $this->signRecord->nameForOriginal($file->getClientOriginalName());
 
         Log::info('Sign upload started.', [
             'user_id' => $user->id,
@@ -64,7 +66,7 @@ class UploadSignsAction
 
         [$width, $height] = $this->mediaMetadata->dimensions($file);
 
-        $existing = $this->findExisting($user->id, $folder->id, $variantId, $name, $width, $height);
+        $existing = $this->signRecord->findExisting($user->id, $folder->id, $variantId, $name, $width, $height);
         $storageKey = $this->signStorage->keyFor($user->id, $folder->id, $variantId, $name, $file, $width, $height);
         $publicUrl = $this->signStorage->url($disk, $storageKey);
         $storedKey = $this->signStorage->store($disk, $storageKey, $file);
@@ -78,25 +80,31 @@ class UploadSignsAction
         ]);
 
         $oldStorageKey = $sign->exists ? $sign->storage_key : null;
+        $oldThumbnailKey = $sign->exists ? $sign->thumbnail_storage_key : null;
 
         $sign->fill([
             'storage_disk' => $disk,
             'storage_key' => $storedKey,
             'public_url' => $publicUrl,
-            'thumbnail_url' => $thumbnailKey !== null ? $this->signStorage->url($disk, $thumbnailKey) : $sign->thumbnail_url,
-            'thumbnail_storage_key' => $thumbnailKey ?? $sign->thumbnail_storage_key,
+            'thumbnail_url' => $thumbnailKey !== null ? $this->signStorage->url($disk, $thumbnailKey) : null,
+            'thumbnail_storage_key' => $thumbnailKey,
+            'thumbnail_status' => $this->thumbnailStatusFor($file, $thumbnailKey),
             'mime_type' => $file->getMimeType() ?? $file->getClientMimeType(),
             'size_bytes' => $file->getSize() ?? 0,
             'width' => $width,
             'height' => $height,
-            'column_ratio' => $this->columnRatioFor($width, $height),
-            'sort_key' => $this->naturalSortKey($name),
+            'column_ratio' => $this->signRecord->columnRatioFor($width, $height),
+            'sort_key' => $this->signRecord->naturalSortKey($name),
         ]);
 
         $sign->save();
 
         if ($oldStorageKey !== null && $oldStorageKey !== $storedKey) {
             $this->signStorage->delete($disk, $oldStorageKey);
+        }
+
+        if ($oldThumbnailKey !== null && $oldThumbnailKey !== $thumbnailKey) {
+            $this->signStorage->delete($disk, $oldThumbnailKey);
         }
 
         return $sign->refresh();
@@ -124,70 +132,18 @@ class UploadSignsAction
         return $thumbnailKey;
     }
 
-    private function nameFor(UploadedFile $file): string
+    private function thumbnailStatusFor(UploadedFile $file, ?string $thumbnailKey): string
     {
-        $original = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $derived = trim((string) $original);
-
-        return $derived !== '' ? $derived : 'sign';
-    }
-
-    private function findExisting(
-        int $userId,
-        int $folderId,
-        ?int $variantId,
-        string $name,
-        ?int $width,
-        ?int $height
-    ): ?Sign {
-        $query = Sign::query()
-            ->where('user_id', $userId)
-            ->where('folder_id', $folderId)
-            ->where('name', $name);
-
-        if ($variantId !== null) {
-            $query->where('variant_id', $variantId);
-        } else {
-            $query->whereNull('variant_id');
+        if ($thumbnailKey !== null) {
+            return Sign::THUMBNAIL_STATUS_READY;
         }
 
-        if ($width !== null && $height !== null) {
-            $query->where('width', $width)->where('height', $height);
-        } else {
-            $query->whereNull('width')->whereNull('height');
+        $mimeType = $file->getMimeType() ?? $file->getClientMimeType();
+
+        if ($this->signThumbnail->supportsMimeType($mimeType)) {
+            return Sign::THUMBNAIL_STATUS_FAILED;
         }
 
-        return $query->first();
-    }
-
-    private function columnRatioFor(?int $width, ?int $height): int
-    {
-        if (! $width || ! $height) {
-            return 1;
-        }
-
-        $ratio = $width / $height;
-        $columns = [6, 4, 2, 1];
-        $closest = $columns[0];
-        $minDiff = abs($ratio - $closest);
-
-        foreach ($columns as $col) {
-            $diff = abs($ratio - $col);
-            if ($diff < $minDiff) {
-                $minDiff = $diff;
-                $closest = $col;
-            }
-        }
-
-        return $closest;
-    }
-
-    private function naturalSortKey(string $name): string
-    {
-        $lower = mb_strtolower($name);
-
-        return preg_replace_callback('/\d+/', function (array $matches): string {
-            return str_pad($matches[0], 10, '0', STR_PAD_LEFT);
-        }, $lower) ?? $lower;
+        return Sign::THUMBNAIL_STATUS_READY;
     }
 }

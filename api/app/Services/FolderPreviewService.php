@@ -56,6 +56,7 @@ SQL;
                 'name',
                 'public_url',
                 'thumbnail_url',
+                'thumbnail_status',
                 'mime_type',
                 'width',
                 'height',

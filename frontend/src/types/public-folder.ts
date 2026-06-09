@@ -37,6 +37,7 @@ export type PreviewSign = {
   variant_id: number | null
   public_url: string
   thumbnail_url: string | null
+  thumbnail_status: 'pending' | 'ready' | 'failed'
   mime_type: string
   width: number | null
   height: number | null
@@ -76,6 +77,7 @@ export type PublicSign = {
   variant_id: number | null
   public_url: string
   thumbnail_url: string | null
+  thumbnail_status: 'pending' | 'ready' | 'failed'
   mime_type: string
   width: number | null
   height: number | null

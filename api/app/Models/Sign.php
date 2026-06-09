@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'public_url',
     'thumbnail_url',
     'thumbnail_storage_key',
+    'thumbnail_status',
     'mime_type',
     'size_bytes',
     'width',
@@ -29,6 +30,12 @@ class Sign extends Model
 {
     /** @use HasFactory<SignFactory> */
     use HasFactory;
+
+    public const THUMBNAIL_STATUS_PENDING = 'pending';
+
+    public const THUMBNAIL_STATUS_READY = 'ready';
+
+    public const THUMBNAIL_STATUS_FAILED = 'failed';
 
     protected $hidden = [
         'storage_disk',

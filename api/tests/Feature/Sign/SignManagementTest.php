@@ -2,14 +2,18 @@
 
 namespace Tests\Feature\Sign;
 
+use App\Jobs\GenerateSignThumbnail;
 use App\Models\ActivityLog;
 use App\Models\Folder;
 use App\Models\Sign;
 use App\Models\User;
+use App\Services\SignStorageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Mockery\MockInterface;
 use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
@@ -203,6 +207,98 @@ class SignManagementTest extends TestCase
         $this->assertSame(Storage::disk($disk)->url($secondSign->storage_key), $secondSign->public_url);
         Storage::disk($disk)->assertExists($secondSign->storage_key);
         $this->assertSame('public', Storage::disk($disk)->getVisibility($secondSign->storage_key));
+    }
+
+    public function test_authenticated_user_can_prepare_and_complete_a_direct_sign_upload(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $disk = $this->fakeSignStorage();
+        $this->mockPreparedUploadUrls();
+
+        Queue::fake();
+        Sanctum::actingAs($user);
+
+        $prepareResponse = $this->postJson("/api/folders/{$folder->id}/signs/uploads/prepare", [
+            'upload_session_id' => '4d69f09b-6098-45bb-98d2-d217d5c26de0',
+            'files' => [
+                [
+                    'original_name' => 'ice-warning.png',
+                    'mime_type' => 'image/png',
+                    'size_bytes' => 2048,
+                    'width' => 1024,
+                    'height' => 256,
+                ],
+            ],
+        ]);
+
+        $prepareResponse->assertOk()
+            ->assertJsonCount(1, 'uploads')
+            ->assertJsonPath('uploads.0.storage_key', "signs/{$user->id}/{$folder->id}/{$folder->defaultVariant->id}/ice-warning-1024x256.png");
+
+        $storageKey = $prepareResponse->json('uploads.0.storage_key');
+        $upload = UploadedFile::fake()->image('ice-warning.png', 1024, 256);
+        Storage::disk($disk)->put($storageKey, file_get_contents($upload->getRealPath()));
+
+        $response = $this->postJson("/api/folders/{$folder->id}/signs/uploads/complete", [
+            'upload_session_id' => '4d69f09b-6098-45bb-98d2-d217d5c26de0',
+            'intent_ids' => [$prepareResponse->json('uploads.0.id')],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('signs.0.thumbnail_url', null)
+            ->assertJsonPath('signs.0.thumbnail_status', Sign::THUMBNAIL_STATUS_PENDING)
+            ->assertJsonPath('signs.0.public_url', Storage::disk($disk)->url($storageKey));
+
+        Queue::assertPushed(GenerateSignThumbnail::class);
+        $this->assertDatabaseHas('signs', [
+            'folder_id' => $folder->id,
+            'name' => 'ice-warning',
+            'thumbnail_status' => Sign::THUMBNAIL_STATUS_PENDING,
+        ]);
+        $this->assertDatabaseHas('activity_logs', [
+            'event' => ActivityLog::SIGNS_UPLOADED,
+            'actor_id' => $user->id,
+            'subject_folder_id' => $folder->id,
+            'upload_session_id' => '4d69f09b-6098-45bb-98d2-d217d5c26de0',
+        ]);
+    }
+
+    public function test_complete_direct_upload_requires_the_object_to_exist_in_storage(): void
+    {
+        $user = User::factory()->create();
+        $folder = Folder::factory()->for($user)->create([
+            'name' => 'Club Signs',
+            'slug' => 'club-signs',
+        ]);
+
+        $this->fakeSignStorage();
+        $this->mockPreparedUploadUrls();
+
+        Sanctum::actingAs($user);
+
+        $prepareResponse = $this->postJson("/api/folders/{$folder->id}/signs/uploads/prepare", [
+            'files' => [
+                [
+                    'original_name' => 'ice-warning.png',
+                    'mime_type' => 'image/png',
+                    'size_bytes' => 2048,
+                    'width' => 1024,
+                    'height' => 256,
+                ],
+            ],
+        ]);
+
+        $response = $this->postJson("/api/folders/{$folder->id}/signs/uploads/complete", [
+            'intent_ids' => [$prepareResponse->json('uploads.0.id')],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('intent_ids');
     }
 
     public function test_authenticated_user_can_list_signs_in_own_folder(): void
@@ -895,5 +991,16 @@ class SignManagementTest extends TestCase
         Storage::fake($disk);
 
         return $disk;
+    }
+
+    private function mockPreparedUploadUrls(): void
+    {
+        $this->partialMock(SignStorageService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('temporaryUpload')
+                ->andReturn([
+                    'url' => 'https://uploads.example.test/sign',
+                    'headers' => [],
+                ]);
+        });
     }
 }

@@ -132,7 +132,9 @@ const folderViewsChartData = computed(() => {
 
   return {
     labels,
-    datasets: [lineDataset('Folder opens', alignToLabels(labels, timeseries.folder_full_views), '#00d492')],
+    datasets: [
+      lineDataset('Folder opens', alignToLabels(labels, timeseries.folder_full_views), '#00d492'),
+    ],
   }
 })
 
@@ -144,7 +146,9 @@ const signCopiesChartData = computed(() => {
 
   return {
     labels,
-    datasets: [lineDataset('Sign copies', alignToLabels(labels, timeseries.sign_copies), '#45dfa4')],
+    datasets: [
+      lineDataset('Sign copies', alignToLabels(labels, timeseries.sign_copies), '#45dfa4'),
+    ],
   }
 })
 
@@ -195,7 +199,9 @@ onMounted(() => {
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.sign_copies.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who copied a sign URL</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">
+            Unique visitors who copied a sign URL
+          </p>
         </div>
       </div>
 

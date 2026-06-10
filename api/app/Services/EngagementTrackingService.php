@@ -8,6 +8,7 @@ use App\Models\FolderView;
 use App\Models\Sign;
 use App\Models\SignCopy;
 use App\Models\VisitorSession;
+use Illuminate\Support\Facades\DB;
 
 class EngagementTrackingService
 {
@@ -34,6 +35,8 @@ class EngagementTrackingService
                 'updated_at' => $timestamp,
             ],
         ], ['folder_id', 'ip_hash', 'view_type'], ['last_seen_at', 'updated_at']);
+
+        $this->bumpDailyCount('folder_view_daily_counts', ['folder_id' => $folder->id]);
     }
 
     public function recordSignCopy(Sign $sign, ?string $ip): void
@@ -59,6 +62,34 @@ class EngagementTrackingService
                 'updated_at' => $timestamp,
             ],
         ], ['sign_id', 'ip_hash'], ['last_seen_at', 'updated_at']);
+
+        $this->bumpDailyCount('sign_copy_daily_counts', ['sign_id' => $sign->id, 'folder_id' => $sign->folder_id]);
+    }
+
+    /**
+     * Increment a per-day counter row, creating it if it doesn't exist yet.
+     *
+     * @param  array<string, int>  $keyColumns
+     */
+    private function bumpDailyCount(string $table, array $keyColumns): void
+    {
+        $now = now();
+        $where = [...$keyColumns, 'date' => today()->toDateString()];
+
+        $updated = DB::table($table)->where($where)->increment('count', 1, ['updated_at' => $now]);
+
+        if ($updated > 0) {
+            return;
+        }
+
+        DB::table($table)->insertOrIgnore([
+            ...$where,
+            'count' => 1,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        DB::table($table)->where($where)->where('count', '<', 1)->increment('count', 1, ['updated_at' => $now]);
     }
 
     private function recordSession(string $ipHash): void

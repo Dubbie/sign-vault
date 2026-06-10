@@ -1,13 +1,15 @@
 export interface EngagementSummary {
-  folder_full_views: number
+  total_visitors: number
+  new_visitors: number
   returning_visitors: number
+  folder_opens: number
   sign_copies: number
 }
 
 export interface TopFolderEngagement {
   folder_id: number
   folder_name: string | null
-  full_views: number
+  opens: number
 }
 
 export interface TopSignEngagement {
@@ -23,12 +25,20 @@ export interface EngagementTimeseriesPoint {
   count: number
 }
 
+export interface NewVsReturningPoint {
+  date: string
+  new: number
+  returning: number
+}
+
 export interface EngagementStats {
   summary: EngagementSummary
   top_folders: TopFolderEngagement[]
   top_signs: TopSignEngagement[]
   timeseries: {
-    folder_full_views: EngagementTimeseriesPoint[]
+    daily_active_visitors: EngagementTimeseriesPoint[]
+    new_vs_returning: NewVsReturningPoint[]
+    folder_opens: EngagementTimeseriesPoint[]
     sign_copies: EngagementTimeseriesPoint[]
   }
 }

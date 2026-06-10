@@ -6,8 +6,10 @@ use App\Enums\FolderViewType;
 use App\Enums\FolderVisibility;
 use App\Models\Folder;
 use App\Models\FolderView;
+use App\Models\FolderViewDailyCount;
 use App\Models\Sign;
 use App\Models\SignCopy;
+use App\Models\SignCopyDailyCount;
 use App\Models\User;
 use App\Models\VisitorSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -156,16 +158,68 @@ class EngagementTrackingTest extends TestCase
 
         $response = $this->getJson('/api/admin/engagement?days=30')
             ->assertOk()
-            ->assertJsonPath('summary.folder_full_views', 1)
+            ->assertJsonPath('summary.total_visitors', 1)
+            ->assertJsonPath('summary.new_visitors', 1)
             ->assertJsonPath('summary.returning_visitors', 0)
+            ->assertJsonPath('summary.folder_opens', 1)
             ->assertJsonPath('summary.sign_copies', 1)
             ->assertJsonPath('top_folders.0.folder_id', $folder->id)
-            ->assertJsonPath('top_folders.0.full_views', 1)
+            ->assertJsonPath('top_folders.0.opens', 1)
             ->assertJsonPath('top_signs.0.sign_id', $sign->id)
             ->assertJsonPath('top_signs.0.copies', 1);
 
         $response->assertJsonStructure([
-            'timeseries' => ['folder_full_views', 'sign_copies'],
+            'timeseries' => ['daily_active_visitors', 'new_vs_returning', 'folder_opens', 'sign_copies'],
         ]);
+    }
+
+    public function test_repeat_visits_increase_daily_volume_counts(): void
+    {
+        [$folder, $sign] = $this->createPublicFolderWithSign();
+
+        $this->getJson('/api/public/folders/'.$folder->public_slug)->assertOk();
+        $this->getJson('/api/public/folders/'.$folder->public_slug)->assertOk();
+        $this->postJson("/api/public/folders/{$folder->public_slug}/signs/{$sign->id}/copy")->assertNoContent();
+        $this->postJson("/api/public/folders/{$folder->public_slug}/signs/{$sign->id}/copy")->assertNoContent();
+
+        $this->assertSame(2, FolderViewDailyCount::query()
+            ->where('folder_id', $folder->id)
+            ->where('date', today()->toDateString())
+            ->value('count'));
+
+        $this->assertSame(2, SignCopyDailyCount::query()
+            ->where('sign_id', $sign->id)
+            ->where('date', today()->toDateString())
+            ->value('count'));
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/admin/engagement?days=30')
+            ->assertOk()
+            ->assertJsonPath('summary.folder_opens', 2)
+            ->assertJsonPath('summary.sign_copies', 2)
+            ->assertJsonPath('top_folders.0.opens', 2)
+            ->assertJsonPath('top_signs.0.copies', 2);
+    }
+
+    public function test_new_vs_returning_timeseries_classifies_visitor_by_first_session(): void
+    {
+        $ipHash = hash_hmac('sha256', '127.0.0.1', (string) config('app.key'));
+
+        VisitorSession::create(['ip_hash' => $ipHash, 'session_date' => today()->subDay()->toDateString()]);
+        VisitorSession::create(['ip_hash' => $ipHash, 'session_date' => today()->toDateString()]);
+
+        $admin = User::factory()->create(['is_admin' => true]);
+        Sanctum::actingAs($admin);
+
+        $response = $this->getJson('/api/admin/engagement?days=30')->assertOk();
+
+        $points = collect($response->json('timeseries.new_vs_returning'))->keyBy('date');
+
+        $this->assertSame(1, $points[today()->subDay()->toDateString()]['new']);
+        $this->assertSame(0, $points[today()->subDay()->toDateString()]['returning']);
+        $this->assertSame(0, $points[today()->toDateString()]['new']);
+        $this->assertSame(1, $points[today()->toDateString()]['returning']);
     }
 }

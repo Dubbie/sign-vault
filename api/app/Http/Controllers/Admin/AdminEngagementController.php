@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\FolderViewType;
 use App\Http\Controllers\Controller;
-use App\Models\FolderView;
-use App\Models\SignCopy;
+use App\Models\FolderViewDailyCount;
+use App\Models\SignCopyDailyCount;
 use App\Models\VisitorSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,72 +16,100 @@ class AdminEngagementController extends Controller
     {
         $days = min(max((int) $request->query('days', 30), 1), 365);
         $since = Carbon::now()->subDays($days)->startOfDay();
-
-        $folderFullViews = FolderView::query()
-            ->where('view_type', FolderViewType::Full)
-            ->where('first_seen_at', '>=', $since)
-            ->distinct('ip_hash')
-            ->count('ip_hash');
-
-        $returningVisitors = VisitorSession::query()
-            ->where('session_date', '>=', $since->toDateString())
-            ->groupBy('ip_hash')
-            ->havingRaw('COUNT(DISTINCT session_date) >= 2')
-            ->distinct()
-            ->count('ip_hash');
-
-        $signCopies = SignCopy::query()
-            ->where('first_seen_at', '>=', $since)
-            ->distinct('ip_hash')
-            ->count('ip_hash');
+        $sinceDate = $since->toDateString();
 
         return response()->json([
             'summary' => [
-                'folder_full_views' => $folderFullViews,
-                'returning_visitors' => $returningVisitors,
-                'sign_copies' => $signCopies,
+                'total_visitors' => $this->totalVisitors($sinceDate),
+                'new_visitors' => $this->newVisitors($sinceDate),
+                'returning_visitors' => $this->returningVisitors($sinceDate),
+                'folder_opens' => $this->totalFolderOpens($sinceDate),
+                'sign_copies' => $this->totalSignCopies($sinceDate),
             ],
-            'top_folders' => $this->topFolders($since),
-            'top_signs' => $this->topSigns($since),
+            'top_folders' => $this->topFolders($sinceDate),
+            'top_signs' => $this->topSigns($sinceDate),
             'timeseries' => [
-                'folder_full_views' => $this->folderViewsTimeseries($since),
-                'sign_copies' => $this->signCopiesTimeseries($since),
+                'daily_active_visitors' => $this->dailyActiveVisitorsTimeseries($sinceDate),
+                'new_vs_returning' => $this->newVsReturningTimeseries($sinceDate),
+                'folder_opens' => $this->folderOpensTimeseries($sinceDate),
+                'sign_copies' => $this->signCopiesTimeseries($sinceDate),
             ],
         ]);
     }
 
-    private function topFolders(Carbon $since): array
+    private function totalVisitors(string $sinceDate): int
     {
-        return FolderView::query()
+        return VisitorSession::query()
+            ->where('session_date', '>=', $sinceDate)
+            ->distinct('ip_hash')
+            ->count('ip_hash');
+    }
+
+    private function newVisitors(string $sinceDate): int
+    {
+        return VisitorSession::query()
+            ->select('ip_hash')
+            ->groupBy('ip_hash')
+            ->havingRaw('MIN(session_date) >= ?', [$sinceDate])
+            ->get()
+            ->count();
+    }
+
+    private function returningVisitors(string $sinceDate): int
+    {
+        return VisitorSession::query()
+            ->where('session_date', '>=', $sinceDate)
+            ->groupBy('ip_hash')
+            ->havingRaw('COUNT(DISTINCT session_date) >= 2')
+            ->distinct()
+            ->count('ip_hash');
+    }
+
+    private function totalFolderOpens(string $sinceDate): int
+    {
+        return (int) FolderViewDailyCount::query()
+            ->where('date', '>=', $sinceDate)
+            ->sum('count');
+    }
+
+    private function totalSignCopies(string $sinceDate): int
+    {
+        return (int) SignCopyDailyCount::query()
+            ->where('date', '>=', $sinceDate)
+            ->sum('count');
+    }
+
+    private function topFolders(string $sinceDate): array
+    {
+        return FolderViewDailyCount::query()
             ->select('folder_id')
-            ->selectRaw('COUNT(*) as full_views')
-            ->where('view_type', FolderViewType::Full)
-            ->where('first_seen_at', '>=', $since)
+            ->selectRaw('SUM(count) as opens')
+            ->where('date', '>=', $sinceDate)
             ->groupBy('folder_id')
-            ->orderByDesc('full_views')
+            ->orderByDesc('opens')
             ->limit(10)
             ->with('folder:id,name')
             ->get()
-            ->map(fn (FolderView $row) => [
+            ->map(fn (FolderViewDailyCount $row) => [
                 'folder_id' => $row->folder_id,
                 'folder_name' => $row->folder?->name,
-                'full_views' => (int) $row->full_views,
+                'opens' => (int) $row->opens,
             ])
             ->all();
     }
 
-    private function topSigns(Carbon $since): array
+    private function topSigns(string $sinceDate): array
     {
-        return SignCopy::query()
+        return SignCopyDailyCount::query()
             ->select('sign_id', 'folder_id')
-            ->selectRaw('COUNT(*) as copies')
-            ->where('first_seen_at', '>=', $since)
+            ->selectRaw('SUM(count) as copies')
+            ->where('date', '>=', $sinceDate)
             ->groupBy('sign_id', 'folder_id')
             ->orderByDesc('copies')
             ->limit(10)
             ->with(['sign:id,name', 'folder:id,name'])
             ->get()
-            ->map(fn (SignCopy $row) => [
+            ->map(fn (SignCopyDailyCount $row) => [
                 'sign_id' => $row->sign_id,
                 'sign_name' => $row->sign?->name,
                 'folder_id' => $row->folder_id,
@@ -92,13 +119,51 @@ class AdminEngagementController extends Controller
             ->all();
     }
 
-    private function folderViewsTimeseries(Carbon $since): array
+    private function dailyActiveVisitorsTimeseries(string $sinceDate): array
     {
-        return FolderView::query()
-            ->selectRaw('DATE(first_seen_at) as date')
+        return VisitorSession::query()
+            ->selectRaw('session_date as date')
             ->selectRaw('COUNT(*) as count')
-            ->where('view_type', FolderViewType::Full)
-            ->where('first_seen_at', '>=', $since)
+            ->where('session_date', '>=', $sinceDate)
+            ->groupBy('session_date')
+            ->orderBy('session_date')
+            ->get()
+            ->map(fn ($row) => ['date' => $row->date, 'count' => (int) $row->count])
+            ->all();
+    }
+
+    private function newVsReturningTimeseries(string $sinceDate): array
+    {
+        $firstSeen = VisitorSession::query()
+            ->select('ip_hash')
+            ->selectRaw('MIN(session_date) as first_date')
+            ->groupBy('ip_hash');
+
+        return VisitorSession::query()
+            ->joinSub($firstSeen, 'first_seen', function ($join) {
+                $join->on('visitor_sessions.ip_hash', '=', 'first_seen.ip_hash');
+            })
+            ->where('visitor_sessions.session_date', '>=', $sinceDate)
+            ->selectRaw('visitor_sessions.session_date as date')
+            ->selectRaw('SUM(CASE WHEN visitor_sessions.session_date = first_seen.first_date THEN 1 ELSE 0 END) as new_count')
+            ->selectRaw('SUM(CASE WHEN visitor_sessions.session_date != first_seen.first_date THEN 1 ELSE 0 END) as returning_count')
+            ->groupBy('visitor_sessions.session_date')
+            ->orderBy('visitor_sessions.session_date')
+            ->get()
+            ->map(fn ($row) => [
+                'date' => $row->date,
+                'new' => (int) $row->new_count,
+                'returning' => (int) $row->returning_count,
+            ])
+            ->all();
+    }
+
+    private function folderOpensTimeseries(string $sinceDate): array
+    {
+        return FolderViewDailyCount::query()
+            ->selectRaw('date')
+            ->selectRaw('SUM(count) as count')
+            ->where('date', '>=', $sinceDate)
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -106,12 +171,12 @@ class AdminEngagementController extends Controller
             ->all();
     }
 
-    private function signCopiesTimeseries(Carbon $since): array
+    private function signCopiesTimeseries(string $sinceDate): array
     {
-        return SignCopy::query()
-            ->selectRaw('DATE(first_seen_at) as date')
-            ->selectRaw('COUNT(*) as count')
-            ->where('first_seen_at', '>=', $since)
+        return SignCopyDailyCount::query()
+            ->selectRaw('date')
+            ->selectRaw('SUM(count) as count')
+            ->where('date', '>=', $sinceDate)
             ->groupBy('date')
             ->orderBy('date')
             ->get()

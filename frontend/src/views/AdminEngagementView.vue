@@ -13,7 +13,11 @@ import {
 import type { ScriptableContext } from 'chart.js'
 
 import { getEngagementStats } from '@/lib/admin'
-import type { EngagementStats, EngagementTimeseriesPoint } from '@/types/engagement'
+import type {
+  EngagementStats,
+  EngagementTimeseriesPoint,
+  NewVsReturningPoint,
+} from '@/types/engagement'
 
 import UiErrorBanner from '@/components/ui/UiErrorBanner.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'
@@ -79,6 +83,17 @@ const chartOptions = {
   },
 }
 
+const multiSeriesChartOptions = {
+  ...chartOptions,
+  plugins: {
+    ...chartOptions.plugins,
+    legend: {
+      display: true,
+      labels: { color: '#bbcac0', font: { size: 11 }, boxWidth: 12, boxHeight: 12 },
+    },
+  },
+}
+
 function makeGradient(ctx: CanvasRenderingContext2D, top: number, bottom: number, hex: string) {
   const gradient = ctx.createLinearGradient(0, top, 0, bottom)
   gradient.addColorStop(0, hex + '40')
@@ -94,15 +109,15 @@ function gradientFill(hex: string) {
   }
 }
 
-function lineDataset(label: string, data: number[], hex: string) {
+function lineDataset(label: string, data: number[], hex: string, fill = true) {
   return {
     label,
     data,
     borderColor: hex,
-    backgroundColor: gradientFill(hex),
+    backgroundColor: fill ? gradientFill(hex) : 'transparent',
     borderWidth: 2,
     tension: 0.4,
-    fill: true,
+    fill,
     pointRadius: 0,
     pointHoverRadius: 4,
     pointHoverBackgroundColor: hex,
@@ -111,7 +126,7 @@ function lineDataset(label: string, data: number[], hex: string) {
   }
 }
 
-function buildDateLabels(...series: EngagementTimeseriesPoint[][]): string[] {
+function buildDateLabels(...series: { date: string }[][]): string[] {
   const dates = new Set<string>()
   for (const points of series) {
     for (const point of points) dates.add(point.date)
@@ -124,16 +139,52 @@ function alignToLabels(labels: string[], points: EngagementTimeseriesPoint[]): n
   return labels.map((date) => byDate.get(date) ?? 0)
 }
 
-const folderViewsChartData = computed(() => {
+const dailyActiveVisitorsChartData = computed(() => {
   const timeseries = data.value?.timeseries
   if (!timeseries) return null
 
-  const labels = buildDateLabels(timeseries.folder_full_views)
+  const labels = buildDateLabels(timeseries.daily_active_visitors)
 
   return {
     labels,
     datasets: [
-      lineDataset('Folder opens', alignToLabels(labels, timeseries.folder_full_views), '#00d492'),
+      lineDataset(
+        'Active visitors',
+        alignToLabels(labels, timeseries.daily_active_visitors),
+        '#00d492',
+      ),
+    ],
+  }
+})
+
+const newVsReturningChartData = computed(() => {
+  const timeseries = data.value?.timeseries
+  if (!timeseries) return null
+
+  const labels = buildDateLabels(timeseries.new_vs_returning)
+  const byDate = new Map(timeseries.new_vs_returning.map((point) => [point.date, point]))
+  const pick = (key: keyof Omit<NewVsReturningPoint, 'date'>) =>
+    labels.map((date) => byDate.get(date)?.[key] ?? 0)
+
+  return {
+    labels,
+    datasets: [
+      lineDataset('New visitors', pick('new'), '#45dfa4', false),
+      lineDataset('Returning visitors', pick('returning'), '#7aa2f7', false),
+    ],
+  }
+})
+
+const folderOpensChartData = computed(() => {
+  const timeseries = data.value?.timeseries
+  if (!timeseries) return null
+
+  const labels = buildDateLabels(timeseries.folder_opens)
+
+  return {
+    labels,
+    datasets: [
+      lineDataset('Folder opens', alignToLabels(labels, timeseries.folder_opens), '#00d492'),
     ],
   }
 })
@@ -179,45 +230,77 @@ onMounted(() => {
     <p v-if="isLoading" class="text-on-surface-variant">Loading...</p>
 
     <div v-else-if="data" class="space-y-gutter">
-      <div class="grid gap-4 sm:grid-cols-3">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div class="glass-card rounded-lg p-5">
-          <p class="text-label-sm text-on-surface-variant">Folder full views</p>
+          <p class="text-label-sm text-on-surface-variant">Total visitors</p>
           <p class="mt-1 text-headline-lg text-on-surface">
-            {{ data.summary.folder_full_views.toLocaleString() }}
+            {{ data.summary.total_visitors.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors who opened a folder</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors active in range</p>
+        </div>
+        <div class="glass-card rounded-lg p-5">
+          <p class="text-label-sm text-on-surface-variant">New visitors</p>
+          <p class="mt-1 text-headline-lg text-on-surface">
+            {{ data.summary.new_visitors.toLocaleString() }}
+          </p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">First active on the site in range</p>
         </div>
         <div class="glass-card rounded-lg p-5">
           <p class="text-label-sm text-on-surface-variant">Returning visitors</p>
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.returning_visitors.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">Unique visitors active on 2+ days</p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Active on 2+ days in range</p>
+        </div>
+        <div class="glass-card rounded-lg p-5">
+          <p class="text-label-sm text-on-surface-variant">Folder opens</p>
+          <p class="mt-1 text-headline-lg text-on-surface">
+            {{ data.summary.folder_opens.toLocaleString() }}
+          </p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Total folder opens in range</p>
         </div>
         <div class="glass-card rounded-lg p-5">
           <p class="text-label-sm text-on-surface-variant">Sign copies</p>
           <p class="mt-1 text-headline-lg text-on-surface">
             {{ data.summary.sign_copies.toLocaleString() }}
           </p>
-          <p class="mt-1 text-xs text-on-surface-variant/70">
-            Unique visitors who copied a sign URL
-          </p>
+          <p class="mt-1 text-xs text-on-surface-variant/70">Total sign copies in range</p>
         </div>
       </div>
 
       <div class="grid gap-4 lg:grid-cols-2">
         <div class="glass-card rounded-lg p-5">
-          <h2 class="text-headline-md text-on-surface">Folder opens over time</h2>
+          <h2 class="text-headline-md text-on-surface">Daily active visitors</h2>
           <div class="mt-4 h-64">
             <Line
-              v-if="folderViewsChartData"
-              :data="folderViewsChartData"
+              v-if="dailyActiveVisitorsChartData"
+              :data="dailyActiveVisitorsChartData"
               :options="chartOptions"
             />
           </div>
         </div>
         <div class="glass-card rounded-lg p-5">
-          <h2 class="text-headline-md text-on-surface">Sign copies over time</h2>
+          <h2 class="text-headline-md text-on-surface">New vs returning visitors</h2>
+          <div class="mt-4 h-64">
+            <Line
+              v-if="newVsReturningChartData"
+              :data="newVsReturningChartData"
+              :options="multiSeriesChartOptions"
+            />
+          </div>
+        </div>
+        <div class="glass-card rounded-lg p-5">
+          <h2 class="text-headline-md text-on-surface">Folder opens per day</h2>
+          <div class="mt-4 h-64">
+            <Line
+              v-if="folderOpensChartData"
+              :data="folderOpensChartData"
+              :options="chartOptions"
+            />
+          </div>
+        </div>
+        <div class="glass-card rounded-lg p-5">
+          <h2 class="text-headline-md text-on-surface">Sign copies per day</h2>
           <div class="mt-4 h-64">
             <Line v-if="signCopiesChartData" :data="signCopiesChartData" :options="chartOptions" />
           </div>
@@ -227,14 +310,14 @@ onMounted(() => {
       <div class="grid gap-4 lg:grid-cols-2">
         <div class="glass-card overflow-hidden rounded-lg">
           <div class="px-5 py-4">
-            <h2 class="text-headline-md text-on-surface">Top folders by views</h2>
+            <h2 class="text-headline-md text-on-surface">Top folders by opens</h2>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full">
               <thead class="bg-surface-container-low">
                 <tr class="text-left">
                   <th class="px-4 py-3 text-xs text-on-surface-variant">Folder</th>
-                  <th class="px-4 py-3 text-xs text-on-surface-variant">Views</th>
+                  <th class="px-4 py-3 text-xs text-on-surface-variant">Opens</th>
                 </tr>
               </thead>
               <tbody>
@@ -251,7 +334,7 @@ onMounted(() => {
                       {{ folder.folder_name ?? `Folder #${folder.folder_id}` }}
                     </span>
                   </td>
-                  <td class="px-4 py-3 text-sm text-on-surface-variant">{{ folder.full_views }}</td>
+                  <td class="px-4 py-3 text-sm text-on-surface-variant">{{ folder.opens }}</td>
                 </tr>
                 <tr v-if="data.top_folders.length === 0">
                   <td colspan="2" class="px-4 py-6 text-center text-sm text-on-surface-variant">

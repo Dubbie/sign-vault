@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/Dubbie/sign-vault/compare/v1.4.0...v1.5.0) (2026-06-10)
+
+
+### Features
+
+* **admin:** redesign engagement dashboard with daily activity metrics ([befa3e9](https://github.com/Dubbie/sign-vault/commit/befa3e995e980e1a98f86b4569f36eab4151bf4a))
+
 ## [1.4.0](https://github.com/Dubbie/sign-vault/compare/v1.3.0...v1.4.0) (2026-06-09)
 
 
